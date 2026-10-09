@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { gsap, ScrollTrigger, MQ, EASE, SCRUB, useGSAP } from '../../../../lib/gsap'
+import { gsap, ScrollTrigger, MQ, EASE, SCRUB, useGSAP, ANTICIPATE_PIN } from '../../../../lib/gsap'
 import { getNavOffset } from '../../../../lib/scroll'
 import {
   APPROACH,
@@ -269,7 +269,7 @@ function buildMaster(root, q, roles, onActive, { dock }) {
       end: () => `+=${Math.round(window.innerHeight * pinVh)}`,
       pin: true,
       scrub: SCRUB,
-      anticipatePin: 1,
+      anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
     },
     onUpdate() {

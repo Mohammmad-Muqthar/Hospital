@@ -13,7 +13,7 @@
  * invalidateOnRefresh, so resizes re-measure the DOM (offset-based, so the
  * values are never polluted by the transforms being animated).
  */
-import { gsap, SCRUB } from '../../../../lib/gsap'
+import { gsap, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
 
 /** Layout + motion run only here; otherwise the static stacked layout is shown. */
 export const CINEMA_MQ = '(prefers-reduced-motion: no-preference) and (min-height: 520px)'
@@ -229,7 +229,7 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
       // Constant scroll pace: the pin is as long as the choreography needs.
       end: () => `+=${Math.round(vh() * S.vhPerSecond * tl.duration())}`,
       scrub: SCRUB,
-      anticipatePin: 1,
+      anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
       onUpdate(self) {
         const isCovered = self.progress >= coveredAt

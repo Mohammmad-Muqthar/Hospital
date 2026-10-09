@@ -1,4 +1,4 @@
-import { gsap, MQ, SCRUB, useGSAP } from '../../../../lib/gsap'
+import { gsap, MQ, SCRUB, useGSAP, ANTICIPATE_PIN } from '../../../../lib/gsap'
 import {
   ACTIVE_SWITCH,
   APPROACH,
@@ -109,7 +109,7 @@ function buildStage(root) {
       end: () => `+=${Math.round(window.innerHeight * PIN_VH)}`,
       pin: true,
       scrub: SCRUB,
-      anticipatePin: 1,
+      anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
     },
     onUpdate() {

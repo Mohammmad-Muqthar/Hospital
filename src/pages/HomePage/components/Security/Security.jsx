@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { CircleCheck } from 'lucide-react'
 import { SECTION_IDS } from '../../../../config/site'
 import { SECURITY } from '../../../../data/siteContent'
-import { gsap, ScrollTrigger, useGSAP, MQ, EASE, SCRUB } from '../../../../lib/gsap'
+import { gsap, ScrollTrigger, useGSAP, MQ, EASE, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
 import { scrollToTimelineLabel } from '../../../../lib/scroll'
 import SecurityArchitecture from './SecurityArchitecture'
 import SecurityFeatureContent from './SecurityFeatureContent'
@@ -83,7 +83,7 @@ export default function Security() {
               end: () => `+=${Math.round(window.innerHeight * PIN_VH)}`,
               pin: true,
               scrub: SCRUB,
-              anticipatePin: 1,
+              anticipatePin: ANTICIPATE_PIN,
               invalidateOnRefresh: true,
               // A refresh re-renders the timeline with events suppressed: resync the index.
               onRefresh: () => syncActive(tl.time()),

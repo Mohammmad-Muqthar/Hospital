@@ -107,6 +107,12 @@ p {
   border-radius: 4px;
 }
 
+/* While a reload restores the reading position (see prepareScrollRestore),
+   keep the page hidden so the hero doesn't flash before the jump. */
+html.is-restoring #root {
+  visibility: hidden;
+}
+
 /* Sections receive programmatic focus after in-page navigation (so the next
    Tab continues there); they are landmarks, not controls — no ring. */
 section[tabindex='-1']:focus,

@@ -55,9 +55,24 @@ function yForAnchor(ranges, anchor) {
   return Math.round(Math.min(Math.max(0, y), Math.max(0, max)))
 }
 
+/**
+ * Forget the recorded scroll velocity. anticipatePin extrapolates velocity
+ * to pin a section slightly early; after a programmatic jump (or when a fast
+ * scroll stops just short of a pin) that extrapolation would pin the NEXT
+ * section over the current one. Two velocity-recording updates in a row make
+ * the two samples identical, i.e. velocity 0.
+ */
+function resetVelocity() {
+  ScrollTrigger.getAll().forEach((st) => {
+    st.update(false, true)
+    st.update(false, true)
+  })
+}
+
 /** Finish every in-flight scrub catch-up so a programmatic jump lands settled. */
 function settleScrubs() {
   ScrollTrigger.update()
+  resetVelocity()
   ScrollTrigger.getAll().forEach((st) => {
     // getTween() is the scrub tween, or 0 when the trigger isn't smoothed.
     const tween = st.getTween?.()
@@ -84,6 +99,19 @@ function isReturnVisit() {
   const type = performance.getEntriesByType?.('navigation')?.[0]?.type
   return type === 'reload' || type === 'back_forward'
 }
+
+const RESTORING_CLASS = 'is-restoring'
+
+/**
+ * Call before the first render (main.jsx). On a reload / back-forward visit
+ * with a saved position, hide the page until it has been restored, so the
+ * visitor never sees the hero flash before the jump back to their section.
+ */
+export function prepareScrollRestore() {
+  if (isReturnVisit() && readSaved()?.anchor) document.documentElement.classList.add(RESTORING_CLASS)
+}
+
+const endRestoring = () => document.documentElement.classList.remove(RESTORING_CLASS)
 
 /**
  * Page-level ScrollTrigger housekeeping. Runs after every section has
@@ -189,6 +217,52 @@ export default function useScrollTriggerSetup() {
     }
     const onVisibility = () => document.visibilityState === 'hidden' && save()
     window.addEventListener('pagehide', save)
+
+    // Never leave the page hidden if restoring fails for any reason.
+    const restoreGuard = setTimeout(endRestoring, 1800)
+
+    // When a fast scroll (PageDown, Space, a scrollbar drag) stops just short
+    // of a pinned section, drop the velocity anticipatePin was extrapolating
+    // so that section is not left pinned early.
+    const onScrollEnd = () => {
+      if (!ScrollTrigger.isRefreshing) resetVelocity()
+    }
+    ScrollTrigger.addEventListener('scrollEnd', onScrollEnd)
+
+    // scrollEnd arrives ~100-150ms after the stop; catch a stuck early pin
+    // on the first still frame instead. Only acts when a pinned section is
+    // active while the scroll position is outside its range — exactly the
+    // anticipatePin overshoot — so ordinary scrolling is untouched.
+    let stopRaf = 0
+    let lastY = -1
+    let stillFrames = 0
+    const anticipatedPinStuck = () => {
+      const y = window.scrollY
+      return ScrollTrigger.getAll().some((st) => st.pin && st.isActive && (y < st.start - 1 || y > st.end + 1))
+    }
+    const watchStop = () => {
+      const y = window.scrollY
+      if (y !== lastY) {
+        lastY = y
+        stillFrames = 0
+        stopRaf = requestAnimationFrame(watchStop)
+        return
+      }
+      stillFrames += 1
+      if (stillFrames < 1) {
+        stopRaf = requestAnimationFrame(watchStop)
+        return
+      }
+      stopRaf = 0
+      if (!ScrollTrigger.isRefreshing && anticipatedPinStuck()) resetVelocity()
+    }
+    const onScroll = () => {
+      if (stopRaf) return
+      lastY = window.scrollY
+      stillFrames = 0
+      stopRaf = requestAnimationFrame(watchStop)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
     document.addEventListener('visibilitychange', onVisibility)
 
     const refresh = () => {
@@ -211,6 +285,11 @@ export default function useScrollTriggerSetup() {
       }
       anchor = anchorFor(ranges, window.scrollY)
       ready = true
+      // Reveal a page hidden by prepareScrollRestore() once the restored
+      // frame has painted.
+      raf = requestAnimationFrame(() => {
+        raf = requestAnimationFrame(endRestoring)
+      })
     }
 
     const fontsReady = document.fonts?.ready ?? Promise.resolve()
@@ -224,6 +303,10 @@ export default function useScrollTriggerSetup() {
     return () => {
       cancelled = true
       keeper.kill()
+      clearTimeout(restoreGuard)
+      ScrollTrigger.removeEventListener('scrollEnd', onScrollEnd)
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(stopRaf)
       heightObserver.disconnect()
       clearTimeout(heightTimer)
       cancelAnimationFrame(raf)

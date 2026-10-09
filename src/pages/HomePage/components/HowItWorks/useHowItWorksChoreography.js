@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { gsap, useGSAP, MQ, SCRUB } from '../../../../lib/gsap'
+import { gsap, useGSAP, MQ, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
 import { getNavOffset } from '../../../../lib/scroll'
 
 /* ------------------------------------------------------------------ */
@@ -276,7 +276,7 @@ function buildStage(root, variantKey, onStepChange) {
       end: () => `+=${Math.round(window.innerHeight * v.pinVh)}`,
       pin: true,
       scrub: SCRUB,
-      anticipatePin: 1,
+      anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
     },
     onUpdate() {
