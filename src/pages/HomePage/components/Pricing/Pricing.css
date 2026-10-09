@@ -1,0 +1,9 @@
+.price-stub {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+}

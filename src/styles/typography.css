@@ -1,0 +1,80 @@
+/*
+ * Shared typography primitives. Sora for display/headings, DM Sans for
+ * everything else. Sections compose these classes or read the same tokens.
+ */
+.t-display,
+.t-h2,
+.t-h3,
+.t-h4 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  color: inherit;
+  text-wrap: balance;
+  font-optical-sizing: auto;
+}
+
+.t-display {
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+}
+
+.t-h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--tracking-heading);
+}
+
+.t-h3 {
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-title);
+}
+
+.t-h4 {
+  font-size: var(--fs-h4);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-title);
+}
+
+.t-lead {
+  font-family: var(--font-body);
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+  letter-spacing: var(--tracking-body);
+  text-wrap: pretty;
+}
+
+.t-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
+}
+
+.t-small {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+
+/* Small uppercase section kicker, e.g. "EVERYTHING IN ONE PLACE" */
+.t-eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.t-eyebrow--on-dark {
+  color: var(--color-accent-soft);
+}
+
+.t-accent {
+  color: var(--color-primary);
+}
+
+.t-tabular {
+  font-variant-numeric: tabular-nums;
+}

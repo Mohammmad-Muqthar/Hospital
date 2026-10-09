@@ -1,0 +1,22 @@
+.brand-logo {
+  display: block;
+  height: var(--logo-h, 40px);
+  width: auto;
+  aspect-ratio: var(--logo-ratio, auto);
+  object-fit: contain;
+  object-position: left center;
+  user-select: none;
+}
+
+/* Text stand-in only while the official asset is missing. */
+.brand-logo--missing {
+  display: inline-flex;
+  align-items: center;
+  height: var(--logo-h, 40px);
+  font-family: var(--font-display);
+  font-size: calc(var(--logo-h, 40px) * 0.45);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.02em;
+  color: currentColor;
+  white-space: nowrap;
+}

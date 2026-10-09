@@ -1,0 +1,7 @@
+/*
+ * Page shell. Must stay transform-free and overflow-visible so pinned
+ * sections (position: fixed while pinned) behave correctly.
+ */
+.home {
+  position: relative;
+}

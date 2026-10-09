@@ -1,0 +1,16 @@
+.nav-stub {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--nav-h);
+  background: rgba(8, 11, 10, 0.85);
+  color: var(--color-text-on-dark);
+}
+
+.nav-stub nav {
+  display: flex;
+  gap: 24px;
+}

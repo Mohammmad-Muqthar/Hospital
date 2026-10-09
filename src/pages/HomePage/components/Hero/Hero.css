@@ -1,0 +1,9 @@
+.hero-stub {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: #0b2c26;
+  color: #f3f8f5;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+}

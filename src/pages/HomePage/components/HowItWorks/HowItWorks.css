@@ -1,0 +1,9 @@
+.how-stub {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: var(--color-teal-deep);
+  color: var(--color-text-on-dark);
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+}

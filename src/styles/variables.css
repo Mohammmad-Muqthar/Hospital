@@ -1,0 +1,128 @@
+/*
+ * Trionix Hospital CRM — design tokens.
+ * Every section reads from these variables. Do not hard-code brand colours,
+ * radii, shadows or easing curves inside section stylesheets.
+ */
+:root {
+  /* ---------- Brand colour ---------- */
+  --color-primary: #086b56;          /* deep emerald — primary actions, accents */
+  --color-primary-hover: #075c4a;
+  --color-primary-press: #064d3e;
+  --color-primary-dark: #103c34;     /* forest green */
+  --color-primary-ink: #0b2c26;      /* darkest forest, used for deep surfaces */
+  --color-accent: #34b994;           /* emerald accent on dark backgrounds */
+  --color-accent-soft: #68d8ba;      /* soft mint highlight on dark backgrounds */
+  --color-success: #1f9d6f;
+  --color-warning: #c98a1b;
+  --color-danger: #c4513f;
+
+  /* ---------- Neutrals (light surfaces) ---------- */
+  --color-text: #142622;             /* primary text on light */
+  --color-text-muted: #4d5f59;       /* secondary text on light (AA on off-white) */
+  --color-text-subtle: #6b7c76;      /* tertiary labels on light */
+  --color-background: #fafbf9;       /* page off-white */
+  --color-surface: #ffffff;          /* cards / app surfaces */
+  --color-surface-2: #f4f7f4;        /* sunken surface inside UI mockups */
+  --color-mint: #e6f3ed;             /* soft mint tint */
+  --color-mint-strong: #cfe8dc;
+  --color-border: #dfe8e2;           /* neutral border */
+  --color-border-strong: #c9d6ce;
+  --color-white: #ffffff;
+
+  /* ---------- Dark surfaces ---------- */
+  --color-dark: #080b0a;             /* near-black (footer, navbar) */
+  --color-dark-2: #111a17;           /* raised dark surface */
+  --color-dark-3: #18241f;
+  --color-teal-deep: #062e2d;        /* How It Works environment */
+  --color-teal-darker: #061b1b;
+  --color-text-on-dark: #f3f8f5;
+  --color-text-on-dark-muted: #a5b3ad;
+  --color-border-on-dark: rgba(243, 248, 245, 0.1);
+
+  /* ---------- Typography ---------- */
+  --font-display: 'Sora Variable', 'Sora', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'DM Sans Variable', 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-display: clamp(2.6rem, 1.15rem + 5.4vw, 6.25rem);   /* hero headline   ~42 → 100px */
+  --fs-h2: clamp(2.15rem, 1.25rem + 3.1vw, 4.5rem);        /* section titles  ~34 → 72px  */
+  --fs-h3: clamp(1.45rem, 1.1rem + 1.1vw, 2.125rem);       /* panel titles    ~23 → 34px  */
+  --fs-h4: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);        /* card titles     18 → 22px   */
+  --fs-lead: clamp(1.0625rem, 0.96rem + 0.42vw, 1.3125rem);/* lead paragraph  17 → 21px   */
+  --fs-body: 1.0625rem;                                    /* 17px */
+  --fs-body-sm: 0.9375rem;                                 /* 15px */
+  --fs-small: 0.875rem;                                    /* 14px */
+  --fs-xs: 0.8125rem;                                      /* 13px — smallest marketing text */
+  --fs-ui: 0.75rem;                                        /* 12px — mock UI labels only */
+  --fs-ui-xs: 0.6875rem;                                   /* 11px — mock UI micro labels only */
+
+  --lh-tight: 1.04;
+  --lh-heading: 1.12;
+  --lh-snug: 1.3;
+  --lh-body: 1.6;
+
+  --tracking-display: -0.04em;
+  --tracking-heading: -0.03em;
+  --tracking-title: -0.018em;
+  --tracking-body: -0.003em;
+  --tracking-eyebrow: 0.14em;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ---------- Layout ---------- */
+  --container-max: 1440px;
+  --container-narrow: 880px;
+  --gutter: clamp(20px, 4.2vw, 64px);
+  --nav-h: 84px;
+  --section-pad: clamp(88px, 10vw, 168px);
+  --section-pad-sm: clamp(64px, 7vw, 112px);
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-button: 12px;
+  --radius-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --shadow-xs: 0 1px 2px rgba(16, 60, 52, 0.06);
+  --shadow-sm: 0 1px 2px rgba(16, 60, 52, 0.06), 0 2px 6px -2px rgba(16, 60, 52, 0.08);
+  --shadow-md: 0 2px 4px rgba(16, 60, 52, 0.04), 0 12px 28px -10px rgba(16, 60, 52, 0.18);
+  --shadow-lg: 0 4px 10px rgba(12, 44, 38, 0.05), 0 28px 60px -22px rgba(12, 44, 38, 0.28);
+  --shadow-xl: 0 6px 16px rgba(10, 40, 34, 0.06), 0 48px 110px -40px rgba(10, 40, 34, 0.42);
+  --shadow-button: 0 1px 1px rgba(4, 40, 32, 0.25), 0 6px 16px -6px rgba(8, 107, 86, 0.55);
+  --shadow-button-hover: 0 2px 2px rgba(4, 40, 32, 0.22), 0 12px 26px -8px rgba(8, 107, 86, 0.6);
+  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  /* ---------- Motion (CSS) ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 160ms;
+  --dur-base: 260ms;
+  --dur-slow: 480ms;
+
+  /* ---------- Stacking ---------- */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-nav: 1000;
+  --z-menu: 1100;
+  --z-skip: 1200;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --nav-h: 72px;
+  }
+}
+
+@media (max-width: 599px) {
+  :root {
+    --nav-h: 64px;
+    --fs-body: 1rem;
+  }
+}
