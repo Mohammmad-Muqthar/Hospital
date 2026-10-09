@@ -170,7 +170,7 @@ export const EXECUTIVE_VIEW = {
   followups: {
     title: 'Follow-up reminders',
     items: [
-      { id: 'f1', type: 'call', lead: 'Lead · Call', detail: 'Second call · Cardiology', due: '09:00', overdue: true },
+      { id: 'f1', type: 'call', lead: 'Lead · Call', detail: 'Cardiology recall', due: '09:00', overdue: true },
       { id: 'f2', type: 'whatsapp', lead: 'Lead · Campaign', detail: 'Send consult options', due: '11:30' },
       { id: 'f3', type: 'visit', lead: 'Lead · Walk-in', detail: 'Clinic visit · Orthopaedics', due: '14:00' },
       { id: 'f4', type: 'call', lead: 'Lead · Referral', detail: 'Confirm appointment', due: '16:15' },
@@ -180,9 +180,10 @@ export const EXECUTIVE_VIEW = {
   opportunities: {
     title: 'Active opportunities',
     items: [
-      { id: 'o1', name: 'Knee consult package', stage: 'Consult booked', value: 'QAR 8,400', progress: 0.55 },
-      { id: 'o2', name: 'Dental implant plan', stage: 'Treatment plan', value: 'QAR 12,900', progress: 0.75 },
-      { id: 'o3', name: 'Skin care programme', stage: 'Contacted', value: 'QAR 3,250', progress: 0.3 },
+      // Illustrative amounts in USD (site-wide convention for mock money).
+      { id: 'o1', name: 'Knee consult package', stage: 'Consult booked', value: '$2,300', progress: 0.55 },
+      { id: 'o2', name: 'Dental implant plan', stage: 'Treatment plan', value: '$3,550', progress: 0.75 },
+      { id: 'o3', name: 'Skin care programme', stage: 'Contacted', value: '$890', progress: 0.3 },
     ],
   },
   activities: {

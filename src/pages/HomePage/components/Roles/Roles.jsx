@@ -3,7 +3,7 @@ import { MotionConfig } from 'motion/react'
 import { SECTION_IDS } from '../../../../config/site'
 import { ROLES, ROLES_INTRO } from '../../../../data/siteContent'
 import { MQ } from '../../../../lib/gsap'
-import { scrollToTimelineLabel } from '../../../../lib/scroll'
+import { scrollToTimelineLabel, scrollToY } from '../../../../lib/scroll'
 import useMediaQuery from '../../../../hooks/useMediaQuery'
 import usePrefersReducedMotion from '../../../../hooks/usePrefersReducedMotion'
 import RoleSelector from './RoleSelector'
@@ -45,6 +45,27 @@ export default function Roles() {
     [timelineRef, activeRef],
   )
 
+  // Keyboard focus arriving in the selector or description while the scene
+  // is still revealing (the copy is in the Tab order from the start, but may
+  // be faded): bring the reader to a settled, fully visible state.
+  const handleStageFocus = useCallback(
+    (event) => {
+      if (reduce || !event.target.matches?.(':focus-visible')) return
+      const tl = timelineRef.current
+      if (tl?.scrollTrigger) {
+        if (window.scrollY < tl.scrollTrigger.start - 1) {
+          scrollToTimelineLabel(tl, ROLE_LABELS[activeRef.current])
+        }
+        return
+      }
+      const rect = event.target.getBoundingClientRect()
+      if (rect.bottom > window.innerHeight * 0.8) {
+        scrollToY(window.scrollY + rect.top - window.innerHeight * 0.45)
+      }
+    },
+    [reduce, timelineRef, activeRef],
+  )
+
   const tabs = !pinned
 
   return (
@@ -73,7 +94,7 @@ export default function Roles() {
           <p className="t-lead roles__lead">{ROLES_INTRO.paragraph}</p>
         </header>
 
-        <div className="roles__stage">
+        <div className="roles__stage" onFocus={handleStageFocus}>
           <div className="roles__sel-col">
             <RoleSelector
               roles={ROLES}

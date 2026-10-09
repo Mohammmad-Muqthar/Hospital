@@ -6,9 +6,11 @@ import { Avatar, Card, Meter, Tag } from './parts'
 const TYPE_ICON = { call: Phone, whatsapp: MessageCircle, visit: MapPin }
 const TYPE_LABEL = { call: 'Call', whatsapp: 'WhatsApp', visit: 'Visit' }
 
-function FollowUps({ limit }) {
+function FollowUps({ limit, compact }) {
   const { followups } = EXECUTIVE_VIEW
   const items = limit ? followups.items.slice(0, limit) : followups.items
+  // The compact (phone) window drops the type word — the icon carries it —
+  // so the detail fits beside the due time without truncation.
   return (
     <Card title={followups.title} meta={`${followups.items.length} due today`} depth={1} area="follow" className="rw-follow">
       <div className="rw-follow__list">
@@ -21,9 +23,7 @@ function FollowUps({ limit }) {
               </span>
               <span className="rw-follow__text">
                 <span className="rw-follow__lead">{f.lead}</span>
-                <span className="rw-follow__detail">
-                  {TYPE_LABEL[f.type]} · {f.detail}
-                </span>
+                <span className="rw-follow__detail">{compact ? f.detail : `${TYPE_LABEL[f.type]} · ${f.detail}`}</span>
               </span>
               {f.overdue ? (
                 <Tag tone="danger">Overdue · {f.due}</Tag>
@@ -71,7 +71,7 @@ export default function ExecutiveView({ variant }) {
     return (
       <div className="rw-grid rw-grid--exec-c">
         <Activity />
-        <FollowUps limit={3} />
+        <FollowUps limit={3} compact />
       </div>
     )
   }
