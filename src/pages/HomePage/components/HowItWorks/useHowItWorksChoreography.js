@@ -6,12 +6,34 @@ import { getNavOffset } from '../../../../lib/scroll'
 /* Layout branches                                                     */
 /* ------------------------------------------------------------------ */
 const MOTION = MQ.motionOK
+
+/**
+ * Minimum viewport height for each pinned layout, per width band.
+ * The stacked stage (tablet / phone) shows heading + phone + step copy in one
+ * screen, and the phone must hold all four notifications at a legible
+ * (>= 11px) size; below these heights it would be too small and the stack
+ * would clip (measured: the type grows with the width, so wider bands need a
+ * little more height). Shorter viewports get the composed, non-pinned flow.
+ */
+const BANDS = [
+  { layout: 'phone', minW: null, maxW: 479, minH: 800 },
+  { layout: 'phone', minW: 480, maxW: 767, minH: 860 },
+  { layout: 'tablet', minW: 768, maxW: 1023, minH: 900 },
+  { layout: 'split', minW: 1024, maxW: null, minH: 600 },
+]
+const widthQuery = ({ minW, maxW }) =>
+  [minW && `(min-width: ${minW}px)`, maxW && `(max-width: ${maxW}px)`].filter(Boolean).join(' and ')
+/** Tall enough for the pinned stage (`tall`) or not (→ flow), as one query list. */
+const bandQuery = (layouts, tall) =>
+  BANDS.filter((b) => layouts.includes(b.layout))
+    .map((b) => `${MOTION} and ${widthQuery(b)} and ${tall ? `(min-height: ${b.minH}px)` : `(max-height: ${b.minH - 1}px)`}`)
+    .join(', ')
 const QUERIES = {
-  split: `${MOTION} and (min-width: 1024px) and (min-height: 600px)`,
-  tablet: `${MOTION} and (min-width: 768px) and (max-width: 1023px) and (min-height: 600px)`,
-  phone: `${MOTION} and (max-width: 767px) and (min-height: 560px)`,
+  split: bandQuery(['split'], true),
+  tablet: bandQuery(['tablet'], true),
+  phone: bandQuery(['phone'], true),
   // Too short for a pinned stage: composed static layout + a short scrubbed settle.
-  flow: `${MOTION} and (min-width: 768px) and (max-height: 599px), ${MOTION} and (max-width: 767px) and (max-height: 559px)`,
+  flow: bandQuery(['phone', 'tablet', 'split'], false),
 }
 
 /**
@@ -209,6 +231,10 @@ function buildStage(root, variantKey, onStepChange) {
   const centred = v.layout === 'stacked'
 
   root.classList.add('how--stage', `how--${v.layout}`)
+  // The phone rests at `restScale` through every step hold; the screen's
+  // text floors (PhoneMockup.css) divide by it so the RENDERED size — not
+  // just the layout size — stays at or above the mock-UI minimum.
+  root.style.setProperty('--how-rest', String(v.restScale))
 
   buildApproach(root, el)
 
@@ -269,7 +295,10 @@ function buildStage(root, variantKey, onStepChange) {
 
   tl.addLabel('intro', 0)
 
-  // ---- STAGE 1 → 2: heading glides from the centred intro to its supporting slot
+  // ---- STAGE 1 → 2: heading glides from the centred intro to its supporting
+  // slot. It stays at full strength: the section title remains the top of the
+  // hierarchy (its slot size is above the step titles' in CSS) — only its
+  // position and scale change, never its alpha.
   tl.fromTo(
     el.eyebrow,
     {
@@ -285,9 +314,8 @@ function buildStage(root, variantKey, onStepChange) {
       x: () => intro().title.x,
       y: () => intro().title.y,
       scale: () => intro().title.scale,
-      opacity: 1,
     },
-    { x: 0, y: 0, scale: 1, opacity: centred ? 0.78 : 0.66, duration: T.headDur, ease: 'power2.inOut' },
+    { x: 0, y: 0, scale: 1, duration: T.headDur, ease: 'power2.inOut' },
     T.reveal,
   )
 
@@ -410,6 +438,7 @@ function buildStage(root, variantKey, onStepChange) {
 
   return () => {
     root.classList.remove('how--stage', `how--${v.layout}`)
+    root.style.removeProperty('--how-rest')
     lens.classList.remove('is-flat')
     onStepChange(-1)
   }
