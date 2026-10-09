@@ -1,0 +1,409 @@
+/*
+ * How It Works — realistic CSS smartphone.
+ *
+ * Sizing contract: the parent (.how-device) defines --phone-h (and derives
+ * --phone-w / --phone-r / --phone-depth). Everything inside the frame is
+ * sized in container units (cqw/cqh of .how-phone__frame and
+ * .how-phone__screen), so the device stays proportionally identical — and
+ * pixel-crisp — at every size.
+ */
+.how-phone {
+  position: relative;
+  width: var(--phone-w);
+  height: var(--phone-h);
+  transform-style: preserve-3d;
+}
+
+/* Stacked silhouettes behind the frame give the body real thickness when
+   the phone turns in 3D (visible only at an angle; hidden head-on). */
+.how-phone__edge {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--phone-r);
+  background: linear-gradient(
+    100deg,
+    rgb(calc(70 - var(--layer) * 4) calc(76 - var(--layer) * 4) calc(74 - var(--layer) * 4)) 0%,
+    rgb(calc(34 - var(--layer) * 1.5) calc(38 - var(--layer) * 1.5) calc(37 - var(--layer) * 1.5)) 14%,
+    rgb(calc(24 - var(--layer)) calc(27 - var(--layer)) calc(26 - var(--layer))) 50%,
+    rgb(calc(40 - var(--layer) * 1.5) calc(44 - var(--layer) * 1.5) calc(43 - var(--layer) * 1.5)) 86%,
+    rgb(calc(84 - var(--layer) * 5) calc(90 - var(--layer) * 5) calc(88 - var(--layer) * 5)) 100%
+  );
+  transform: translateZ(calc(var(--layer) * var(--phone-depth) * -1));
+}
+
+/* The deepest layer carries the soft ambient shadow onto the environment. */
+.how-phone__edge:nth-child(9) {
+  box-shadow:
+    0 calc(var(--phone-h) * 0.07) calc(var(--phone-h) * 0.14) calc(var(--phone-h) * -0.04) rgba(0, 6, 5, 0.62),
+    0 calc(var(--phone-h) * 0.02) calc(var(--phone-h) * 0.05) rgba(0, 6, 5, 0.38);
+}
+
+/* ---------- Frame: brushed graphite / titanium band ---------- */
+.how-phone__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--phone-r);
+  container: how-frame / size;
+  background:
+    linear-gradient(
+      152deg,
+      #7d8482 0%,
+      #3b403e 9%,
+      #1e2221 24%,
+      #2c3130 46%,
+      #191c1b 63%,
+      #2f3433 82%,
+      #8b9290 100%
+    );
+  box-shadow:
+    inset 0 0 0 0.6px rgba(255, 255, 255, 0.34),
+    inset 0 1.2px 0.6px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0.6px rgba(0, 0, 0, 0.5),
+    0 0 0 0.6px rgba(0, 0, 0, 0.7);
+}
+
+/* Side keys (no branding): action + volume on the left, side key on the right. */
+.how-phone__key {
+  position: absolute;
+  width: 1.15cqw;
+  border-radius: 1cqw;
+  background: linear-gradient(90deg, #121514, #5a605e 45%, #2a2e2d 70%, #101312);
+  box-shadow: 0 0 0 0.4px rgba(0, 0, 0, 0.55);
+}
+
+.how-phone__key--action {
+  left: -0.95cqw;
+  top: 19.5cqh;
+  height: 4.6cqh;
+}
+
+.how-phone__key--vol-up {
+  left: -0.95cqw;
+  top: 27.5cqh;
+  height: 8.2cqh;
+}
+
+.how-phone__key--vol-down {
+  left: -0.95cqw;
+  top: 37.8cqh;
+  height: 8.2cqh;
+}
+
+.how-phone__key--power {
+  right: -0.95cqw;
+  top: 30cqh;
+  height: 12.5cqh;
+}
+
+/* Thin black bezel between the metal band and the glass. */
+.how-phone__bezel {
+  position: absolute;
+  inset: 1.3cqw;
+  border-radius: 14.7cqw;
+  background: #020303;
+  box-shadow:
+    0 0 0 0.6px rgba(255, 255, 255, 0.08),
+    inset 0 0 0 0.6px rgba(255, 255, 255, 0.05);
+}
+
+/* ---------- Screen ---------- */
+.how-phone__screen {
+  position: absolute;
+  inset: 2.2cqw;
+  overflow: hidden;
+  border-radius: 12.5cqw;
+  background: #040706;
+  container: how-screen / size;
+  color: #fff;
+  font-family: var(--font-body);
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.how-phone__wallpaper {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(95% 48% at 50% -6%, rgba(38, 112, 98, 0.5), transparent 72%),
+    radial-gradient(130% 55% at 50% 112%, rgba(8, 107, 86, 0.42), transparent 68%),
+    linear-gradient(180deg, #0b1916 0%, #060c0b 52%, #050a09 100%);
+}
+
+.how-phone__statusbar {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 15cqw;
+}
+
+.how-phone__island {
+  position: absolute;
+  top: 3.3cqw;
+  left: 50%;
+  width: 32cqw;
+  height: 9.4cqw;
+  margin-left: -16cqw;
+  border-radius: 999px;
+  background: #000;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+/* Front camera lens inside the island. */
+.how-phone__island::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 6.5cqw;
+  width: 3.4cqw;
+  height: 3.4cqw;
+  margin-top: -1.7cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1d2c3c 0%, #0a1018 55%, #030507 100%);
+  box-shadow: 0 0 0 0.4cqw rgba(255, 255, 255, 0.03);
+}
+
+.how-phone__status-icons {
+  position: absolute;
+  top: 6.1cqw;
+  right: 7.2cqw;
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+  color: #fff;
+}
+
+.how-phone__status-icons svg {
+  display: block;
+  height: 3.5cqw;
+  width: auto;
+  fill: currentColor;
+}
+
+.how-phone__battery {
+  height: 3.9cqw !important;
+}
+
+.how-phone__ui {
+  position: absolute;
+  inset: 15cqw 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 3.3cqw;
+}
+
+.how-phone__lock {
+  padding-top: 3.2cqw;
+  text-align: center;
+}
+
+.how-phone__date {
+  font-size: 4.7cqw;
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.how-phone__clock {
+  margin-top: 0.4cqw;
+  font-family: var(--font-display);
+  font-size: 24cqw;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: rgba(255, 255, 255, 0.95);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Newest first, like a real notification centre. */
+.how-phone__stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5cqw;
+  margin-top: 7cqw;
+}
+
+.how-phone__home {
+  position: absolute;
+  left: 50%;
+  bottom: 2.3cqw;
+  width: 35cqw;
+  height: 1.45cqw;
+  margin-left: -17.5cqw;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Glass: a soft static falloff plus a diagonal sheen that slides as the
+   phone turns (the timeline moves .how-phone__sheen). */
+.how-phone__glass {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.015) 30%, transparent 46%);
+}
+
+.how-phone__sheen {
+  position: absolute;
+  top: -10%;
+  left: -50%;
+  width: 200%;
+  height: 120%;
+  background: linear-gradient(
+    112deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.055) 44%,
+    rgba(255, 255, 255, 0.02) 52%,
+    transparent 58%
+  );
+}
+
+/* ---------- Notifications ---------- */
+.how-notif {
+  --tone-bg: rgba(255, 255, 255, 0.13);
+  --tone-fg: #eef4f1;
+  display: flex;
+  align-items: flex-start;
+  gap: 3.8cqw;
+  padding: 3.3cqw 3.6cqw 3.6cqw 3.2cqw;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6.6cqw;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.072));
+  transform-origin: 50% 0%;
+}
+
+.how-notif--emerald {
+  --tone-bg: rgba(52, 185, 148, 0.2);
+  --tone-fg: #86e2c8;
+}
+
+.how-notif--success {
+  --tone-bg: linear-gradient(160deg, #2bb07f, #13805a);
+  --tone-fg: #ffffff;
+}
+
+.how-notif--insight {
+  --tone-bg: linear-gradient(160deg, rgba(246, 214, 150, 0.24), rgba(214, 170, 92, 0.16));
+  --tone-fg: #f4d9a2;
+}
+
+.how-notif__media {
+  position: relative;
+  flex: none;
+  width: 11.2cqw;
+  height: 11.2cqw;
+  margin-top: 0.3cqw;
+}
+
+.how-notif__status {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 3.3cqw;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+}
+
+.how-notif__status svg {
+  width: 54%;
+  height: 54%;
+}
+
+.how-notif__badge {
+  position: absolute;
+  right: -1.1cqw;
+  bottom: -1.1cqw;
+  display: grid;
+  place-items: center;
+  width: 5.4cqw;
+  height: 5.4cqw;
+  border-radius: 1.5cqw;
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 0 0.55cqw #1a1e1d;
+}
+
+.how-notif__badge svg {
+  width: 82%;
+  height: 82%;
+}
+
+.how-notif__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.how-notif__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 2cqw;
+  font-size: max(11px, 3.7cqw);
+  font-weight: var(--fw-medium);
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.how-notif__title {
+  margin-top: 0.6cqw;
+  font-size: max(11px, 4.75cqw);
+  font-weight: var(--fw-semibold);
+  line-height: 1.25;
+  letter-spacing: -0.006em;
+  color: #fff;
+}
+
+.how-notif__body {
+  margin-top: 0.3cqw;
+  font-size: max(11px, 4.4cqw);
+  line-height: 1.32;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Compact devices: keep every notification legible (>= 11px) and make the
+   lock screen give the four-item stack the room it needs. */
+@container how-screen (max-width: 250px) {
+  .how-notif {
+    gap: 3.2cqw;
+    padding: 3cqw 3.2cqw 3.2cqw 3cqw;
+  }
+
+  .how-notif__media {
+    width: 10cqw;
+    height: 10cqw;
+  }
+
+  .how-notif__title,
+  .how-notif__body {
+    line-height: 1.24;
+  }
+
+  .how-phone__stack {
+    gap: 2.2cqw;
+    margin-top: 5cqw;
+  }
+
+  .how-phone__clock {
+    font-size: 20cqw;
+  }
+}
+
+@container how-screen (max-height: 460px) {
+  .how-phone__lock {
+    padding-top: 1cqw;
+  }
+
+  .how-phone__date {
+    font-size: max(10px, 4.4cqw);
+  }
+
+  .how-phone__clock {
+    font-size: 16cqw;
+  }
+
+  .how-phone__stack {
+    margin-top: 3.5cqw;
+  }
+}

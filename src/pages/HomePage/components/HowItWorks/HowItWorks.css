@@ -1,9 +1,385 @@
-.how-stub {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  background: var(--color-teal-deep);
+/*
+ * How It Works — deep-teal environment with one 3D phone.
+ *
+ * Base styles (no mode class) are the complete static composition used for
+ * reduced motion, no-JS and short screens. The choreography hook adds
+ * `.how--stage` plus `.how--split` (desktop) or `.how--stacked`
+ * (tablet / phone) while its pinned timeline is active.
+ */
+.how {
+  position: relative;
+  isolation: isolate;
+  background: var(--color-background);
   color: var(--color-text-on-dark);
+}
+
+/* ---------- Environment ---------- */
+.how-env {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(10, 72, 66, 0.4), transparent 70%),
+    radial-gradient(90% 70% at 50% 120%, rgba(2, 14, 14, 0.55), transparent 70%),
+    linear-gradient(180deg, var(--color-teal-deep) 0%, #05292a 48%, var(--color-teal-darker) 100%);
+  will-change: opacity;
+  pointer-events: none;
+}
+
+/* Soft off-white falloff that blends the section's top edge into the light
+   Features section while the environment darkens (motion modes only). */
+.how-feather {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 60vh;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    var(--color-background) 0%,
+    rgba(250, 251, 249, 0.94) 16%,
+    rgba(250, 251, 249, 0.58) 42%,
+    rgba(250, 251, 249, 0.2) 72%,
+    rgba(250, 251, 249, 0) 100%
+  );
+  will-change: opacity;
+  pointer-events: none;
+}
+
+.how-stage {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--section-pad);
+  /* The ambient light is wider than small screens; keep it inside the
+     section so it never widens the page (clip, not hidden: y stays visible). */
+  overflow-x: clip;
+}
+
+/* ---------- Static composition (reduced motion / no JS / short screens) ---------- */
+.how-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'head head'
+    'device steps';
+  align-items: center;
+  column-gap: clamp(40px, 6vw, 112px);
+  row-gap: clamp(56px, 6.5vw, 104px);
+}
+
+.how-head {
+  grid-area: head;
+  text-align: center;
+  /* Also the intro size probe for the timeline: children set their own sizes. */
+  font-size: var(--fs-h2);
+}
+
+.how-head__eyebrow {
+  /* Block-level (not inline-block) so the header's intro-size probe font
+     never creates a tall line box around it. */
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.how-head__title {
+  margin: 18px auto 0;
+  max-width: 9.9em; /* greedy wrap: "From lead to won —" / "in four steps" (lines measure 9.39em; +"in" = 10.49em) */
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--tracking-heading);
+  color: var(--color-text-on-dark);
+  text-wrap: wrap;
+}
+
+.how-device-area {
+  grid-area: device;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.how-device {
+  --phone-h: min(76vh, 620px);
+  --phone-w: calc(var(--phone-h) * 0.461538);
+  --phone-r: calc(var(--phone-w) * 0.16);
+  --phone-depth: calc(var(--phone-w) * 0.0058);
+  position: relative;
+  flex: none;
+  width: var(--phone-w);
+  height: var(--phone-h);
+}
+
+/* Ambient light behind the phone (environment light, never a glow ring). */
+.how-device__light {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--phone-h) * 1.7);
+  height: calc(var(--phone-h) * 1.35);
+  margin-left: calc(var(--phone-h) * -0.85);
+  margin-top: calc(var(--phone-h) * -0.675);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(46, 160, 130, 0.26) 0%,
+    rgba(18, 104, 90, 0.2) 36%,
+    rgba(11, 74, 68, 0.09) 64%,
+    rgba(11, 74, 68, 0) 100%
+  );
+  pointer-events: none;
+}
+
+/* Soft contact shadow under the device. */
+.how-device__shadow {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: calc(var(--phone-w) * 1.2);
+  height: calc(var(--phone-h) * 0.08);
+  margin-left: calc(var(--phone-w) * -0.6);
+  margin-top: calc(var(--phone-h) * 0.012);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 6, 5, 0.72), rgba(0, 6, 5, 0.3) 55%, rgba(0, 6, 5, 0) 100%);
+  pointer-events: none;
+}
+
+.how-device__lens {
+  position: absolute;
+  inset: 0;
+  perspective: 1600px;
+}
+
+/* Set by the timeline only while the phone is square to the viewer (visually
+   identical), so the browser rasterises the screen text at its true scale. */
+.how-device__lens.is-flat {
+  perspective: none;
+}
+
+.how-rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* ---------- Steps ---------- */
+.how-steps {
+  grid-area: steps;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3.2vw, 44px);
+  max-width: 34rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.how-step__title {
   font-family: var(--font-display);
   font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  line-height: 1.14;
+  letter-spacing: var(--tracking-title);
+  color: var(--color-text-on-dark);
+  text-wrap: balance;
+}
+
+.how-step__text {
+  max-width: 36ch;
+  margin-top: 10px;
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+  color: var(--color-text-on-dark-muted);
+  text-wrap: pretty;
+}
+
+@media (max-width: 859px) {
+  .how-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'device'
+      'steps';
+    row-gap: clamp(40px, 9vw, 64px);
+  }
+
+  .how-device {
+    --phone-h: min(78svh, 540px, 156vw);
+  }
+
+  .how-steps {
+    justify-self: center;
+    width: 100%;
+  }
+}
+
+/* ================================================================== */
+/* Pinned stage (added by the choreography hook)                       */
+/* ================================================================== */
+.how--stage .how-stage {
+  height: 100vh;
+  padding: var(--nav-h) 0 0;
+  overflow: clip;
+}
+
+.how--stage .how-layout {
+  height: 100%;
+}
+
+.how--stage .how-device-area {
+  /* Size container: the phone height adapts to the room actually left. */
+  container-type: size;
+  min-height: 0;
+  height: 100%;
+}
+
+.how--stage .how-steps {
+  display: grid;
+  gap: 0;
+}
+
+/* The heading is the foreground plane: the phone surfaces behind it. */
+.how--stage .how-head {
+  position: relative;
+  z-index: 2;
+}
+
+/* The heading scales about its top-left (desktop, left-aligned) or top-centre
+   (stacked, centred) when the timeline carries it to/from the intro. */
+.how--stage .how-head__eyebrow,
+.how--stage .how-head__title {
+  transform-origin: 0 0;
+}
+
+.how--stacked .how-head__eyebrow,
+.how--stacked .how-head__title {
+  transform-origin: 50% 0;
+}
+
+/* All four steps share one grid cell, so differing copy lengths never move
+   the layout. The timeline crossfades them; all stay in the DOM. */
+.how--stage .how-step {
+  grid-area: 1 / 1;
+}
+
+/* ---------- Desktop: phone centre-left, copy right ---------- */
+.how--split .how-layout {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-areas:
+    'device .'
+    'device head'
+    'device steps'
+    'device .';
+  align-items: start;
+  column-gap: clamp(24px, 3.5vw, 72px);
+  row-gap: 0;
+}
+
+.how--split .how-device-area {
+  justify-content: flex-end;
+  padding-right: clamp(16px, 5.6vw, 104px);
+}
+
+/* Final (largest) size; the timeline shows it at ~94% during the steps and
+   settles to identity at the end, so the resting phone is pixel-crisp. */
+.how--split .how-device {
+  --phone-h: min(76vh, 680px, calc(100cqh - 36px));
+}
+
+.how--split .how-head {
+  text-align: left;
+}
+
+.how--split .how-head__eyebrow {
+  margin-inline: 0;
+}
+
+.how--split .how-head__title {
+  margin: 14px 0 0;
+  font-size: clamp(1.5rem, 0.95rem + 0.95vw, 2.125rem);
+  line-height: 1.16;
+}
+
+.how--split .how-steps {
+  margin-top: clamp(36px, 7.5vh, 76px);
+  max-width: 32rem;
+}
+
+.how--split .how-step__title {
+  font-size: clamp(2.125rem, 1.2rem + 1.45vw, 2.75rem);
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.08;
+}
+
+.how--split .how-step__text {
+  max-width: 33ch;
+  margin-top: 18px;
+}
+
+/* ---------- Tablet / phone: phone centred, copy below ---------- */
+.how--stacked .how-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: clamp(8px, 1.6svh, 20px) clamp(14px, 2.6svh, 32px);
+  text-align: center;
+}
+
+/* The stage fills the large viewport (no strip when mobile browser chrome
+   collapses) while the content is laid out inside the small viewport. */
+.how--stacked .how-layout {
+  height: calc(100svh - var(--nav-h));
+}
+
+.how--stacked .how-head {
+  flex: none;
+  width: 100%;
+}
+
+.how--stacked .how-head__title {
+  margin-top: 6px;
+  font-size: clamp(1.3rem, 0.95rem + 1.6vw, 2rem);
+  line-height: 1.18;
+}
+
+.how--stacked .how-device-area {
+  flex: 1 1 0;
+  width: 100%;
+}
+
+.how--stacked .how-device {
+  --phone-h: min(58svh, 494px, 160vw, calc(100cqh - 12px));
+}
+
+.how--stacked .how-steps {
+  flex: none;
+  width: 100%;
+  max-width: 32rem;
+  margin-top: clamp(6px, 1.4svh, 16px);
+}
+
+.how--stacked .how-step__title {
+  font-size: clamp(1.5rem, 1.05rem + 1.8vw, 2.25rem);
+  letter-spacing: var(--tracking-heading);
+}
+
+.how--stacked .how-step__text {
+  max-width: 34ch;
+  margin: 8px auto 0;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .how--stacked .how-device {
+    --phone-h: min(56vh, 620px, calc(100cqh - 20px));
+  }
+
+  .how--stacked .how-step__text {
+    font-size: var(--fs-lead);
+  }
 }
