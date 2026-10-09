@@ -55,12 +55,6 @@ If the video file is missing or fails to load, the hero falls back to a still
 deep-forest cinematic background automatically. Paths can be changed without
 code via a `.env.local` file (see below).
 
---- | --- | --- |
-| Official Trionix Hospital logo (transparent PNG/SVG, white wordmark for dark backgrounds) | `public/images/trionix-hospital-logo.png` | plain "Trionix Hospital" text label (the logo is never redrawn in code) |
-| Hero background video | `public/videos/hero.mp4` (optional `hero.webm`, poster image) | a still deep-forest cinematic background |
-
-Paths can also be changed without code via a `.env.local` file (see below).
-
 ---
 
 ## 3. Configuration (`src/config/site.js`)
