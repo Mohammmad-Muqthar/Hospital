@@ -6,24 +6,30 @@ import { Avatar, Card, Meter, Tag } from './parts'
 const TYPE_ICON = { call: Phone, whatsapp: MessageCircle, visit: MapPin }
 const TYPE_LABEL = { call: 'Call', whatsapp: 'WhatsApp', visit: 'Visit' }
 
-function FollowUps({ limit, compact }) {
+/** The phone window lists the first three reminders only. */
+const COMPACT_FOLLOWUPS = 3
+
+function FollowUps() {
   const { followups } = EXECUTIVE_VIEW
-  const items = limit ? followups.items.slice(0, limit) : followups.items
-  // The compact (phone) window drops the type word — the icon carries it —
-  // so the detail fits beside the due time without truncation.
+  // The phone window drops the type word — the icon carries it — so the
+  // detail fits beside the due time without truncation.
   return (
     <Card title={followups.title} meta={`${followups.items.length} due today`} depth={1} area="follow" className="rw-follow">
       <div className="rw-follow__list">
-        {items.map((f) => {
+        {followups.items.map((f, i) => {
           const TypeIcon = TYPE_ICON[f.type]
+          const classes = ['rw-follow__item', f.overdue && 'is-overdue', i >= COMPACT_FOLLOWUPS && 'rw-x-full']
           return (
-            <div className={`rw-follow__item${f.overdue ? ' is-overdue' : ''}`} key={f.id}>
+            <div className={classes.filter(Boolean).join(' ')} key={f.id}>
               <span className={`rw-follow__icon rw-follow__icon--${f.type}`}>
                 <TypeIcon size={14} strokeWidth={1.9} />
               </span>
               <span className="rw-follow__text">
                 <span className="rw-follow__lead">{f.lead}</span>
-                <span className="rw-follow__detail">{compact ? f.detail : `${TYPE_LABEL[f.type]} · ${f.detail}`}</span>
+                <span className="rw-follow__detail">
+                  <span className="rw-x-full">{TYPE_LABEL[f.type]} · </span>
+                  {f.detail}
+                </span>
               </span>
               {f.overdue ? (
                 <Tag tone="danger">Overdue · {f.due}</Tag>
@@ -64,24 +70,19 @@ function Activity() {
   )
 }
 
-export default function ExecutiveView({ variant }) {
+/**
+ * Sales Executive daily workflow. The phone window (CSS hides .rw-x-full)
+ * keeps today's activity and the first follow-ups only.
+ */
+export default function ExecutiveView() {
   const { leads, opportunities } = EXECUTIVE_VIEW
-
-  if (variant === 'compact') {
-    return (
-      <div className="rw-grid rw-grid--exec-c">
-        <Activity />
-        <FollowUps limit={3} compact />
-      </div>
-    )
-  }
 
   return (
     <div className="rw-grid rw-grid--exec">
       <Activity />
       <FollowUps />
 
-      <Card title={leads.title} meta={leads.meta} depth={2} area="leads">
+      <Card title={leads.title} meta={leads.meta} depth={2} area="leads" className="rw-x-full">
         <div className="rw-leads">
           {leads.items.map((l) => (
             <div className="rw-lead" key={l.id}>
@@ -98,7 +99,7 @@ export default function ExecutiveView({ variant }) {
         </div>
       </Card>
 
-      <Card title={opportunities.title} depth={3} area="opps">
+      <Card title={opportunities.title} depth={3} area="opps" className="rw-x-full">
         <div className="rw-opps">
           {opportunities.items.map((o) => (
             <div className="rw-opp" key={o.id}>

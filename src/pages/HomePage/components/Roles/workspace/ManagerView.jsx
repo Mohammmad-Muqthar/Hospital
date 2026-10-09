@@ -59,12 +59,12 @@ function TrendChart({ series, labels }) {
   )
 }
 
-function Team({ reps }) {
+function Team() {
   const { team } = MANAGER_VIEW
   return (
     <Card title={team.title} meta={team.meta} depth={1} area="team">
       <div className="rw-reps">
-        {reps.map((r) => (
+        {team.reps.map((r) => (
           <div className="rw-rep" key={r.name}>
             <span className="rw-person">
               <Avatar initials={r.initials} size="sm" />
@@ -105,21 +105,16 @@ function Pipeline() {
   )
 }
 
-export default function ManagerView({ variant }) {
-  const { activity, report, board, team } = MANAGER_VIEW
-
-  if (variant === 'compact') {
-    return (
-      <div className="rw-grid rw-grid--manager-c">
-        <Team reps={team.reps} />
-        <Pipeline />
-      </div>
-    )
-  }
+/**
+ * Sales Manager overview. The phone window (CSS hides .rw-x-full) keeps the
+ * team and pipeline modules only.
+ */
+export default function ManagerView() {
+  const { activity, report, board } = MANAGER_VIEW
 
   return (
     <div className="rw-grid rw-grid--manager">
-      <div className="rw-mod rw-kpis" data-depth="1" style={{ '--a': 'kpi' }}>
+      <div className="rw-mod rw-kpis rw-x-full" data-depth="1" style={{ '--a': 'kpi' }}>
         {activity.map((k) => (
           <div className="rw-card rw-kpi" key={k.label}>
             <span className="rw-kpi__label">{k.label}</span>
@@ -131,10 +126,10 @@ export default function ManagerView({ variant }) {
         ))}
       </div>
 
-      <Team reps={team.reps} />
+      <Team />
       <Pipeline />
 
-      <Card title={board.title} depth={3} area="board" className="rw-board">
+      <Card title={board.title} depth={3} area="board" className="rw-board rw-x-full">
         <div className="rw-board__grid">
           {board.days.map((d) => (
             <div className="rw-board__day" key={d.day}>
@@ -149,7 +144,7 @@ export default function ManagerView({ variant }) {
         </div>
       </Card>
 
-      <Card title={report.title} meta={report.meta} depth={2} area="report" className="rw-report">
+      <Card title={report.title} meta={report.meta} depth={2} area="report" className="rw-report rw-x-full">
         <div className="rw-report__value">
           <span className="rw-num">{report.current}</span>
           <Tag tone="mint">{report.delta}</Tag>

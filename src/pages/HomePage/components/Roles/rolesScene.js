@@ -27,8 +27,11 @@ export const ROLE_LABELS = ['admin', 'manager', 'executive', 'receptionist']
 
 /**
  * Pinned timeline rhythm (timeline seconds; the whole timeline is mapped onto
- * PIN_VH viewport heights of scroll):
+ * pinVh viewport heights of scroll):
  *   [admin hold] [transition] [manager hold] [transition] [executive hold] [transition] [receptionist hold]
+ * Docked layouts (short frames, see Roles.css) open with the heading →
+ * workspace hand-over, then hold Admin:
+ *   [dock] [admin hold] [transition] …
  * Each label sits a little inside its hold so a click lands on a settled state.
  */
 export const SCENE = {
@@ -39,6 +42,12 @@ export const SCENE = {
   lastHold: 0.75,
   /** Total pin distance in viewport heights (desktop budget ≤ 3.2). */
   pinVh: 3,
+  /** Docked layouts: hand-over length, Admin label (after it), Admin hold end. */
+  dock: 0.5,
+  dockLabelInset: 0.06,
+  dockHold: 0.92,
+  /** Docked layouts: 0.32 more timeline at the same scroll pace (≤ 3.2). */
+  pinVhDocked: 3.15,
 }
 
 /** Window tilt used during each transition (varies direction subtly). */
