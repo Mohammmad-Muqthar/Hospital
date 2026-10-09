@@ -110,11 +110,34 @@ export function formatMoney(amount, currency = DEFAULT_CURRENCY, { fixed = false
   return currency === 'USD' ? `$${number}` : `${CURRENCIES[currency].label} ${number}`
 }
 
-/** Split a formatted price into parts for typographic layout. */
-export function getPriceParts(amount, currency = DEFAULT_CURRENCY) {
-  const formatted = formatMoney(amount, currency)
+/**
+ * Split a formatted price into parts for typographic layout.
+ * `options` is passed through to formatMoney (e.g. `{ fixed: true }`).
+ */
+export function getPriceParts(amount, currency = DEFAULT_CURRENCY, options) {
+  const formatted = formatMoney(amount, currency, options)
   if (currency === 'USD') return { symbol: '$', value: formatted.slice(1) }
   return { symbol: CURRENCIES[currency].label, value: formatted.slice(CURRENCIES[currency].label.length + 1) }
+}
+
+/** Plan by id (e.g. the insight's basis plan). */
+export function getPlan(id) {
+  return PLANS.find((plan) => plan.id === id)
+}
+
+/**
+ * Everything the cost-insight band shows, in one currency:
+ * the basis plan's per-user per-day figure (split for typography),
+ * its plain-text form, and the note built from the monthly price.
+ */
+export function getInsight(currency = DEFAULT_CURRENCY) {
+  const plan = getPlan(PRICING.insight.basisPlanId)
+  const perDay = getPerDayCost(plan, currency)
+  return {
+    figure: getPriceParts(perDay, currency, { fixed: true }),
+    figureText: formatMoney(perDay, currency, { fixed: true }),
+    note: PRICING.insight.note(formatMoney(getMonthlyPrice(plan, currency), currency)),
+  }
 }
 
 /** "$0.53 per user, per day" / "$11.63 a day for your whole team". */

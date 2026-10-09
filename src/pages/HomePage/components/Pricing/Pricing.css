@@ -1,9 +1,593 @@
-.price-stub {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  background: var(--color-background);
+/*
+ * Phase 7 — Pricing.
+ *
+ * Not pinned. Every element is fully visible in CSS; GSAP sets entrance
+ * start states only inside its motion branch. Layout:
+ *  - ≥1024px: insight band + three equal plan panels on one shared grid.
+ *    The band's two halves sit on the plan columns, and the panels share
+ *    their row tracks through CSS subgrid, so names, prices, per-day lines,
+ *    specs and buttons line up across all three whatever wraps.
+ *  - <1024px: band and panels stack in one centred column.
+ */
+
+.price {
+  --price-gap: clamp(16px, 1.7vw, 24px);
+  --price-pad: clamp(24px, 2.6vw, 40px);
+  --price-radius: 22px;
+  --price-stack: 560px;
+  --price-fig: clamp(3rem, 4.2vw, 4rem);
+  --price-surface-tint: #eef5f1;
+
+  position: relative;
+  /* Off-white, settling into a barely deeper tone behind the plans so the
+     white panels read as surfaces. */
+  background: linear-gradient(180deg, var(--color-background) 0%, var(--color-background) 34%, #f3f6f4 100%);
   color: var(--color-text);
+  padding-block: var(--section-pad) var(--section-pad-sm);
+}
+
+/* ---------------------------------------------------------------- */
+/* Header                                                             */
+/* ---------------------------------------------------------------- */
+.price-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.price-title {
+  margin-top: clamp(16px, 1.6vw, 22px);
   font-family: var(--font-display);
-  font-size: var(--fs-h3);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+  color: var(--color-text);
+}
+
+/* Each line rises from its own mask; padding keeps descenders unclipped. */
+.price-title__mask {
+  display: block;
+  overflow: clip;
+  padding-block: 0.04em 0.12em;
+  margin-block: -0.04em -0.12em;
+}
+
+.price-title__line {
+  display: block;
+  text-wrap: balance;
+}
+
+.price-title__line--accent {
+  color: var(--color-primary);
+}
+
+.price-lead {
+  max-width: 35rem;
+  margin-top: clamp(20px, 2vw, 28px);
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body);
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.price-currency {
+  margin-top: clamp(28px, 2.8vw, 40px);
+}
+
+/* ---------------------------------------------------------------- */
+/* Currency segmented control                                         */
+/* ---------------------------------------------------------------- */
+.price-switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 4px;
+  border-radius: 14px;
+  background: #edf2ee;
+  box-shadow: inset 0 0 0 1px rgba(16, 60, 52, 0.06), inset 0 1px 2px rgba(16, 60, 52, 0.05);
+}
+
+.price-switch__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+  transition: color var(--dur-base) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.price-switch__option[aria-checked='true'] {
+  color: var(--color-text);
+}
+
+.price-switch__option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.price-switch__indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow:
+    0 1px 2px rgba(16, 60, 52, 0.1),
+    0 3px 8px -3px rgba(16, 60, 52, 0.14),
+    inset 0 0 0 1px rgba(16, 60, 52, 0.04);
+}
+
+.price-switch__label {
+  position: relative;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .price-switch__option[aria-checked='false']:hover {
+    color: var(--color-text);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Currency crossfade stack (see CurrencySwap.jsx)                    */
+/* ---------------------------------------------------------------- */
+.price-swap {
+  display: inline-grid;
+  justify-items: start;
+}
+
+.price-swap--block {
+  display: grid;
+}
+
+.price-swap__layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+  visibility: visible;
+  transition: visibility 0s linear 0s;
+}
+
+/* Hidden only after its fade-out (see CurrencySwap EXIT timing). */
+.price-swap__layer[aria-hidden='true'] {
+  visibility: hidden;
+  transition-delay: 0.32s;
+}
+
+/* Prices of different sizes (USD / QAR) share one baseline. */
+.price-plan__swap {
+  align-items: last baseline;
+}
+
+/* ---------------------------------------------------------------- */
+/* Pricing table: insight band + plans                                */
+/* ---------------------------------------------------------------- */
+.price-table {
+  margin-top: clamp(52px, 5.6vw, 88px);
+}
+
+.price-insight {
+  margin-bottom: var(--price-gap);
+}
+
+.price-insight__panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--price-gap);
+  align-items: center;
+  padding-block: clamp(28px, 2.6vw, 40px);
+  border: 1px solid rgba(8, 107, 86, 0.09);
+  border-radius: var(--price-radius);
+  background: var(--price-surface-tint);
+}
+
+.price-insight__cost {
+  grid-column: 1;
+  min-width: 0;
+  padding-inline: var(--price-pad);
+}
+
+.price-insight__eyebrow {
+  display: block;
+}
+
+.price-insight__figure {
+  margin-top: 14px;
+}
+
+.price-insight__lockup {
+  display: flex;
+  align-items: last baseline;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.price-insight__amount {
+  display: inline-flex;
+  align-items: flex-start;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 3.4vw, 3.25rem);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: var(--color-primary);
+}
+
+.price-insight__sym {
+  margin-top: 0.13em;
+  margin-right: 0.08em;
+  font-size: 0.46em;
+  letter-spacing: 0;
+}
+
+.price-insight__suffix {
+  max-width: 5.6em;
+  font-size: 0.9375rem;
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  color: var(--color-text-muted);
+  white-space: normal;
+}
+
+.price-insight__story {
+  grid-column: 2 / span 2;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: start;
+  padding-inline: var(--price-pad);
+}
+
+.price-insight__cup {
+  width: 48px;
+  height: 48px;
+  margin-top: -6px;
+  color: var(--color-primary-dark);
+}
+
+.price-insight__analogy {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 1.9vw, 1.75rem);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+
+.price-insight__note {
+  max-width: 34rem;
+  margin-top: 8px;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------- */
+/* Plan panels                                                        */
+/* ---------------------------------------------------------------- */
+.price-plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--price-gap);
+  row-gap: 0;
+}
+
+/* GSAP entrance target. */
+.price-plan-wrap {
+  display: grid;
+  grid-row: span 5;
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
+/* Motion hover target (2D lift only). */
+.price-plan {
+  position: relative;
+  isolation: isolate;
+  grid-row: 1 / -1;
+  display: grid;
+  grid-template-rows: subgrid;
+  row-gap: 0;
+  min-width: 0;
+  padding: var(--price-pad);
+  border: 1px solid transparent;
+  border-radius: var(--price-radius);
+  perspective: 1400px;
+}
+
+/* The visible panel body: fill, border, resting shadow. Motion tilts this
+   layer only (see PricingPlan.jsx). It sits behind the content. */
+.price-plan__surface {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border: 1px solid var(--color-border);
+  border-radius: inherit;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfefd 100%);
+  box-shadow: inset 0 1px 0 #ffffff, var(--shadow-sm);
+  backface-visibility: hidden;
+  transition: border-color var(--dur-slow) var(--ease-out);
+}
+
+/* Deeper shadow is pre-rendered and faded in: no box-shadow repaints. */
+.price-plan__surface::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow:
+    0 2px 4px rgba(16, 60, 52, 0.04),
+    0 26px 52px -24px rgba(16, 60, 52, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.price-plan__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.price-plan__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.price-plan__name {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.price-plan__price {
+  margin-top: clamp(26px, 2.4vw, 36px);
+  min-width: 0;
+  /* The QAR figure is sized from this width (cqi) so the longest value
+     always fits; every panel has the same width, so all three match. */
+  container-type: inline-size;
+}
+
+.price-plan__price-visual {
+  display: block;
+}
+
+.price-amount {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--price-fig);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.price-amount__sym {
+  align-self: flex-start;
+  margin-top: 0.13em;
+  margin-right: 0.07em;
+  font-size: 0.44em;
+  letter-spacing: 0;
+}
+
+/* Longest QAR value ("1,270.36") ≈ 4.75em + 67px of fixed parts. */
+.price-amount[data-currency='QAR'] {
+  font-size: min(var(--price-fig), calc((100cqi - 72px) / 4.85));
+}
+
+.price-amount[data-currency='QAR'] .price-amount__sym {
+  margin-top: 0.3em;
+  margin-right: 0.3em;
+  font-family: var(--font-body);
+  font-size: 0.26em;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.price-amount__per {
+  margin-left: 0.6rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  color: var(--color-text-subtle);
+}
+
+.price-plan__perday {
+  margin-top: 14px;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* Structural divider between the price block and what the plan includes.
+   (Element-qualified to outrank the global `ul[role='list']` reset.) */
+ul.price-plan__specs {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  margin-top: clamp(24px, 2.2vw, 30px);
+  padding-top: clamp(22px, 2vw, 26px);
+  border-top: 1px solid #e9efeb;
+}
+
+.price-plan__spec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.price-plan__spec svg {
+  flex: none;
+  color: var(--color-primary);
+}
+
+.price-plan__cta {
+  align-self: end;
+  margin-top: clamp(28px, 2.6vw, 36px);
+}
+
+.price-plan:focus-within .price-plan__surface {
+  border-color: var(--color-border-strong);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .price-plan:hover .price-plan__surface {
+    border-color: var(--color-border-strong);
+  }
+
+  .price-plan:hover .price-plan__surface::after {
+    opacity: 1;
+  }
+
+  .price-plan:hover .btn--dark {
+    background-color: #0d332c;
+    box-shadow: var(--inset-highlight), 0 2px 2px rgba(6, 30, 25, 0.22), 0 12px 24px -10px rgba(16, 60, 52, 0.6);
+  }
+
+  .price-plan:hover .btn__icon {
+    transform: translateX(3px);
+  }
+}
+
+/* Without subgrid, fall back to equal-height flex columns. */
+@supports not (grid-template-rows: subgrid) {
+  .price-plan-wrap {
+    display: block;
+  }
+
+  .price-plan {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .price-plan__cta {
+    align-self: stretch;
+    margin-top: auto;
+    padding-top: clamp(28px, 2.6vw, 36px);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Footnote + full pricing                                            */
+/* ---------------------------------------------------------------- */
+.price-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-top: clamp(40px, 4vw, 56px);
+  text-align: center;
+}
+
+.price-footnote {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- */
+/* Stacked: tablet portrait and mobile                                */
+/* ---------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .price {
+    --price-fig: 3.5rem;
+  }
+
+  .price-switch__option {
+    min-height: 44px;
+  }
+
+  .price-insight,
+  .price-plans {
+    max-width: var(--price-stack);
+    margin-inline: auto;
+  }
+
+  .price-insight__panel {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 24px;
+    padding-block: var(--price-pad);
+  }
+
+  .price-insight__cost,
+  .price-insight__story {
+    grid-column: 1;
+  }
+
+  .price-plans {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 16px;
+  }
+
+  .price-plan-wrap {
+    display: block;
+  }
+
+  .price-plan {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* In a flex column align-self is horizontal: keep the CTA full width. */
+  .price-plan__cta {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 599px) {
+  .price {
+    --price-fig: clamp(2.75rem, 12.5vw, 3.25rem);
+    --price-pad: 24px;
+  }
+
+  /* Cup + analogy share a row; the note takes the band's full width. */
+  .price-insight__story {
+    column-gap: 14px;
+    align-items: center;
+  }
+
+  .price-insight__copy {
+    display: contents;
+  }
+
+  .price-insight__note {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  .price-insight__cup {
+    width: 40px;
+    height: 40px;
+    margin-top: -6px;
+  }
 }
