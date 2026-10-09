@@ -6,7 +6,7 @@
  */
 .roles {
   /* Colour of the environment we arrive from (How It Works). */
-  --roles-veil: var(--color-teal-deep);
+  --roles-veil: var(--color-teal-darker);
   /* Height of the static teal → off-white fade used by every non-pinned
      layout (mobile, tablet, short screens, reduced motion). */
   --roles-fade: clamp(150px, 26vw, 300px);

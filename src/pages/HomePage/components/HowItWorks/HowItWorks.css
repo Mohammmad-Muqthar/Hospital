@@ -19,6 +19,9 @@
   inset: 0;
   z-index: 0;
   background:
+    /* Settle the bottom edge on exactly --color-teal-darker so the Roles
+       section's incoming veil (same colour) continues it without a seam. */
+    linear-gradient(180deg, transparent 82%, var(--color-teal-darker) 100%),
     radial-gradient(60% 55% at 50% 0%, rgba(10, 72, 66, 0.4), transparent 70%),
     radial-gradient(90% 70% at 50% 120%, rgba(2, 14, 14, 0.55), transparent 70%),
     linear-gradient(180deg, var(--color-teal-deep) 0%, #05292a 48%, var(--color-teal-darker) 100%);
