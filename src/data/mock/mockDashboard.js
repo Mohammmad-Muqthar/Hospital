@@ -72,11 +72,18 @@ export const mockDashboard = {
     { id: 'd', initials: 'RD', name: 'Rep D', unit: 'Pediatrics', progress: 0.63, status: 'On track' },
   ],
 
-  /** Upcoming follow-ups (business leads only). */
+  /**
+   * Upcoming follow-ups (business leads only). The panel shows as many
+   * complete rows as its height allows, so the list is long enough to fill
+   * the tallest preview.
+   */
   followUps: [
     { id: 'f1', time: '09:30', title: 'Corporate wellness lead', type: 'Call back', owner: 'RA' },
     { id: 'f2', time: '11:00', title: 'Branch partnership proposal', type: 'Review', owner: 'RC' },
-    { id: 'f3', time: '14:15', title: 'Clinic network demo', type: 'Follow-up', owner: 'RB' },
-    { id: 'f4', time: '16:40', title: 'Diagnostics package quote', type: 'Send quote', owner: 'RD' },
+    { id: 'f3', time: '12:30', title: 'Clinic network demo', type: 'Follow-up', owner: 'RB' },
+    { id: 'f4', time: '14:15', title: 'Diagnostics package quote', type: 'Send quote', owner: 'RD' },
+    { id: 'f5', time: '15:30', title: 'Employer health plan renewal', type: 'Renewal', owner: 'RA' },
+    { id: 'f6', time: '16:40', title: 'Referral partner check-in', type: 'Meeting', owner: 'RB' },
+    { id: 'f7', time: '17:30', title: 'Wellness camp enquiry', type: 'Call back', owner: 'RC' },
   ],
 }

@@ -19,8 +19,9 @@ const SLICE_INDEXES = [0, 1, 2, 3]
  *
  * One pinned stage driven by one scrubbed master timeline (see heroTimeline.js):
  * full-bleed video → camera pull-back through the headline → copy + CTAs →
- * 3D dashboard rise onto the light page surface → four-slice split that flips
- * into the stat cards. With reduced motion (or very short screens) the same
+ * 3D dashboard rise onto the light page surface → the dashboard splits into
+ * four pieces (strips on desktop, quadrants for the 2×2 layouts) that turn
+ * over into the stat cards. With reduced motion (or very short screens) the same
  * markup renders as a calm static layout with no pinning.
  */
 export default function Hero({
@@ -185,7 +186,11 @@ export default function Hero({
             <HeroDashboard className="hero__dash-whole" />
             <div className="hero__slices" aria-hidden="true">
               {SLICE_INDEXES.map((i) => (
-                <div key={i} className="hero__slice" style={{ '--i': i }}>
+                <div
+                  key={i}
+                  className="hero__slice"
+                  style={{ '--i': i, '--col': i % 2, '--row': Math.floor(i / 2) }}
+                >
                   <div className="hero__slice-front">
                     <HeroDashboard className="hero__slice-dash" />
                   </div>
