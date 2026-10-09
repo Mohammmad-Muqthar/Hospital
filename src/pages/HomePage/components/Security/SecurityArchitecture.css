@@ -1,0 +1,677 @@
+/*
+ * Security architecture — CSS 3D product visualization.
+ *
+ * Rest values here are the composed FINAL state of the story (also used for
+ * reduced motion / no JS). The master timeline sets other start states in
+ * JS and travels back to these. GSAP never touches the `transform` of a
+ * face or billboard (their orientation is static CSS); it moves the
+ * preserve-3d containers and fades leaf faces. Opacity is never animated on
+ * a preserve-3d container (that would flatten the 3D context).
+ */
+
+.sx {
+  /* Section-scoped material palette. */
+  --sx-plinth-top: #24564b;
+  --sx-plinth-left: linear-gradient(to left, #1d4a41 0%, #143b33 100%);
+  --sx-plinth-front: linear-gradient(to bottom, #133a33 0%, #0c2a24 100%);
+  --sx-plate-top: linear-gradient(135deg, #f7faf8 0%, #eef3f0 100%);
+  --sx-plate-left: linear-gradient(to left, #e6eee9 0%, #d9e4de 100%);
+  --sx-plate-front: linear-gradient(to bottom, #d3dfd8 0%, #c5d4cb 100%);
+  --sx-body-top: linear-gradient(135deg, #ffffff 0%, #f6f9f7 100%);
+  --sx-body-left: linear-gradient(to left, #f1f5f2 0%, #e5ece8 100%);
+  --sx-body-front: linear-gradient(to bottom, #dfe8e3 0%, #d2ddd7 100%);
+  --sx-wall: rgba(225, 240, 233, 0.34);
+  --sx-wall-edge: rgba(8, 107, 86, 0.2);
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: clip;
+  pointer-events: none;
+  user-select: none;
+  container-type: size;
+}
+
+.sx-viewport {
+  --fit: 1;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  transform: scale(var(--fit));
+  perspective: 2100px;
+  perspective-origin: 50% 42%;
+}
+
+.sx-emerge,
+.sx-rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.sx-scene {
+  --cam-rx: 57deg;
+  --cam-rz: -38deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -49%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--cam-rx)) rotateZ(var(--cam-rz));
+}
+
+/* ---------------------------------------------------------------- */
+/* Box primitive                                                     */
+/* ---------------------------------------------------------------- */
+.sx-box {
+  position: absolute;
+  width: var(--w);
+  height: var(--d);
+  transform-style: preserve-3d;
+  transform: translateZ(var(--z, 0px));
+}
+
+.sx-face {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+.sx-face--top {
+  inset: 0;
+  transform: translateZ(var(--h));
+}
+
+/* +y edge, standing up from z = 0 to z = h. */
+.sx-face--front {
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: var(--h);
+  transform-origin: 0 0;
+  transform: translateZ(var(--h)) rotateX(-90deg);
+}
+
+/* −x edge, standing up from z = 0 to z = h (local +x maps to up). */
+.sx-face--left {
+  left: 0;
+  top: 0;
+  width: var(--h);
+  height: 100%;
+  transform-origin: 0 0;
+  transform: rotateY(-90deg);
+}
+
+/* ---------------------------------------------------------------- */
+/* Platform                                                          */
+/* ---------------------------------------------------------------- */
+.sx-ground {
+  position: absolute;
+  inset: 26px 18px 10px 30px;
+  border-radius: 40px;
+  transform: translateZ(-2px);
+  background: rgba(16, 60, 52, 0.16);
+  box-shadow:
+    0 0 26px 10px rgba(16, 60, 52, 0.14),
+    18px 26px 90px 40px rgba(16, 60, 52, 0.1);
+}
+
+.sx-plinth > .sx-face--top {
+  background: var(--sx-plinth-top);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.sx-plinth > .sx-face--left {
+  background: var(--sx-plinth-left);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.12);
+}
+.sx-plinth > .sx-face--front {
+  background: var(--sx-plinth-front);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sx-plate > .sx-face--top {
+  background: var(--sx-plate-top);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 2px rgba(16, 60, 52, 0.035);
+}
+.sx-plate > .sx-face--left {
+  background: var(--sx-plate-left);
+}
+.sx-plate > .sx-face--front {
+  background: var(--sx-plate-front);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Recessed zones on the plate (painted into its top face). */
+.sx-tray {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(16, 60, 52, 0.035), rgba(16, 60, 52, 0.015));
+  box-shadow:
+    inset 0 1px 2px rgba(16, 60, 52, 0.07),
+    inset 0 0 0 1px rgba(16, 60, 52, 0.035),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.sx-deck {
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: translateZ(var(--deck-z));
+}
+
+/* ---------------------------------------------------------------- */
+/* Clinic chambers                                                   */
+/* ---------------------------------------------------------------- */
+.sx-slot {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+/* Contact shadow on the plate (lies 1px above it to avoid z-fighting). */
+.sx-ao {
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  transform: translateZ(1px);
+  background: rgba(16, 60, 52, 0.07);
+  box-shadow:
+    0 0 6px 2px rgba(16, 60, 52, 0.07),
+    10px 14px 30px 6px rgba(16, 60, 52, 0.09);
+}
+
+.sx-chamber,
+.sx-slabs,
+.sx-layer-labels,
+.sx-walls,
+.sx-gate {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.sx-chamber,
+.sx-slabs,
+.sx-layer-labels {
+  inset: 0;
+}
+
+.sx-chamber__body > .sx-face--top {
+  background: var(--sx-body-top);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 1),
+    inset 0 0 0 1.5px rgba(16, 60, 52, 0.05);
+}
+.sx-chamber__body > .sx-face--left {
+  background: var(--sx-body-left);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.9);
+}
+.sx-chamber__body > .sx-face--front {
+  background:
+    linear-gradient(to bottom, transparent 34%, rgba(16, 60, 52, 0.06) 34%, rgba(16, 60, 52, 0.06) 70%, transparent 70%),
+    var(--sx-body-front);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+/* Roof detail: a recessed inner panel gives the chamber a crafted top. */
+.sx-roof {
+  position: absolute;
+  inset: 12px 14px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f2f6f4, #e9f0ec);
+  box-shadow:
+    inset 0 1px 2px rgba(16, 60, 52, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Per-tenant branding slot (logo mark) on each roof. */
+.sx-roof__mark {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #d5ebe1, #bfe0d2);
+  box-shadow: inset 0 0 0 1px rgba(8, 107, 86, 0.14);
+}
+.sx-slot--b .sx-roof__mark {
+  background: linear-gradient(135deg, #dfe9e4, #c9d9d1);
+}
+.sx-slot--c .sx-roof__mark {
+  background: linear-gradient(135deg, #2f9e7d, #0b7a62);
+  box-shadow: none;
+}
+.sx-slot--d .sx-roof__mark {
+  background: linear-gradient(135deg, #e3efe9, #cfe3d9);
+}
+
+
+/* Data layers */
+.sx-slab > .sx-face--top {
+  background: linear-gradient(135deg, #f3faf6 0%, #e3f2eb 100%);
+  border-radius: 1px;
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 107, 86, 0.16),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+.sx-slab > .sx-face--left {
+  background: #cfe6db;
+}
+.sx-slab > .sx-face--front {
+  background: #bcdccd;
+}
+.sx-slab--2 > .sx-face--top {
+  background: linear-gradient(135deg, #ffffff 0%, #eef8f3 100%);
+}
+
+.sx-slot.is-active .sx-slab > .sx-face--top {
+  background: linear-gradient(135deg, #f0faf5 0%, #d9efe5 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 107, 86, 0.32),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+.sx-slot.is-active .sx-slab > .sx-face--left {
+  background: #9fd2bd;
+}
+.sx-slot.is-active .sx-slab > .sx-face--front {
+  background: #7fc3a8;
+}
+
+/* Containment walls (translucent, visible from both sides). */
+.sx-walls {
+  left: calc(var(--sx-wall-inset, 10px) * -1);
+  top: calc(var(--sx-wall-inset, 10px) * -1);
+  width: calc(100% + var(--sx-wall-inset, 10px) * 2);
+  height: calc(100% + var(--sx-wall-inset, 10px) * 2);
+}
+
+.sx-wall {
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), var(--sx-wall) 30%, rgba(214, 234, 225, 0.42));
+  box-shadow:
+    inset 0 0 0 1px var(--sx-wall-edge),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+}
+
+.sx-wall--back,
+.sx-wall--front {
+  left: 0;
+  width: 100%;
+  height: var(--wh);
+  transform-origin: 0 0;
+  transform: translateZ(var(--wh)) rotateX(-90deg);
+}
+.sx-wall--back {
+  top: 0;
+}
+.sx-wall--front {
+  top: 100%;
+}
+.sx-wall--front-a {
+  width: 34%;
+}
+.sx-wall--front-c {
+  left: 66%;
+  width: 34%;
+}
+
+.sx-wall--left,
+.sx-wall--right {
+  top: 0;
+  width: var(--wh);
+  height: 100%;
+  transform-origin: 0 0;
+  transform: rotateY(-90deg);
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.5), var(--sx-wall) 30%, rgba(214, 234, 225, 0.42));
+  box-shadow:
+    inset 0 0 0 1px var(--sx-wall-edge),
+    inset -2px 0 0 rgba(255, 255, 255, 0.7);
+}
+.sx-wall--left {
+  left: 0;
+}
+.sx-wall--right {
+  left: 100%;
+}
+
+/* The gate: one front wall segment that slides open after approval. */
+.sx-gate {
+  left: 34%;
+  top: 100%;
+  width: 32%;
+  height: 0;
+  /* hinged on its left edge; the timeline swings it open (rotationZ) */
+  transform-origin: 0 0;
+}
+.sx-wall--gate {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--wh);
+  transform-origin: 0 0;
+  transform: translateZ(var(--wh)) rotateX(-90deg);
+  background: linear-gradient(to bottom, rgba(232, 246, 239, 0.75), rgba(193, 228, 212, 0.6));
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 107, 86, 0.38),
+    inset 0 3px 0 rgba(8, 107, 86, 0.55);
+}
+
+/* ---------------------------------------------------------------- */
+/* Billboards (labels that always face the viewer)                   */
+/* ---------------------------------------------------------------- */
+.sx-bb {
+  position: absolute;
+  width: 0;
+  height: 0;
+  /* A flat 0×0 3D layer would clip its overflowing content in Chromium:
+     keep the anchor in the 3D context so its children are real planes. */
+  transform-style: preserve-3d;
+  transform-origin: 0 0;
+  /* After facing the camera, labels are biased toward it so nearby glass
+     and slabs never cut through them. */
+  transform: translateZ(var(--bz, 0px)) rotateZ(calc(var(--cam-rz) * -1)) rotateX(calc(var(--cam-rx) * -1))
+    translateZ(var(--bb-bias, 150px)) scale(var(--label-scale, 1));
+}
+
+.sx-bb > * {
+  position: absolute;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Zero-width flex anchor: centres its child over the anchor point without
+   using CSS translate (the child stays free for GSAP transforms). */
+.sx-bb > .sx-bb__center {
+  left: 0;
+  bottom: 0;
+  transform-style: preserve-3d;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 0;
+  height: 0;
+}
+.sx-bb__center > * {
+  flex: none;
+}
+
+/* Clinic name labels: float over each chamber during the branch state
+   (hidden in the composed final state). */
+.sx-name {
+  display: grid;
+  gap: 1px;
+  margin-bottom: 2px;
+  text-align: center;
+  line-height: 1.25;
+  opacity: 0;
+}
+.sx-name__title {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.sx-name__sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-subtle);
+}
+
+/* Data layer tags (active chamber only) */
+.sx-tag {
+  right: 0;
+  bottom: -9px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.005em;
+  color: var(--color-primary-dark);
+  box-shadow:
+    0 0 0 1px rgba(16, 60, 52, 0.08),
+    0 4px 10px -4px rgba(16, 60, 52, 0.25);
+}
+
+/* Access request panel (compact product-UI chip) */
+.sx-panel {
+  left: var(--sx-panel-x, -56px);
+  bottom: 0;
+  display: grid;
+  gap: 10px;
+  width: 244px;
+  padding: 12px 14px 13px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--color-text);
+  box-shadow:
+    0 0 0 1px rgba(16, 60, 52, 0.08),
+    0 2px 4px rgba(16, 60, 52, 0.05),
+    0 18px 36px -16px rgba(12, 44, 38, 0.38);
+}
+
+.sx-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sx-panel__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.sx-panel__titles {
+  display: grid;
+  line-height: 1.25;
+}
+.sx-panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.sx-panel__sub {
+  font-size: 12px;
+  color: var(--color-text-subtle);
+}
+
+.sx-panel__status {
+  display: grid;
+}
+.sx-status {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sx-status--pending {
+  background: #fbf4e6;
+  color: #8a5a0c;
+}
+.sx-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-warning);
+}
+.sx-status--approved {
+  background: var(--color-mint);
+  color: var(--color-primary-dark);
+}
+.sx-status__check {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.sx-panel__time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- */
+/* Regional support desks                                            */
+/* ---------------------------------------------------------------- */
+.sx-region {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.sx-region__lift {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.sx-region__ao {
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  transform: translateZ(1px);
+  background: rgba(16, 60, 52, 0.06);
+  box-shadow: 6px 10px 20px 2px rgba(16, 60, 52, 0.08);
+}
+.sx-region__body > .sx-face--top {
+  background: var(--sx-body-top);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 1),
+    inset 0 0 0 1.5px rgba(16, 60, 52, 0.06);
+}
+.sx-region__body > .sx-face--left {
+  background: var(--sx-body-left);
+}
+.sx-region__body > .sx-face--front {
+  background: var(--sx-body-front);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+/* Highlight layer on the routed desk's top (faded by the timeline). */
+.sx-region__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, #e3f4ec 0%, #cfeadf 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(8, 107, 86, 0.45);
+}
+.sx-region.is-routed .sx-region__glow {
+  opacity: 1;
+}
+
+.sx-region__label {
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--color-text-muted);
+}
+/* The routed desk is named by the docked request chip instead. */
+.sx-region.is-routed .sx-region__label {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Support request token                                             */
+/* ---------------------------------------------------------------- */
+.sx-token {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.sx-token__ao {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  transform: translateZ(19.5px);
+  background: rgba(8, 60, 48, 0.22);
+  box-shadow: 0 0 8px 3px rgba(8, 60, 48, 0.14);
+}
+.sx-token__body {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(18px);
+}
+.sx-puck > .sx-face {
+  border-radius: 0;
+}
+.sx-puck > .sx-face--top {
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2aa982 0%, #0b7a62 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.sx-puck > .sx-face--left {
+  background: #0a6b55;
+}
+.sx-puck > .sx-face--front {
+  background: #075543;
+}
+
+.sx-chip {
+  /* nudged left of the token so it clears the neighbouring desk label */
+  margin-right: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px 6px 9px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(16, 60, 52, 0.08),
+    0 10px 22px -10px rgba(12, 44, 38, 0.4);
+}
+.sx-chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-mint);
+}
+.sx-chip__text {
+  display: grid;
+  line-height: 1.2;
+}
+.sx-chip__title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.sx-chip__sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* Narrow (phone) stages: pull the access panel back over its chamber so it
+   stays inside the clipped visual. */
+@container (max-width: 640px) {
+  .sx-panel {
+    --sx-panel-x: -112px;
+  }
+
+  .sx-chip {
+    margin-right: 96px;
+  }
+
+  /* labels are counter-scaled here, so give the raised parts more headroom */
+  .sx-scene {
+    translate: -50% -43%;
+  }
+}

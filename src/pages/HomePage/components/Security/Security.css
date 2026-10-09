@@ -1,9 +1,427 @@
-.sec-stub {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  background: #f2f7f4;
+/*
+ * Phase 6 — Secure by design.
+ *
+ * Three layouts share one DOM:
+ *  - default (no JS / reduced motion): normal section, architecture in its
+ *    composed final state, all four features listed;
+ *  - .is-pinned (desktop ≥1024 × ≥600, motion OK): 100vh stage pinned by
+ *    ScrollTrigger, features grid-stacked in a stable reading area;
+ *  - .is-scrolly (smaller / shorter screens, motion OK): no pin; the compact
+ *    architecture sticks under the navbar while feature blocks scroll by.
+ * The classes are added by gsap.matchMedia() and removed on revert.
+ */
+
+.sec {
+  position: relative;
+  background: var(--color-background);
   color: var(--color-text);
+  padding-block: var(--section-pad);
+}
+
+.sec-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  grid-template-areas:
+    'intro stage'
+    'features features';
+  column-gap: clamp(32px, 4.4vw, 80px);
+  row-gap: clamp(56px, 6vw, 104px);
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------- */
+/* Intro: eyebrow, heading, paragraph, checklist                      */
+/* ---------------------------------------------------------------- */
+.sec-intro {
+  grid-area: intro;
+  min-width: 0;
+}
+
+.sec-eyebrow {
+  margin-bottom: clamp(16px, 2.2vh, 24px);
+}
+
+.sec-title {
+  /* capped by column width so the three designed lines never re-wrap */
+  font-size: min(var(--fs-h2), 4.3vw, 4.2rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  color: var(--color-text);
+}
+
+.sec-title__line {
+  display: block;
+}
+
+.sec-lead {
+  max-width: 31em;
+  margin-top: clamp(18px, 2.8vh, 28px);
+  color: var(--color-text-muted);
+}
+
+.sec-points {
+  display: grid;
+  gap: 12px;
+  margin-top: clamp(22px, 3.4vh, 36px);
+}
+
+.sec-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.sec-point__icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-primary);
+}
+
+/* ---------------------------------------------------------------- */
+/* Stage: architecture + quick feature navigation                     */
+/* ---------------------------------------------------------------- */
+.sec-stage {
+  grid-area: stage;
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sec-visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 860 / 690;
+}
+
+/* The quick navigation only exists alongside the pinned timeline. */
+.sec-nav {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- */
+/* Features                                                          */
+/* ---------------------------------------------------------------- */
+.sec-features {
+  grid-area: features;
+  min-width: 0;
+}
+
+.sec-features__list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 40px clamp(28px, 3vw, 56px);
+}
+
+.sec-feature__title {
   font-family: var(--font-display);
-  font-size: var(--fs-h3);
+  font-size: clamp(1.25rem, 1.05rem + 0.5vw, 1.5rem);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+  color: var(--color-text);
+}
+
+.sec-feature__text {
+  margin-top: 10px;
+  max-width: 30em;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+.sec-code {
+  display: inline-block;
+  padding: 0.05em 0.45em 0.1em;
+  border-radius: 6px;
+  background: var(--color-mint);
+  color: var(--color-primary-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* ================================================================ */
+/* Pinned desktop scene                                              */
+/* ================================================================ */
+.sec.is-pinned {
+  padding-block: 0;
+}
+
+.sec.is-pinned .sec-frame {
+  height: 100vh;
+  padding-top: var(--nav-h);
+  padding-bottom: clamp(12px, 2.2vh, 32px);
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-areas:
+    '. stage'
+    'intro stage'
+    'features stage'
+    '. stage';
+  row-gap: 0;
+  align-items: stretch;
+}
+
+.sec.is-pinned .sec-title {
+  /* three balanced lines that fit the column and short laptop viewports */
+  font-size: min(var(--fs-h2), 4.3vw, 7.2vh, 4.2rem);
+}
+
+.sec.is-pinned .sec-lead {
+  font-size: min(var(--fs-lead), 2.45vh);
+  margin-top: clamp(14px, 2.6vh, 28px);
+}
+
+.sec.is-pinned .sec-points {
+  gap: clamp(6px, 1.2vh, 12px);
+  margin-top: clamp(16px, 3vh, 34px);
+}
+
+.sec.is-pinned .sec-features {
+  margin-top: clamp(22px, 4.4vh, 52px);
+}
+
+/* Stable reading area: all four items share one grid cell (no height jumps). */
+.sec.is-pinned .sec-features__list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.sec.is-pinned .sec-feature {
+  grid-area: 1 / 1;
+}
+
+.sec.is-pinned .sec-feature__title {
+  font-size: clamp(1.5rem, 0.9rem + 1.05vw, 2rem);
+  letter-spacing: -0.022em;
+}
+
+.sec.is-pinned .sec-feature__text {
+  max-width: 27em;
+}
+
+.sec.is-pinned .sec-stage {
+  min-height: 0;
+  height: 100%;
+  /* let the architecture breathe into the page gutter */
+  margin-right: calc(var(--gutter) * -0.6);
+}
+
+.sec.is-pinned .sec-visual {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.sec.is-pinned .sec-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 clamp(10px, 1.2vw, 24px);
+  padding-top: 4px;
+  margin-right: calc(var(--gutter) * 0.6);
+}
+
+.sec-nav__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px 0 14px;
+  border-radius: 8px;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  letter-spacing: -0.003em;
+  color: var(--color-text-subtle);
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.sec-nav__btn::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.sec-nav__btn:hover {
+  color: var(--color-text);
+}
+
+.sec-nav__btn[aria-current] {
+  color: var(--color-text);
+}
+
+.sec-nav__btn[aria-current]::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 1399px) {
+  /* two tidy rows rather than one orphaned title */
+  .sec.is-pinned .sec-nav {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    justify-content: center;
+    column-gap: 28px;
+  }
+}
+
+/* ================================================================ */
+/* Scroll-by sequence (no pin)                                       */
+/* ================================================================ */
+.sec.is-scrolly .sec-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.sec.is-scrolly .sec-stage {
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 2;
+  margin-top: clamp(32px, 5vh, 56px);
+  background: var(--color-background);
+}
+
+/* soft fade so blocks slide under the stage without a hard edge */
+.sec.is-scrolly .sec-stage::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 28px;
+  background: linear-gradient(to bottom, var(--color-background), rgba(250, 251, 249, 0));
+  pointer-events: none;
+}
+
+.sec.is-scrolly .sec-visual {
+  aspect-ratio: auto;
+  height: clamp(250px, 48svh, 560px);
+}
+
+.sec.is-scrolly .sec-features__list {
+  display: block;
+}
+
+.sec.is-scrolly .sec-feature {
+  min-height: 56svh;
+  padding-top: 12px;
+}
+
+/* The last block ends with the section so the stage and its text leave together. */
+.sec.is-scrolly .sec-feature:last-child {
+  min-height: 0;
+  padding-bottom: clamp(24px, 6svh, 64px);
+}
+
+.sec.is-scrolly .sec-feature__title {
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.875rem);
+}
+
+/* ================================================================ */
+/* Responsive (static layouts)                                       */
+/* ================================================================ */
+@media (max-width: 1199px) {
+  .sec-features__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .sec-title {
+    font-size: var(--fs-h2);
+  }
+
+  .sec-visual {
+    aspect-ratio: 1 / 0.9;
+  }
+
+  .sec-frame {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'intro'
+      'stage'
+      'features';
+    row-gap: clamp(40px, 6vw, 64px);
+  }
+
+  .sec-lead {
+    max-width: 36em;
+  }
+}
+
+@media (max-width: 767px) {
+  .sec-visual {
+    aspect-ratio: 1 / 1.02;
+  }
+
+  .sec-features__list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .sec-point {
+    font-size: var(--fs-body-sm);
+  }
+
+  .sec.is-scrolly .sec-visual {
+    height: clamp(240px, 40svh, 360px);
+  }
+
+  .sec.is-scrolly .sec-feature {
+    min-height: 52svh;
+  }
+}
+
+/* Short desktop screens without the pinned scene: two columns, sticky visual. */
+@media (min-width: 1024px) {
+  .sec.is-scrolly .sec-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+    grid-template-areas:
+      'intro stage'
+      'features stage';
+    align-items: start;
+  }
+
+  .sec.is-scrolly .sec-stage {
+    grid-row: 1 / span 2;
+    margin-top: 0;
+  }
+
+  .sec.is-scrolly .sec-stage::after {
+    display: none;
+  }
+
+  .sec.is-scrolly .sec-visual {
+    height: calc(100vh - var(--nav-h) - 24px);
+  }
+
+  .sec.is-scrolly .sec-features {
+    margin-top: 48px;
+  }
+
+  /* beside the stage, the last block keeps the stage stuck through the final state */
+  .sec.is-scrolly .sec-feature:last-child {
+    min-height: 80vh;
+  }
 }
