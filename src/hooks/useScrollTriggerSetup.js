@@ -121,16 +121,49 @@ export default function useScrollTriggerSetup() {
       },
     })
 
+    const pageHeight = () => document.documentElement.scrollHeight
+    let settledHeight = pageHeight()
+
     const onRefresh = () => {
       ranges = measureRanges()
       if (ready && anchor) {
         const y = yForAnchor(ranges, anchor)
         if (y != null && Math.abs(window.scrollY - y) > 2) jumpTo(y)
       }
+      settledHeight = pageHeight()
       layoutPending = false
       clearTimeout(pendingTimer)
     }
     ScrollTrigger.addEventListener('refresh', onRefresh)
+
+    // Content can change height AFTER a refresh — React re-rendering a
+    // breakpoint-specific layout right after GSAP's media-query rebuild,
+    // late-loading media. ScrollTrigger only refreshes on window resize and
+    // load, so re-measure when the page height changes outside a refresh;
+    // onRefresh then re-seats the reader. Capped to avoid any feedback loop.
+    let heightTimer = 0
+    let autoRefreshes = 0
+    let autoWindowStart = 0
+    const heightObserver = new ResizeObserver(() => {
+      if (ScrollTrigger.isRefreshing || Math.abs(pageHeight() - settledHeight) < 2) return
+      layoutPending = true
+      clearTimeout(heightTimer)
+      heightTimer = setTimeout(() => {
+        if (cancelled) return
+        const now = performance.now()
+        if (now - autoWindowStart > 2000) {
+          autoWindowStart = now
+          autoRefreshes = 0
+        }
+        if (Math.abs(pageHeight() - settledHeight) >= 2 && autoRefreshes < 3) {
+          autoRefreshes += 1
+          ScrollTrigger.refresh()
+        } else {
+          layoutPending = false
+        }
+      }, 150)
+    })
+    heightObserver.observe(document.body)
 
     const onResize = () => {
       layoutPending = true
@@ -191,6 +224,8 @@ export default function useScrollTriggerSetup() {
     return () => {
       cancelled = true
       keeper.kill()
+      heightObserver.disconnect()
+      clearTimeout(heightTimer)
       cancelAnimationFrame(raf)
       clearTimeout(pendingTimer)
       window.removeEventListener('resize', onResize)
