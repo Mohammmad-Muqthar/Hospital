@@ -245,19 +245,23 @@
   letter-spacing: -0.042em;
 }
 
+/* One set of words; the wide / narrow line breaks are switched by CSS. */
 .hero__lines {
   display: block;
+  white-space: nowrap;
   perspective-origin: 50% 50%;
 }
 
-.hero__lines--narrow {
-  display: none;
+/* Inline-block so the timeline can move each line's words through depth. */
+.hero__word {
+  display: inline-block;
+  backface-visibility: hidden;
 }
 
-.hero__line {
-  display: block;
-  white-space: nowrap;
-  backface-visibility: hidden;
+@media (min-width: 768px) {
+  .hero__br--narrow {
+    display: none;
+  }
 }
 
 .hero__word--accent {
@@ -321,12 +325,8 @@
     letter-spacing: -0.04em;
   }
 
-  .hero__lines--wide {
+  .hero__br--wide {
     display: none;
-  }
-
-  .hero__lines--narrow {
-    display: block;
   }
 }
 
@@ -607,6 +607,26 @@
       0 22px 44px -28px rgba(10, 40, 34, 0.36);
     backface-visibility: hidden;
     pointer-events: none;
+  }
+
+  /* 2×2 card layouts: the dashboard splits into quadrants instead of strips,
+     so each piece is already larger than its card (never scaled up). The
+     dashboard's width and height are rounded to even pixels, so the halves
+     stay on whole pixels and the swap from the unified preview is seamless. */
+  @media (max-width: 1023px) {
+    .hero__slice {
+      top: calc(var(--row) * 50%);
+      left: calc(var(--col) * 50%);
+      width: 50%;
+      height: 50%;
+    }
+
+    .hero__slice-dash {
+      top: calc(var(--row) * -100%);
+      left: calc(var(--col) * -100%);
+      width: 200%;
+      height: 200%;
+    }
   }
 
   .hero__slice-back {

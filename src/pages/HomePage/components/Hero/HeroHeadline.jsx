@@ -1,63 +1,51 @@
+import { Fragment } from 'react'
 import { HERO } from '../../../../data/siteContent'
 
 const WORDS = HERO.headline.split(' ')
 const ACCENT = new Set(HERO.headlineAccent)
 
+/** Word indexes where a new line starts, from the verbatim desktop split. */
+const WIDE_BREAKS = HERO.headlineLines
+  .slice(0, -1)
+  .reduce((acc, line) => [...acc, (acc.at(-1) ?? 0) + line.split(' ').length], [])
+
 /**
  * Narrow-screen line split ("Grow your / hospital sales / with a CRM /
- * that tracks / performance"), derived from the verbatim headline by word
- * index so the copy itself is never retyped. Five short lines let the phone
- * headline stay large (~42px) without any line touching the screen edges.
+ * that tracks / performance"), by word index so the copy itself is never
+ * retyped. Five short lines let the phone headline stay large (~42px)
+ * without any line touching the screen edges.
  */
 const NARROW_BREAKS = [2, 4, 7, 9]
 
-function splitAt(words, breaks) {
-  const lines = []
-  let start = 0
-  for (const end of [...breaks, words.length]) {
-    lines.push(words.slice(start, end))
-    start = end
-  }
-  return lines
-}
-
-const WIDE_LINES = HERO.headlineLines.map((line) => line.split(' '))
-const NARROW_LINES = splitAt(WORDS, NARROW_BREAKS)
-
-function Line({ words }) {
-  return (
-    <span className="hero__line">
-      {words.map((word, i) => (
-        <span
-          key={`${word}-${i}`}
-          className={ACCENT.has(word) ? 'hero__word hero__word--accent' : 'hero__word'}
-        >
-          {word}
-          {i < words.length - 1 ? ' ' : ''}
-        </span>
-      ))}
-    </span>
-  )
-}
+/** Line number of word `i` in a layout. */
+const lineOf = (breaks, i) => breaks.filter((b) => b <= i).length
 
 /**
- * The page <h1>. Screen readers get the full sentence once; the two visual
- * line layouts (wide / narrow) are aria-hidden and only one is displayed.
- * Each visual line is its own element so the hero timeline can move it
- * through depth independently.
+ * The page <h1>. The sentence exists exactly once, as real text: every word
+ * is its own inline-block (so the hero timeline can move each line through
+ * depth — words of one line always share one transform), the spaces are
+ * plain text between them, and the line breaks for the wide and narrow
+ * layouts are <br> elements that CSS switches on and off. The DOM text,
+ * the accessible name and reader / no-CSS views therefore all read the
+ * headline once, correctly spaced.
  */
 export default function HeroHeadline({ id }) {
   return (
     <h1 id={id} className="hero__title">
-      <span className="sr-only">{HERO.headline}</span>
-      <span className="hero__lines hero__lines--wide" aria-hidden="true">
-        {WIDE_LINES.map((words, i) => (
-          <Line key={i} words={words} />
-        ))}
-      </span>
-      <span className="hero__lines hero__lines--narrow" aria-hidden="true">
-        {NARROW_LINES.map((words, i) => (
-          <Line key={i} words={words} />
+      <span className="hero__lines">
+        {WORDS.map((word, i) => (
+          <Fragment key={i}>
+            {WIDE_BREAKS.includes(i) && <br className="hero__br hero__br--wide" />}
+            {NARROW_BREAKS.includes(i) && <br className="hero__br hero__br--narrow" />}
+            <span
+              className={ACCENT.has(word) ? 'hero__word hero__word--accent' : 'hero__word'}
+              data-line-wide={lineOf(WIDE_BREAKS, i)}
+              data-line-narrow={lineOf(NARROW_BREAKS, i)}
+            >
+              {word}
+            </span>
+            {i < WORDS.length - 1 ? ' ' : null}
+          </Fragment>
         ))}
       </span>
     </h1>
