@@ -47,13 +47,16 @@ export default function Roles() {
 
   // Keyboard focus arriving in the selector or description while the scene
   // is still revealing (the copy is in the Tab order from the start, but may
-  // be faded): bring the reader to a settled, fully visible state.
+  // be faded — before the pin, or during the docked heading hand-over):
+  // bring the reader to a settled, fully visible state.
   const handleStageFocus = useCallback(
     (event) => {
       if (reduce || !event.target.matches?.(':focus-visible')) return
       const tl = timelineRef.current
-      if (tl?.scrollTrigger) {
-        if (window.scrollY < tl.scrollTrigger.start - 1) {
+      const st = tl?.scrollTrigger
+      if (st) {
+        const settled = tl.labels[ROLE_LABELS[0]] / tl.duration()
+        if (window.scrollY < st.start - 1 || st.progress < settled - 0.002) {
           scrollToTimelineLabel(tl, ROLE_LABELS[activeRef.current])
         }
         return
