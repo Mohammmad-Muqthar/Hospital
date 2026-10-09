@@ -387,6 +387,9 @@
 
 .price-amount {
   display: flex;
+  /* The figure never breaks, but the "/month" suffix may drop to its own
+     line if the row would overflow (e.g. WCAG text-spacing overrides). */
+  flex-wrap: wrap;
   align-items: baseline;
   white-space: nowrap;
   font-family: var(--font-display);
