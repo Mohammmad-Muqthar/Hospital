@@ -430,6 +430,12 @@
   flex: none;
 }
 
+/*
+ * Label sizes: none under 13px. Labels keep ≥ 0.86 of their CSS size on
+ * screen (SCENE.labelFit counter-scales them on small stages), so every one
+ * renders at ≥ 11px — the floor for mock-UI text — at any stage size.
+ */
+
 /* Clinic name labels: float over each chamber during the branch state
    (hidden in the composed final state). */
 .sx-name {
@@ -447,7 +453,7 @@
   color: var(--color-text);
 }
 .sx-name__sub {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-subtle);
 }
@@ -459,7 +465,7 @@
   padding: 2px 8px;
   border-radius: 6px;
   background: #fff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 16px;
   letter-spacing: 0.005em;
@@ -475,7 +481,9 @@
   bottom: 0;
   display: grid;
   gap: 10px;
-  width: 244px;
+  /* sized by its content (larger phone labels, user text spacing), never narrower */
+  width: max-content;
+  min-width: 244px;
   padding: 12px 14px 13px;
   border-radius: 12px;
   background: #fff;
@@ -508,12 +516,12 @@
   line-height: 1.25;
 }
 .sx-panel__title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 .sx-panel__sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-text-subtle);
 }
 
@@ -528,7 +536,7 @@
   height: 28px;
   padding: 0 10px;
   border-radius: 8px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
 }
 .sx-status--pending {
@@ -559,7 +567,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -683,12 +691,12 @@
   line-height: 1.2;
 }
 .sx-chip__title {
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--color-text);
 }
 .sx-chip__sub {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -707,5 +715,43 @@
   /* labels are counter-scaled here, so give the raised parts more headroom */
   .sx-scene {
     --scene-top-share: 0.43;
+  }
+}
+
+/*
+ * Dense stages (phones — data-dense is set from fitScene()): labels are
+ * counter-scaled to about twice the scene's scale to stay legible, so fewer
+ * of them show at once.
+ */
+
+/* Chambers stand a few dozen pixels apart: one-line clinic names, so
+   neighbouring labels never run into each other. */
+.sx[data-dense] .sx-name__sub {
+  display: none;
+}
+
+/* The layer tags' anchors sit closer together than the tags are tall: fan
+   the outer two apart so the stack reads as three separate tags. */
+.sx[data-dense] .sx-tag-bb--0 .sx-tag {
+  bottom: -17px;
+}
+
+.sx[data-dense] .sx-tag-bb--2 .sx-tag {
+  bottom: -1px;
+}
+
+/* The docked request chip leans further left (still over its token) so it
+   keeps clear of the neighbouring desk's label. */
+.sx[data-dense] .sx-chip {
+  margin-right: 136px;
+}
+
+/* The composed (static) state keeps to the routing story — the docked
+   request and its desks — as the scrubbed story's final state does here.
+   The layer tags and the access panel each have their own beat in motion. */
+@media (prefers-reduced-motion: reduce) {
+  .sx[data-dense] .sx-tag,
+  .sx[data-dense] .sx-panel {
+    display: none;
   }
 }
