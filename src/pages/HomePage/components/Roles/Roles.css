@@ -1,9 +1,402 @@
-.roles-stub {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  background: var(--color-background);
+/*
+ * Roles — one CRM, four perspectives.
+ * Layout is driven by media queries only (never by React state), so GSAP
+ * measures the final layout when it builds the pinned scene.
+ * Pinned layout = (≥1280 × ≥600 or ≥1024 × ≥700) and motion OK.
+ */
+.roles {
+  /* Colour of the environment we arrive from (How It Works). */
+  --roles-veil: var(--color-teal-deep);
+  /* Height of the static teal → off-white fade used by every non-pinned
+     layout (mobile, tablet, short screens, reduced motion). */
+  --roles-fade: clamp(150px, 26vw, 300px);
+
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: calc(var(--section-pad) * 0.7 + var(--roles-fade)) var(--section-pad);
+  background-color: var(--color-background);
+  /* Ease-out falloff: the top edge matches the teal section above (no seam)
+     and the light arrives softly before any text. */
+  background-image: linear-gradient(
+    180deg,
+    var(--roles-veil) 0,
+    color-mix(in srgb, var(--roles-veil) 78%, var(--color-background)) calc(var(--roles-fade) * 0.12),
+    color-mix(in srgb, var(--roles-veil) 52%, var(--color-background)) calc(var(--roles-fade) * 0.3),
+    color-mix(in srgb, var(--roles-veil) 28%, var(--color-background)) calc(var(--roles-fade) * 0.5),
+    color-mix(in srgb, var(--roles-veil) 11%, var(--color-background)) calc(var(--roles-fade) * 0.72),
+    color-mix(in srgb, var(--roles-veil) 3%, var(--color-background)) calc(var(--roles-fade) * 0.88),
+    var(--color-background) var(--roles-fade)
+  );
+  background-repeat: no-repeat;
   color: var(--color-text);
-  font-family: var(--font-display);
-  font-size: var(--fs-h3);
 }
+
+/* ---------- Environment ------------------------------------------------ */
+.roles__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Soft architectural daylight: a broad pool of light behind the workspace
+   and a barely-there floor tone towards the bottom of the stage. */
+.roles__light {
+  position: absolute;
+  inset: var(--roles-fade) 0 0;
+  background: radial-gradient(58% 54% at 50% 62%, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0) 74%);
+}
+
+/* The deep-teal tide we arrive on. Only shown (and scrubbed away) by GSAP
+   in motion-OK layouts; decorative, so hidden by default. */
+.roles__veil {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 140vh;
+  visibility: hidden;
+  /* Solid for the first 100vh, then an ease-out falloff over the last 40vh
+     so the light arrives softly but the teal edge itself stays crisp-free. */
+  background: linear-gradient(
+    180deg,
+    var(--roles-veil) 0%,
+    var(--roles-veil) 71.5%,
+    color-mix(in srgb, var(--roles-veil) 79%, transparent) 74.4%,
+    color-mix(in srgb, var(--roles-veil) 61%, transparent) 77.2%,
+    color-mix(in srgb, var(--roles-veil) 46%, transparent) 80%,
+    color-mix(in srgb, var(--roles-veil) 33%, transparent) 82.9%,
+    color-mix(in srgb, var(--roles-veil) 21%, transparent) 85.8%,
+    color-mix(in srgb, var(--roles-veil) 12%, transparent) 88.6%,
+    color-mix(in srgb, var(--roles-veil) 5%, transparent) 92.9%,
+    color-mix(in srgb, var(--roles-veil) 0%, transparent) 100%
+  );
+}
+
+.roles__inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Header ----------------------------------------------------- */
+.roles__head {
+  display: grid;
+  gap: 18px;
+}
+
+.roles__eyebrow {
+  margin-bottom: 14px;
+}
+
+.roles__title {
+  max-width: 15ch;
+  color: var(--color-text);
+}
+
+.roles__lead {
+  max-width: 34ch;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Stage (mobile first: stacked) ------------------------------ */
+.roles__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'sel'
+    'ws'
+    'desc';
+  row-gap: 28px;
+  margin-top: clamp(32px, 6vw, 56px);
+}
+
+.roles__sel-col {
+  grid-area: sel;
+  min-width: 0;
+}
+
+.roles__ws-col {
+  grid-area: ws;
+  min-width: 0;
+}
+
+.roles__desc-col {
+  grid-area: desc;
+  min-width: 0;
+}
+
+/* ---------- Role selector ---------------------------------------------- */
+.roles-sel {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 2px;
+}
+
+.roles-sel__tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 6px 8px 6px 20px;
+  border-radius: 8px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: var(--fw-medium);
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--color-text-muted);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--dur-base) var(--ease-out),
+    font-weight var(--dur-base) var(--ease-out);
+}
+
+.roles-sel__label {
+  display: inline-block;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.roles-sel__tab.is-active {
+  color: var(--color-text);
+  font-weight: var(--fw-semibold);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .roles-sel__tab:hover {
+    color: var(--color-text);
+  }
+
+  .roles-sel__tab:hover .roles-sel__label {
+    transform: translateX(2px);
+  }
+}
+
+.roles-sel__tab:focus-visible {
+  outline-offset: 2px;
+}
+
+/* The one refined indicator: a 2 × 20px emerald bar that slides. */
+.roles-sel__mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 2px;
+  background: var(--color-primary);
+  pointer-events: none;
+}
+
+/* ---------- Role description ------------------------------------------- */
+.roles-desc {
+  display: grid;
+}
+
+.roles-desc__panel {
+  grid-area: 1 / 1;
+  min-width: 0;
+  border-radius: 6px;
+}
+
+.roles-desc__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 16px;
+  align-items: center;
+}
+
+.roles-desc__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.roles-desc__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.625rem, 1.25rem + 1vw, 2.375rem);
+  font-weight: var(--fw-semibold);
+  line-height: 1.08;
+  letter-spacing: var(--tracking-heading);
+  text-wrap: balance;
+}
+
+.roles-desc__text {
+  grid-column: 1 / -1;
+  margin-top: 14px;
+  max-width: 34ch;
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
+}
+
+/* ---------- Tablet ----------------------------------------------------- */
+@media (min-width: 600px) {
+  .roles-sel {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 32px;
+  }
+}
+
+@media (min-width: 768px) {
+  .roles__head {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: end;
+    column-gap: 48px;
+  }
+
+  .roles__lead {
+    padding-bottom: 0.35em;
+  }
+
+  .roles-sel__tab {
+    font-size: 1.125rem;
+  }
+
+  .roles__stage {
+    row-gap: 36px;
+  }
+}
+
+/* ---------- Desktop ---------------------------------------------------- */
+@media (min-width: 1024px) {
+  .roles__stage {
+    grid-template-columns: minmax(220px, 0.32fr) minmax(0, 1fr);
+    grid-template-areas:
+      '. ws'
+      'sel ws'
+      'desc ws'
+      '. ws';
+    grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+    column-gap: clamp(32px, 4vw, 64px);
+    row-gap: 28px;
+    align-items: center;
+  }
+
+  .roles-sel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .roles-sel__tab {
+    min-height: 50px;
+    font-size: clamp(1.125rem, 0.95rem + 0.3vw, 1.25rem);
+  }
+
+}
+
+/* Narrow laptops: selector + description share the left column, so keep
+   them compact (icon inline with the title). */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .roles-sel__tab {
+    min-height: 44px;
+    font-size: 1.0625rem;
+  }
+
+  .roles-desc__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .roles-desc__title {
+    font-size: 1.625rem;
+  }
+
+  .roles-desc__text {
+    margin-top: 10px;
+    font-size: var(--fs-body);
+  }
+}
+
+@media (min-width: 1280px) {
+  .roles-desc__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .roles-desc__title {
+    margin-top: 20px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .roles__stage {
+    grid-template-columns: minmax(180px, 0.86fr) minmax(0, 3.7fr) minmax(220px, 1.12fr);
+    grid-template-areas: 'sel ws desc';
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: clamp(36px, 3.6vw, 72px);
+    align-items: center;
+  }
+
+  .roles__sel-col,
+  .roles__desc-col {
+    align-self: center;
+  }
+}
+
+/* ---------- Pinned stage (desktop, motion OK) --------------------------- */
+/* Keep in sync with PINNED_QUERY in useRolesScene.js. */
+@media (min-width: 1280px) and (min-height: 600px) and (prefers-reduced-motion: no-preference),
+  (min-width: 1024px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .roles {
+    height: 100vh;
+    padding-block: var(--nav-h) 0;
+    background-image: none;
+  }
+
+  .roles__light {
+    inset: 0;
+  }
+
+  .roles__inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-block: clamp(16px, 3.4vh, 44px) clamp(28px, 7.4vh, 88px);
+  }
+
+  .roles__head {
+    flex: none;
+  }
+
+  .roles__eyebrow {
+    margin-bottom: clamp(8px, 1.4vh, 16px);
+  }
+
+  .roles__title {
+    font-size: min(var(--fs-h2), 7.1vh);
+    max-width: 16ch;
+  }
+
+  .roles__stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: clamp(16px, 4.2vh, 56px);
+  }
+
+  .roles__ws-col {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .roles__ws-col .rw,
+  .roles__ws-col .rw-fit {
+    height: 100%;
+  }
+
+  .roles__ws-col .rw-fit {
+    aspect-ratio: auto;
+    max-width: none;
+  }
+}
+
