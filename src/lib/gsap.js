@@ -5,6 +5,8 @@
  * directly) so plugins are registered exactly once and every section shares
  * the same ScrollTrigger configuration.
  */
+// Must run before gsap.matchMedia() is first used (see the file for why).
+import './sharedMediaQueries'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'

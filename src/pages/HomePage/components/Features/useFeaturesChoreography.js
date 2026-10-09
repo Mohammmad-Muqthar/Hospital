@@ -1,4 +1,4 @@
-import { gsap, MQ, SCRUB, ScrollTrigger, useGSAP } from '../../../../lib/gsap'
+import { gsap, MQ, SCRUB, useGSAP } from '../../../../lib/gsap'
 import {
   ACTIVE_SWITCH,
   BEATS,
@@ -195,12 +195,8 @@ export default function useFeaturesChoreography(rootRef) {
       const root = rootRef.current
       if (!root) return
 
-      // Passive trigger that lives outside the breakpoint branches. When the
-      // last viewport ScrollTrigger is killed, GSAP clears its scroll memory,
-      // so a desktop ⇄ tablet switch would otherwise drop the reader back at
-      // the top of the page. This one survives every branch change.
-      ScrollTrigger.create({ trigger: root, start: 'top bottom', end: 'bottom top' })
-
+      // (Scroll memory across breakpoint switches is kept by the page-level
+      // trigger in hooks/useScrollTriggerSetup.js.)
       const mm = gsap.matchMedia()
       mm.add(STAGE_QUERY, () => buildStage(root))
       mm.add(FLOW_QUERY, () => buildFlow(root))

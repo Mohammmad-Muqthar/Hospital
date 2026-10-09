@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { gsap, ScrollTrigger, useGSAP, MQ } from '../../../../lib/gsap'
+import { gsap, useGSAP, MQ } from '../../../../lib/gsap'
 import { scrollToTimelineLabel } from '../../../../lib/scroll'
 import { SECTION_IDS, siteConfig } from '../../../../config/site'
 import { HERO } from '../../../../data/siteContent'
@@ -76,12 +76,18 @@ export default function Hero({
           if (!ctx.conditions.cinematic) {
             // Reduced motion / very short screens: static layout, no pin, nothing hidden.
             playbackRef.current.covered = false
-            ScrollTrigger.create({
-              trigger: root,
-              start: 'top bottom',
-              end: 'bottom top',
-              onToggle: setInView,
-              onRefresh: setInView,
+            // Attached to an (empty) timeline so its first refresh is deferred:
+            // a bare ScrollTrigger created inside a matchMedia branch refreshes
+            // immediately and wipes GSAP's remembered scroll position, which
+            // sends the page to the top on every breakpoint change.
+            gsap.timeline({
+              scrollTrigger: {
+                trigger: root,
+                start: 'top bottom',
+                end: 'bottom top',
+                onToggle: setInView,
+                onRefresh: setInView,
+              },
             })
             return undefined
           }
@@ -95,12 +101,15 @@ export default function Hero({
           timelineRef.current = tl
           // Visible from the top of the page until the released section has
           // scrolled a full viewport past the end of its pin.
-          ScrollTrigger.create({
-            start: -1,
-            end: () => tl.scrollTrigger.end + window.innerHeight,
-            refreshPriority: -1, // measured after the pinned master trigger
-            onToggle: setInView,
-            onRefresh: setInView,
+          // Timeline-attached for the same deferred-refresh reason as above.
+          gsap.timeline({
+            scrollTrigger: {
+              start: -1,
+              end: () => tl.scrollTrigger.end + window.innerHeight,
+              refreshPriority: -1, // measured after the pinned master trigger
+              onToggle: setInView,
+              onRefresh: setInView,
+            },
           })
 
           return () => {

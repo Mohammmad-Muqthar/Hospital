@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
-import { gsap, ScrollTrigger, useGSAP, MQ, SCRUB } from '../../../../lib/gsap'
-import { getNavOffset, scrollToY } from '../../../../lib/scroll'
+import { gsap, useGSAP, MQ, SCRUB } from '../../../../lib/gsap'
+import { getNavOffset } from '../../../../lib/scroll'
 
 /* ------------------------------------------------------------------ */
 /* Layout branches                                                     */
@@ -202,7 +202,7 @@ function buildApproach(root, el, { end = 'top top', headFrom = 0.58 } = {}) {
     .set({}, {}, 1)
 }
 
-function buildStage(root, variantKey, onStepChange, memory) {
+function buildStage(root, variantKey, onStepChange) {
   const v = VARIANTS[variantKey]
   const el = collect(root)
   const { notifs, stepTitles, stepTexts, rig, light, shadow, sheen, lens } = el
@@ -252,9 +252,6 @@ function buildStage(root, variantKey, onStepChange, memory) {
       scrub: SCRUB,
       anticipatePin: 1,
       invalidateOnRefresh: true,
-      onUpdate(self) {
-        if (!ScrollTrigger.isRefreshing) memory.progress = self.progress
-      },
     },
     onUpdate() {
       const time = this.time()
@@ -411,63 +408,16 @@ function buildStage(root, variantKey, onStepChange, memory) {
     .addLabel('final', T.final + T.finalDur + T.labelInset)
     .set({}, {}, T.end)
 
-  const stopResume = resumeAfterSwitch(memory, (p) => {
-    const st = tl.scrollTrigger
-    return st ? st.start + p * (st.end - st.start) : null
-  })
-
   return () => {
-    stopResume()
-    rememberForSwitch(memory, memory.progress)
     root.classList.remove('how--stage', `how--${v.layout}`)
     lens.classList.remove('is-flat')
     onStepChange(-1)
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Scroll memory across breakpoint switches                            */
-/* ------------------------------------------------------------------ */
-// A switch while the visitor is inside this section (a tablet rotated, a
-// window resized) rebuilds the scene with a different pin length — or none —
-// so ScrollTrigger's restored pixel offset would land on another state, or in
-// another section. Each branch records how far through the section the
-// visitor was and the next branch re-seats them at the same point.
-function rememberForSwitch(memory, progress) {
-  memory.pending = progress > 0 && progress < 1 ? progress : null
-  memory.at = performance.now()
-  memory.progress = 0
-}
-
-function resumeAfterSwitch(memory, yForProgress) {
-  const resume = () => {
-    ScrollTrigger.removeEventListener('refresh', resume)
-    const pending = memory.pending
-    memory.pending = null
-    if (pending == null || performance.now() - memory.at > 1500) return
-    const y = yForProgress(pending)
-    if (y == null) return
-    scrollToY(y, { smooth: false })
-    memory.progress = pending // a programmatic re-seat may not emit onUpdate before the next switch
-  }
-  ScrollTrigger.addEventListener('refresh', resume)
-  return () => ScrollTrigger.removeEventListener('refresh', resume)
-}
-
 /** Short screens: no pin, composed layout, a brief scrubbed settle on entry. */
-function buildFlow(root, memory) {
+function buildFlow(root) {
   const el = collect(root)
-  // Progress through the unpinned section (0: its top meets the viewport top,
-  // 1: its bottom meets the viewport bottom), kept for breakpoint switches.
-  const tracker = ScrollTrigger.create({
-    trigger: root,
-    start: 'top top',
-    end: 'bottom bottom',
-    onUpdate(self) {
-      if (!ScrollTrigger.isRefreshing) memory.progress = self.progress
-    },
-  })
-  const stopResume = resumeAfterSwitch(memory, (p) => tracker.start + p * (tracker.end - tracker.start))
   buildApproach(root, el, { end: 'top 30%', headFrom: 0.5 })
   gsap
     .timeline({
@@ -485,11 +435,6 @@ function buildFlow(root, memory) {
       0,
     )
     .fromTo(el.light, { opacity: 0 }, { opacity: 1, ease: 'none', duration: 1 }, 0)
-
-  return () => {
-    stopResume()
-    rememberForSwitch(memory, memory.progress)
-  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -510,26 +455,19 @@ export default function useHowItWorksChoreography(rootRef) {
     setActiveStep(index)
   }, [])
 
-  // Scroll memory shared by the breakpoint branches (never React state).
-  const memoryRef = useRef({ progress: 0, pending: null, at: 0 })
 
   useGSAP(
     () => {
       const root = rootRef.current
       if (!root) return
-      const memory = memoryRef.current
 
-      // Passive trigger that lives outside the breakpoint branches (same
-      // pattern as Features). When the last viewport ScrollTrigger is killed,
-      // GSAP wipes its recorded scroll position, so a breakpoint switch would
-      // otherwise drop the visitor at the top of the page.
-      ScrollTrigger.create({ trigger: root, start: 'top bottom', end: 'bottom top' })
-
+      // (Scroll memory across breakpoint switches is kept by the page-level
+      // trigger in hooks/useScrollTriggerSetup.js.)
       const mm = gsap.matchMedia()
-      mm.add(QUERIES.split, () => buildStage(root, 'split', onStepChange, memory))
-      mm.add(QUERIES.tablet, () => buildStage(root, 'tablet', onStepChange, memory))
-      mm.add(QUERIES.phone, () => buildStage(root, 'phone', onStepChange, memory))
-      mm.add(QUERIES.flow, () => buildFlow(root, memory))
+      mm.add(QUERIES.split, () => buildStage(root, 'split', onStepChange))
+      mm.add(QUERIES.tablet, () => buildStage(root, 'tablet', onStepChange))
+      mm.add(QUERIES.phone, () => buildStage(root, 'phone', onStepChange))
+      mm.add(QUERIES.flow, () => buildFlow(root))
       // prefers-reduced-motion: reduce → nothing to build; the CSS
       // composition is already complete and static (no pin).
     },

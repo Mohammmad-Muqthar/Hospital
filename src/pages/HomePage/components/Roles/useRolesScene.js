@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { gsap, ScrollTrigger, MQ, EASE, SCRUB, useGSAP } from '../../../../lib/gsap'
+import { gsap, MQ, EASE, SCRUB, useGSAP } from '../../../../lib/gsap'
 import { getNavOffset } from '../../../../lib/scroll'
 import { NAV_ORDER, NAV_SLOT, ROLE_LABELS, SCENE, TRANSITION_TILT, VEIL, getNavLayout } from './rolesScene'
 import { ROLE_SESSIONS } from '../../../../data/mock/mockRoles'
@@ -261,12 +261,8 @@ export default function useRolesScene(rootRef, roles, setActiveIndex) {
       const root = rootRef.current
       const q = gsap.utils.selector(root)
 
-      // GSAP forgets the recorded scroll position when the last ScrollTrigger
-      // on the page is killed (a breakpoint change where every trigger lives
-      // in a toggling matchMedia context), and the following refresh then
-      // jumps to the top. This inert trigger outlives those changes.
-      ScrollTrigger.create({ trigger: root, start: 'top bottom', end: 'bottom top' })
-
+      // (Scroll memory across breakpoint switches is kept by the page-level
+      // trigger in hooks/useScrollTriggerSetup.js.)
       const mm = gsap.matchMedia()
 
       mm.add({ pinned: PINNED_QUERY, motionOK: MQ.motionOK, mobile: MQ.mobile }, (ctx) => {
