@@ -10,6 +10,7 @@ import HeroHeadline from './HeroHeadline'
 import HeroDashboard from './HeroDashboard'
 import HeroStatCard from './HeroStatCard'
 import { buildHeroTimeline, CINEMA_MQ } from './heroTimeline'
+import { fitHeroCopy } from './heroCopyFit'
 import './Hero.css'
 
 const SLICE_INDEXES = [0, 1, 2, 3]
@@ -93,6 +94,9 @@ export default function Hero({
             return undefined
           }
 
+          // Before the timeline measures the copy: keep it inside the stage
+          // under user text settings (no-op with the designed type).
+          const releaseCopyFit = fitHeroCopy(root)
           const tl = buildHeroTimeline(root, ctx.conditions, {
             onCoveredChange: (covered) => {
               playbackRef.current.covered = covered
@@ -114,6 +118,7 @@ export default function Hero({
           })
 
           return () => {
+            releaseCopyFit()
             timelineRef.current = null
             playbackRef.current.covered = false
           }

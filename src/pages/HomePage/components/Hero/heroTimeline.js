@@ -217,6 +217,15 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   // The dashboard waits fully transparent (still in the accessibility tree)
   // until its rise begins, so no corner can peek in during the CTA hold.
   gsap.set(frame, { opacity: 0 })
+  // The pull-back scales the backdrop and deepens the scrim on every frame.
+  // Their own compositor layers keep both changes off the paint path:
+  // without them each frame re-rasterised the full-viewport gradient
+  // backdrop (~85% of the 'type' phase raster work at 1920×1080). Decorative,
+  // text-free layers, so a fixed raster scale costs no sharpness. Released
+  // once they settle (see 'type'); set here, inside the matchMedia context,
+  // so leaving the cinematic layout restores the original inline styles.
+  gsap.set(bg, { willChange: 'transform' })
+  gsap.set(scrim, { willChange: 'opacity' })
 
   let covered = false
   let coveredAt = 1
@@ -272,6 +281,11 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   const typeEnd = (lines.length - 1) * S.lineStagger + S.lineDur
   tl.fromTo(bg, { scale: S.bgFrom }, { scale: 1, duration: typeEnd, ease: 'power2.out' }, 0)
   tl.fromTo(scrim, { opacity: 0 }, { opacity: S.scrim, duration: typeEnd - 0.5, ease: 'power1.inOut' }, 0.15)
+  // The backdrop and scrim are their own compositor layers only while they
+  // move; once settled they flatten back into the stage so later phases don't
+  // composite two idle full-viewport layers. Scrubbed, so scrolling back
+  // restores the layers before they move again.
+  tl.set([bg, scrim], { willChange: 'auto' }, typeEnd)
 
   /* ---------- copy: paragraph, then the CTA pair ---------- */
   const copyAt = typeEnd - 0.55

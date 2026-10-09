@@ -235,26 +235,34 @@
 }
 
 .hero__title {
+  /* width-driven, but capped by height so short laptop screens keep the whole composition */
+  --hero-title-size: min(clamp(2.75rem, 0.6rem + 6.15vw, 6.5rem), 11.6vh);
+
   margin: 0;
   color: var(--hero-text);
   font-family: var(--font-display);
-  /* width-driven, but capped by height so short laptop screens keep the whole composition */
-  font-size: min(clamp(2.75rem, 0.6rem + 6.15vw, 6.5rem), 11.6vh);
+  /* --hero-title-fit (heroCopyFit.js) is 1 unless user text settings would
+     push the copy out of the pinned stage. */
+  font-size: calc(var(--hero-title-size) * var(--hero-title-fit, 1));
   font-weight: 600;
   line-height: 1.02;
   letter-spacing: -0.042em;
 }
 
-/* One set of words; the wide / narrow line breaks are switched by CSS. */
+/* One set of words; the wide / narrow line breaks are switched by CSS.
+   Lines may still wrap (white-space: normal): the designed breaks always fit,
+   but enlarged text spacing (WCAG 1.4.12) or zoom must reflow, not clip. */
 .hero__lines {
   display: block;
-  white-space: nowrap;
   perspective-origin: 50% 50%;
 }
 
-/* Inline-block so the timeline can move each line's words through depth. */
+/* Inline-block so the timeline can move each line's words through depth.
+   A single word wider than the column (only under enlarged text spacing on
+   the narrowest phones) breaks instead of being clipped. */
 .hero__word {
   display: inline-block;
+  overflow-wrap: anywhere;
   backface-visibility: hidden;
 }
 
@@ -320,7 +328,7 @@
 
 @media (max-width: 767px) {
   .hero__title {
-    font-size: clamp(2.5rem, 1.6rem + 4.4vw, 3.5rem);
+    --hero-title-size: clamp(2.5rem, 1.6rem + 4.4vw, 3.5rem);
     line-height: 1.04;
     letter-spacing: -0.04em;
   }
