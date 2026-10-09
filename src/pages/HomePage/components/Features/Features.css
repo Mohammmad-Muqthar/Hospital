@@ -414,13 +414,15 @@
   grid-template-rows: minmax(0, 1.06fr) minmax(0, 0.94fr);
 }
 
-/* Only the scene in view takes pointer input (hover); the transparent camera
-   layer never blocks the heading underneath it. */
+/* Only the panels of the scene in view take pointer input (hover). The
+   transparent camera and scene layers never do: in the shared 3D context a
+   full-stage scene box at z = 0 would otherwise sit in front of a panel that
+   is still settling at a slightly negative z and swallow its hover. */
 .feat.is-stage .feat-camera {
   pointer-events: none;
 }
 
-.feat.is-stage .feat-scene[data-active] {
+.feat.is-stage .feat-scene[data-active] .feat-panel {
   pointer-events: auto;
 }
 
@@ -491,6 +493,36 @@
   .feat-card--small .feat-card__desc {
     grid-column: 1 / -1;
     margin-top: 10px;
+  }
+}
+
+/* Short split cards (laptops ~600–690px tall): the text column is narrow, so
+   the icon joins the title row instead of stacking above it — the full
+   description keeps its lines without being cut by the card. */
+@container card (max-height: 250px) {
+  .feat.is-stage .feat-card--split .feat-card__text {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .feat.is-stage .feat-card--split .feat-card__title {
+    margin-top: 0;
+  }
+
+  .feat.is-stage .feat-card--split .feat-card__desc {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  /* Short flip cards read text-first: should the module be too short to show
+     (it then steps aside), the copy sits at the top of the card instead of
+     under an empty band. */
+  .feat.is-stage .feat-card--flip .feat-card__ui {
+    order: 0;
+    margin: 14px 0 0;
   }
 }
 

@@ -96,7 +96,7 @@ export function PartnersArt() {
               <Chip>{p.type}</Chip>
               <span className={`feat-ui-partner__status${signed ? ' is-signed' : ''}`}>
                 {signed ? <CircleCheck size={12} strokeWidth={2.2} /> : <Clock size={12} strokeWidth={2.2} />}
-                {p.agreement}
+                <span className="feat-ui-partner__agreement">{p.agreement}</span>
               </span>
             </span>
           </>
