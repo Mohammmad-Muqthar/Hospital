@@ -1,7 +1,291 @@
-.foot-stub {
+/*
+ * Footer — the calm, architectural conclusion of the page.
+ *
+ * A full-width near-black surface with large top corner radii sits on the
+ * off-white page floor (the colour Pricing ends on), so the hand-off is one
+ * clean rounded edge rather than a hard cut. Everything is visible by
+ * default: entrance states are applied by GSAP only (Footer.jsx).
+ */
+.foot {
+  --foot-radius: clamp(24px, 2.5vw, 36px);
+  --foot-logo-h: 48px;
+  --foot-head-h: var(--foot-logo-h);
+  --foot-col-gap: clamp(32px, 4.6vw, 88px);
+  --foot-text: var(--color-text-on-dark);
+  --foot-muted: var(--color-text-on-dark-muted);
+  --foot-accent: var(--color-accent);
+  --foot-link-shift: 4px;
+
+  position: relative;
+  isolation: isolate;
+  /* Clips the surface while it docks (it starts slightly lower). The footer
+     is never an ancestor of a pinned element. */
+  overflow: clip;
+  background: var(--color-background);
+  color: var(--foot-text);
+}
+
+/* ---------- Surface ---------- */
+.foot__panel {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--foot-radius) var(--foot-radius) 0 0;
+  /* Forest-charcoal at the top edge settling into near-black. */
+  background: linear-gradient(
+    180deg,
+    var(--color-dark-2) 0%,
+    #0c1311 34%,
+    var(--color-dark) 78%
+  );
+  /* A whisper of light on the rounded edge so it reads as a machined surface. */
+  box-shadow: inset 0 1px 0 rgba(243, 248, 245, 0.06);
+  transform-origin: 50% 0;
+}
+
+.foot__inner {
+  position: relative;
+  padding-top: clamp(80px, 8.6vw, 128px);
+}
+
+/* ---------- Grid ---------- */
+.foot__grid {
   display: grid;
+  grid-template-columns:
+    minmax(0, 34fr)
+    minmax(0, 17fr)
+    minmax(0, 17fr)
+    minmax(0, 32fr);
+  column-gap: var(--foot-col-gap);
+  align-items: start;
+}
+
+/* Every column opens on the same band as the logo, so the logo and the
+   column headings share one optical line and the content below starts on
+   a common baseline. */
+.foot__logo,
+.foot__heading {
+  min-height: var(--foot-head-h);
+}
+
+.foot__logo {
+  display: flex;
+  align-items: center;
+}
+
+.foot__heading {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  letter-spacing: -0.006em;
+  color: var(--foot-text);
+}
+
+/* ---------- Brand ---------- */
+.foot__logo-link {
+  display: inline-flex;
+  border-radius: var(--radius-xs);
+  color: var(--foot-text);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.foot__desc {
+  max-width: 32ch;
+  margin-top: 18px;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--foot-muted);
+  text-wrap: pretty;
+}
+
+/* ---------- Link columns ---------- */
+.foot__links {
+  display: grid;
+  gap: 2px;
+  /* Pull the first row up so its text sits on the description's first line. */
+  margin-top: -6px;
+}
+
+.foot__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  /* Room for a symmetric focus ring; the negative margin keeps the text on
+     the column's grid line. */
+  padding-inline: 8px;
+  margin-inline: -8px;
+  border-radius: var(--radius-xs);
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.5;
+  color: var(--foot-muted);
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.foot__link-text {
+  display: inline-block;
+  transition: transform 360ms var(--ease-out);
+}
+
+/* ---------- Healthcare statement ---------- */
+/* Centre the 40px statement on the first line of the neighbouring columns. */
+.foot__care .foot__heading {
+  margin-bottom: 10px;
+}
+
+.foot__statement {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 34ch;
+  font-size: 1rem;
+  font-weight: var(--fw-medium);
+  line-height: 1.45;
+  color: rgba(243, 248, 245, 0.88);
+}
+
+.foot__statement-text {
+  text-wrap: balance;
+}
+
+.foot__statement-icon {
+  display: grid;
+  flex: none;
   place-items: center;
-  min-height: 40vh;
-  background: var(--color-dark);
-  color: var(--color-text-on-dark-muted);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  color: var(--foot-accent);
+  background: rgba(52, 185, 148, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(52, 185, 148, 0.16);
+}
+
+/* ---------- Copyright ---------- */
+.foot__base {
+  margin-top: clamp(72px, 7.6vw, 120px);
+  padding-block: 28px max(36px, calc(env(safe-area-inset-bottom) + 20px));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.foot__copy {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--foot-muted);
+}
+
+/* ---------- Interaction ---------- */
+.foot :focus-visible {
+  outline: 2px solid var(--foot-accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-xs);
+}
+
+/* Keyboard focus brightens the label inside a snug ring; the text shift stays
+   a pointer gesture so the label never leaves its ring. */
+.foot__link:focus-visible {
+  outline-offset: 2px;
+  color: var(--foot-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .foot__link:hover {
+    color: var(--foot-text);
+  }
+}
+
+/* Movement on hover only when the visitor has not asked to reduce motion;
+   with reduced motion the colour change alone carries the feedback. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .foot__link:hover .foot__link-text {
+    transform: translateX(var(--foot-link-shift));
+  }
+
+  .foot__logo-link:hover {
+    transform: translateY(-1px) scale(1.015);
+  }
+}
+
+/* ---------- Compact desktop: give the statement room for one line ---------- */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .foot {
+    --foot-col-gap: 40px;
+  }
+
+  .foot__grid {
+    grid-template-columns:
+      minmax(0, 30fr)
+      minmax(0, 15fr)
+      minmax(0, 15fr)
+      minmax(0, 40fr);
+  }
+}
+
+/* ---------- Tablet: brand full width, three columns below ---------- */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .foot__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 64px;
+  }
+
+  .foot__brand {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Mobile: brand, Product | Company, statement, copyright ---------- */
+@media (max-width: 767px) {
+  .foot {
+    --foot-col-gap: 24px;
+    --foot-head-h: auto;
+  }
+
+  .foot__inner {
+    padding-top: 72px;
+  }
+
+  .foot__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 48px;
+  }
+
+  .foot__brand,
+  .foot__care {
+    grid-column: 1 / -1;
+  }
+
+  .foot__logo {
+    min-height: var(--foot-logo-h);
+  }
+
+  .foot__desc {
+    margin-top: 16px;
+  }
+
+  .foot__heading {
+    margin-bottom: 6px;
+  }
+
+  .foot__links {
+    gap: 0;
+    margin-top: 0;
+  }
+
+  .foot__link {
+    min-height: 44px;
+  }
+
+  .foot__care .foot__heading {
+    margin-bottom: 16px;
+  }
+
+  .foot__base {
+    margin-top: 64px;
+    padding-top: 24px;
+  }
 }
