@@ -5,6 +5,8 @@
  * aria-hidden mock UI). Organisations are generic placeholders, people are
  * shown by initials only, and no patient data appears anywhere. Panels whose
  * figures could read like business results carry a "Sample data" tag.
+ * Money is USD in compact notation ($12.4k, $186k) — the same currency and
+ * style as the hero dashboard and the default pricing currency.
  */
 
 export const SAMPLE_TAG = 'Sample data'
@@ -56,26 +58,26 @@ export const MOCK_PIPELINE = {
     {
       id: 'new',
       label: 'New',
-      deals: [{ name: 'Apex Tech Park', value: '₹1.2L', close: '28 Oct' }],
+      deals: [{ name: 'Apex Tech Park', value: '$12.4k', close: '28 Oct' }],
     },
     {
       id: 'qualified',
       label: 'Qualified',
       deals: [
-        { name: 'Metro Cabs', value: '₹0.9L', close: '02 Nov', stale: 'Stale 9d' },
-        { name: 'Greenfield School', value: '₹2.4L', close: '21 Oct' },
+        { name: 'Metro Cabs', value: '$9.6k', close: '02 Nov', stale: 'Stale 9d' },
+        { name: 'Greenfield School', value: '$24.5k', close: '21 Oct' },
       ],
     },
     {
       id: 'proposal',
       label: 'Proposal',
-      deals: [{ name: 'Harbor Logistics', value: '₹4.8L', close: '18 Oct' }],
+      deals: [{ name: 'Harbor Logistics', value: '$48.2k', close: '18 Oct' }],
     },
     {
       id: 'won',
       label: 'Won',
       won: true,
-      deals: [{ name: 'Lakeside Mall', value: '₹3.6L', close: 'Closed' }],
+      deals: [{ name: 'Lakeside Mall', value: '$36.8k', close: 'Closed' }],
     },
   ],
 }
@@ -101,15 +103,15 @@ export const MOCK_DASHBOARD = {
   period: 'This month',
   filters: ['All departments', 'Cardiology', 'Orthopaedics'],
   totals: [
-    { id: 'won', label: 'Won', value: '₹18.6L', meta: '24 deals', tone: 'won' },
-    { id: 'lost', label: 'Lost', value: '₹4.1L', meta: '7 deals', tone: 'lost' },
+    { id: 'won', label: 'Won', value: '$186k', meta: '24 deals', tone: 'won' },
+    { id: 'lost', label: 'Lost', value: '$41k', meta: '7 deals', tone: 'lost' },
   ],
   repsLabel: 'Revenue by rep',
   reps: [
-    { initials: 'AK', name: 'A. Khan', value: '₹6.2L', share: 0.92 },
-    { initials: 'MR', name: 'M. Rao', value: '₹5.0L', share: 0.74 },
-    { initials: 'SN', name: 'S. Nair', value: '₹4.3L', share: 0.64 },
-    { initials: 'DM', name: 'D. Mathew', value: '₹3.1L', share: 0.46 },
+    { initials: 'AK', name: 'A. Khan', value: '$62k', share: 0.92 },
+    { initials: 'MR', name: 'M. Rao', value: '$50k', share: 0.74 },
+    { initials: 'SN', name: 'S. Nair', value: '$43k', share: 0.64 },
+    { initials: 'DM', name: 'D. Mathew', value: '$31k', share: 0.46 },
   ],
   trend: {
     label: 'Won revenue',

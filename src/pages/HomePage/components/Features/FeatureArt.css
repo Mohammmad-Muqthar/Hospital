@@ -1494,6 +1494,27 @@
   overflow: hidden;
 }
 
+/*
+ * A flex line always holds at least one item, so a list's FIRST row could
+ * never wrap away: on a short stage it was cut in half. A zero-size leading
+ * item now takes that place, so the first real row wraps out of view whole
+ * too. Its negative margin cancels the list's own gap (6px / 8px).
+ */
+.feat.is-stage .feat-ui-queue::before,
+.feat.is-stage .feat-ui-follow::before,
+.feat.is-stage .feat-ui-tickets::before,
+.feat.is-stage .feat-ui--activities::before,
+.feat.is-stage .feat-ui--partners::before {
+  content: '';
+  width: 100%;
+  height: 0;
+  margin-bottom: -6px;
+}
+
+.feat.is-stage .feat-ui--partners::before {
+  margin-bottom: -8px;
+}
+
 .feat.is-stage .feat-ui-queue,
 .feat.is-stage .feat-ui-follow,
 .feat.is-stage .feat-ui-tickets {
@@ -1512,7 +1533,10 @@
   height: 100%;
 }
 
+/* The rep list may shrink with the module (it is the dashboard's last block
+   on short stages), so rows that no longer fit wrap out of view whole. */
 .feat.is-stage .feat-ui-reps {
+  flex: 0 1 auto;
   flex-wrap: wrap;
   align-content: flex-start;
   column-gap: 24px;
@@ -1622,7 +1646,25 @@
   }
 }
 
-@container ui (max-height: 76px) {
+@container ui (max-height: 100px) {
+  .feat-ui-week__row:nth-of-type(n + 3) {
+    display: none;
+  }
+}
+
+/* Very short laptops: two rows of the heatmap without the weekday labels. */
+@container ui (max-height: 84px) {
+  .feat-ui-week {
+    gap: 4px 6px;
+    padding: 6px 8px;
+  }
+
+  .feat-ui-week > span {
+    display: none;
+  }
+}
+
+@container ui (max-height: 64px) {
   .feat-ui--weekly {
     display: none;
   }

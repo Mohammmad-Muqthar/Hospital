@@ -339,12 +339,24 @@
 /* ======================================================================
  * Desktop stage (class set by the GSAP desktop branch)
  * ==================================================================== */
+/*
+ * Clip sideways only (panels travel in from beyond the stage edges; the page
+ * must never scroll horizontally). Vertically the section stays open: the
+ * docking heading rides above the section top during the approach, and the
+ * final scene's soft shadows fall naturally onto the next section instead of
+ * ending in a hard crease. z-index lifts that overflow above How It Works'
+ * background (still far below the navbar).
+ */
 .feat.is-stage {
+  z-index: 1;
   height: 100vh;
   padding: 0;
-  overflow: clip;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
+/* Composed breathing room under the navbar and above the fold: ≥ 40px from
+   768px-tall screens up, easing off only on very short laptops. */
 .feat.is-stage .feat-frame {
   position: absolute;
   inset: 0;
@@ -352,7 +364,7 @@
   align-items: center;
   justify-content: center;
   max-width: none;
-  padding: calc(var(--nav-h) + clamp(12px, 2.6vh, 30px)) var(--gutter) clamp(16px, 3.4vh, 40px);
+  padding: calc(var(--nav-h) + clamp(24px, 5.5vh, 60px)) var(--gutter) clamp(24px, 5.25vh, 56px);
 }
 
 .feat.is-stage .feat-stage {
@@ -365,13 +377,15 @@
   perspective-origin: 50% 42%;
 }
 
+/* The heading rests on the optical centre (a little above the middle), so the
+   pin's first frame is composed and the hand-off from the hero stays tight. */
 .feat.is-stage .feat-intro {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 3vh;
+  padding-bottom: 14vh;
 }
 
 .feat.is-stage .feat-camera {
