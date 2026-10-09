@@ -42,12 +42,15 @@
 }
 
 /* ---------- Primitives ---------- */
+/* A title that needs the full width pushes the tag/actions onto their own
+   line rather than running underneath them. */
 .feat-ui-bar {
   display: flex;
   flex: none;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px 10px;
   min-height: 22px;
   color: var(--color-text-subtle);
 }
@@ -217,13 +220,6 @@
   font-weight: 500;
 }
 
-.feat-ui-ellipsis {
-  overflow: hidden;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .feat-ui-btn {
   display: inline-flex;
   flex: none;
@@ -262,15 +258,11 @@
   background: var(--color-primary);
 }
 
-/* Stacked two-line labels inside rows never wrap (calendar event titles may). */
+/* Labels inside rows never truncate: on narrow modules they wrap, and the
+   narrow-module rules at the end of this file shed secondary details first so
+   a wrap stays within two lines. */
 .feat-ui-stack > * {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.feat-ui-cal__event .feat-ui-stack > .feat-ui-strong {
-  white-space: normal;
+  min-width: 0;
 }
 
 /* White sub-surface used by records, rows and cards inside a module. */
@@ -395,6 +387,10 @@
   border-radius: 7px;
 }
 
+.feat-ui-queue__name {
+  min-width: 0;
+}
+
 .feat-ui-queue__score {
   min-width: 18px;
   color: var(--color-text);
@@ -475,7 +471,10 @@
   min-height: 0;
 }
 
+/* Each lane is a size container, so cards adapt to the lane they sit in
+   (four lanes on the stage, two-by-two on phones). */
 .feat-ui-col {
+  container: lane / inline-size;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -529,8 +528,11 @@
   box-shadow: var(--shadow-xs);
 }
 
+/* Value and close date share a line when the lane allows; the stale flag
+   drops beneath the value rather than being cut by the lane. */
 .feat-ui-deal__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
@@ -612,12 +614,16 @@
   color: var(--color-primary);
 }
 
+/* Kind and contact share one line; should a row ever be too tight, the contact
+   wraps beneath the kind instead of being cut off (narrow modules switch to
+   the two-line layout at the end of this file). */
 .feat-ui-follow__text {
+  display: flex;
   flex: 1;
-}
-
-.feat-ui-follow__text .feat-ui-muted {
-  margin-left: 6px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1px 6px;
+  min-width: 0;
 }
 
 .feat-ui-follow__time {
@@ -853,7 +859,7 @@
   display: grid;
   flex: 1 1 auto;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   min-height: 150px;
   padding: 12px 12px 10px;
   border: 1px solid var(--color-border);
@@ -896,6 +902,7 @@
 .feat-ui-columns__bar > span {
   display: block;
   width: 100%;
+  height: calc(var(--v, 1) * 100%);
   border-radius: 7px 7px 3px 3px;
   background: var(--ui-level-2);
 }
@@ -999,6 +1006,10 @@
   text-align: center;
 }
 
+.feat-ui-week__short {
+  display: none;
+}
+
 .feat-ui-week__row {
   display: contents;
 }
@@ -1074,8 +1085,6 @@
 }
 
 .feat-ui-daily__stat .feat-ui-muted {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -1096,8 +1105,9 @@
   font-weight: 500;
 }
 
-.feat-ui-daily__outcome > .feat-ui-ellipsis {
+.feat-ui-daily__text {
   flex: 1;
+  min-width: 0;
 }
 
 .feat-ui-daily__check {
@@ -1737,15 +1747,95 @@
  * Narrow modules (1024–1200px desktop cards, tablets, phones)
  * ==================================================================== */
 @container ui (max-width: 250px) {
-  .feat-ui-activity__meta,
+  .feat-ui-activity__meta {
+    display: none;
+  }
+}
+
+/*
+ * Follow-ups in a narrow module: each row becomes a two-line list item —
+ * kind and time/overdue tag on top, the contact on the full width beneath —
+ * instead of squeezing the contact between them.
+ */
+@container ui (max-width: 269px) {
+  .feat-ui-follow__inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon kind end'
+      'icon name name';
+    align-items: center;
+    gap: 0 9px;
+    padding-block: 3px;
+  }
+
+  .feat-ui-follow__text {
+    display: contents;
+  }
+
+  .feat-ui-follow__icon {
+    grid-area: icon;
+  }
+
+  .feat-ui-follow__kind {
+    grid-area: kind;
+  }
+
+  .feat-ui-follow__name {
+    grid-area: name;
+  }
+
+  .feat-ui-follow__end {
+    grid-area: end;
+  }
+
+  .feat-ui-follow .feat-ui-chip {
+    height: 18px;
+    padding: 0 6px;
+  }
+}
+
+/*
+ * Channel partners in a narrow module: the name takes the full line, deal
+ * and agreement share the line beneath (the type chip yields).
+ */
+@container ui (max-width: 279px) {
+  .feat-ui-partner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'avatar name name'
+      'avatar deal status';
+    align-items: center;
+    gap: 2px 10px;
+  }
+
+  .feat-ui-partner__text,
+  .feat-ui-partner__end {
+    display: contents;
+  }
+
+  .feat-ui-partner .feat-ui-avatar {
+    grid-area: avatar;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .feat-ui-partner__name {
+    grid-area: name;
+  }
+
+  .feat-ui-partner__deal {
+    grid-area: deal;
+  }
+
   .feat-ui-partner__end .feat-ui-chip {
     display: none;
   }
 
-  .feat-ui-partner .feat-ui-avatar--square {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
+  .feat-ui-partner__status {
+    grid-area: status;
   }
 }
 
@@ -1760,7 +1850,133 @@
 }
 
 @container ui (max-width: 220px) {
+  .feat-ui-partner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'name name'
+      'deal status';
+  }
+
   .feat-ui-partner .feat-ui-avatar {
+    display: none;
+  }
+}
+
+/* Manager Dashboard on phones: the period label yields, so the header keeps
+   one line beside the sample tag, and won/lost share a row above a
+   full-width pipeline-health tile instead of three cramped tiles. */
+@container ui (max-width: 340px) {
+  .feat-ui--dash .feat-ui-bar__meta {
+    display: none;
+  }
+
+  .feat-ui-dash__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feat-ui-kpi--health {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Cold calling: the contact's role yields; the name may take two lines. */
+@container ui (max-width: 245px) {
+  .feat-ui-call__meta {
+    display: none;
+  }
+}
+
+/* Narrow pipeline lanes: the close date yields; the name may take two lines
+   and the stale flag sits under the value. */
+@container lane (max-width: 119px) {
+  .feat-ui-deal__close {
+    display: none;
+  }
+}
+
+/* Weekly board in a narrow module: single-letter weekdays, as on the calendar. */
+@container ui (max-width: 224px) {
+  .feat-ui-week__long {
+    display: none;
+  }
+
+  .feat-ui-week__short {
+    display: inline;
+  }
+}
+
+/* Support inbox: the channel switch keeps its labels (the icons yield), then
+   the waiting time yields to the subject. */
+@container ui (max-width: 305px) {
+  .feat-ui-seg__item svg {
+    display: none;
+  }
+}
+
+@container ui (max-width: 285px) {
+  .feat-ui-ticket__wait {
+    display: none;
+  }
+}
+
+/*
+ * CRM Reports in a narrow module: four columns would leave each source label
+ * ~35px, so the chart becomes horizontal bars (label and value above each
+ * bar) and every source reads in full. The rep breakdown yields to it.
+ */
+@container ui (max-width: 287px) {
+  .feat-ui-columns {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    align-content: space-evenly;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .feat-ui-columns__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label value'
+      'track track';
+    align-items: baseline;
+    gap: 6px 8px;
+  }
+
+  .feat-ui-columns__value {
+    grid-area: value;
+  }
+
+  .feat-ui-columns__label {
+    grid-area: label;
+    color: var(--color-text-muted);
+    font-size: var(--fs-ui);
+    font-weight: 500;
+  }
+
+  .feat-ui-columns__track {
+    grid-area: track;
+    display: block;
+    min-height: 0;
+  }
+
+  .feat-ui-columns__bar {
+    display: block;
+    width: 100%;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--color-surface-2);
+  }
+
+  .feat-ui-columns__bar > span {
+    width: calc(var(--v, 1) * 100%);
+    height: 100%;
+    border-radius: 4px;
+  }
+
+  .feat-ui-conv {
     display: none;
   }
 }
