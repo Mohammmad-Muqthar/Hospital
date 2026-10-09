@@ -94,12 +94,15 @@ function buildStage(root) {
   approach.to({}, { duration: 0 }, 1) // normalise the approach to 0 → 1
 
   /* ---- Master timeline (pinned) ---- */
+  // The scene in view is the only one that takes pointer input (hover). It is
+  // derived from the playhead, written to the DOM only when it changes.
   let active = null
   const setActive = (index) => {
     if (index === active) return
     active = index
     sceneEls.forEach((el, i) => el.toggleAttribute('data-active', i === index))
   }
+  const sceneAt = (t) => (t < ACTIVE_SWITCH[0] ? -1 : t < ACTIVE_SWITCH[1] ? 0 : t < ACTIVE_SWITCH[2] ? 1 : 2)
 
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
@@ -111,10 +114,14 @@ function buildStage(root) {
       scrub: SCRUB,
       anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
+      // A refresh (resize, breakpoint switch, font load) re-renders the
+      // timeline from 0 — firing onUpdate with "no scene" — and then restores
+      // the playhead with events suppressed. Re-derive the active scene from
+      // the restored playhead, or hover stays dead until the next scroll.
+      onRefresh: (self) => self.animation && setActive(sceneAt(self.animation.time())),
     },
     onUpdate() {
-      const t = this.time()
-      setActive(t < ACTIVE_SWITCH[0] ? -1 : t < ACTIVE_SWITCH[1] ? 0 : t < ACTIVE_SWITCH[2] ? 1 : 2)
+      setActive(sceneAt(this.time()))
     },
   })
   Object.entries(LABELS).forEach(([name, at]) => tl.addLabel(name, at))

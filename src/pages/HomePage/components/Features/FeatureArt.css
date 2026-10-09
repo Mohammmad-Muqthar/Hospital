@@ -1151,11 +1151,12 @@
   text-align: center;
 }
 
+/* The event bar is pinned to the cell's foot, so a cell's only in-flow content
+   is its date: short month grids can never push a bar into the next row. */
 .feat-ui-cal__day {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   min-width: 0;
   min-height: 0;
   padding: 4px 4px 5px 6px;
@@ -1196,6 +1197,10 @@
 }
 
 .feat-ui-cal__mark {
+  position: absolute;
+  right: 4px;
+  bottom: 5px;
+  left: 6px;
   display: block;
   height: 5px;
   border-radius: 3px;
@@ -1558,16 +1563,35 @@
   width: 100%;
 }
 
-/* Lead record: shed the meta fields, then the header strip. */
-@container ui (max-height: 330px) {
+/*
+ * The thresholds below are measured, not guessed: each one is the module
+ * height at which "everything still shown + one whole row" stops fitting
+ * (plus a few px of margin), so a list's label, header or well never stays on
+ * screen without at least one row in it.
+ */
+
+/* Lead record: the meta fields go first (record 224 → 161px), then the header
+   strip; when not even one queued lead (40px) fits under the record, the queue
+   leaves and the record sits centred in the well — never a blank strip. */
+@container ui (max-height: 344px) {
   .feat-ui-fields {
     display: none;
   }
 }
 
-@container ui (max-height: 240px) {
+@container ui (max-height: 282px) {
   .feat-ui--lead > .feat-ui-bar {
     display: none;
+  }
+}
+
+@container ui (max-height: 248px) {
+  .feat-ui-queue {
+    display: none;
+  }
+
+  .feat-ui--lead {
+    justify-content: center;
   }
 }
 
@@ -1578,30 +1602,35 @@
   }
 }
 
-@container ui (max-height: 100px) {
+@container ui (max-height: 94px) {
   .feat-ui-call__outcomes {
     display: none;
   }
 }
 
-/* Pipeline: header strip, then the lanes give way to the stage strip. */
-@container ui (max-height: 170px) {
+/* Pipeline: the header strip goes first. Lanes only stay while every lane can
+   show its card — below ~582px of module width a deal wraps onto more lines
+   (74px instead of 54px), so those lanes hand over to the single-line stage
+   strip earlier. A lane header never promises a card it cannot show. */
+@container ui (max-height: 174px) {
   .feat-ui--pipeline > .feat-ui-bar {
     display: none;
   }
 }
 
-@container ui (max-height: 112px) {
+@container ui (max-height: 122px) or ((max-width: 590px) and (max-height: 142px)) {
   .feat-ui-kanban {
     display: none;
   }
 
-  .feat-ui-stages {
+  /* The strip is compact enough for the header to return above it. */
+  .feat-ui--pipeline > .feat-ui-bar {
     display: flex;
   }
 
-  .feat-ui--pipeline {
-    justify-content: center;
+  .feat-ui-stages {
+    display: flex;
+    margin-block: auto;
   }
 }
 
@@ -1693,28 +1722,73 @@
   }
 }
 
-/* Calendar: the event strip leaves when short. */
-@container ui (max-height: 260px) {
+/* Calendar: on shorter stages the occasion strip keeps to the title (in these
+   narrower cells the kind line would wrap and double the strip's height), and
+   it leaves before the month grid is squeezed below its 20px rows (grid 131px
+   + strip ≤ 65px + chrome 74px). */
+@container ui (max-width: 560px) and (max-height: 360px) {
+  .feat.is-stage .feat-ui-cal__event .feat-ui-muted {
+    display: none;
+  }
+}
+
+@container ui (max-height: 276px) {
   .feat-ui-cal__events {
     display: none;
   }
 }
 
-/* Support: list label and header strip first, then the routing row. */
-@container ui (max-height: 200px) {
+/* Short month grids (rows under ~31px): a bar under the date would collide
+   with it, so each date sits centred in its row and the occasion becomes a
+   dot beside it, in the same colour. */
+@container ui (max-height: 326px) {
+  .feat-ui-cal__day {
+    justify-content: center;
+    padding: 0 4px 0 5px;
+  }
+
+  .feat-ui-cal__num {
+    min-width: 16px;
+    height: 16px;
+    margin: 0 0 0 -1px;
+  }
+
+  .feat-ui-cal__mark {
+    top: 50%;
+    right: 7px;
+    bottom: auto;
+    left: auto;
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    border-radius: 50%;
+  }
+}
+
+@container ui (max-height: 250px) {
+  .feat-ui-cal__wd {
+    padding: 4px 0 3px;
+  }
+}
+
+/* Support: the inbox header and the list label leave together, before the
+   last ticket would (header + label + one ticket need 209px); then the
+   routing row (switch + routing + one ticket need 150px). */
+@container ui (max-height: 216px) {
   .feat-ui-support__queue,
   .feat-ui--support > .feat-ui-bar {
     display: none;
   }
 }
 
-@container ui (max-height: 120px) {
+@container ui (max-height: 156px) {
   .feat-ui-route {
     display: none;
   }
 }
 
-/* Very short modules (laptops around 600–650px tall): tighter well, no header strips. */
+/* Very short modules (laptops around 600–650px tall): tighter well, no header
+   strips; a list that is down to its last rows sits centred in the well. */
 @container ui (max-height: 110px) {
   .feat-ui {
     gap: 6px;
@@ -1723,6 +1797,15 @@
 
   .feat-ui > .feat-ui-bar {
     display: none;
+  }
+
+  .feat.is-stage .feat-ui-follow {
+    justify-content: center;
+  }
+
+  /* The partner list's gap is 6px here too; its leading spacer follows. */
+  .feat.is-stage .feat-ui--partners::before {
+    margin-bottom: -6px;
   }
 
   .feat-ui-partner,
@@ -1736,8 +1819,10 @@
   }
 }
 
-/* Too short for any module: keep the copy, drop the decorative illustration. */
-@container ui (max-height: 46px) {
+/* Too short for any module: keep the copy, drop the decorative illustration.
+   (A compact row below needs exactly 44px with its well, so a module is
+   either shown with a whole row or not at all — never empty.) */
+@container ui (max-height: 44.5px) {
   .feat-ui {
     display: none;
   }
@@ -2022,5 +2107,93 @@
 
   .feat:not(.is-stage) .feat-ui-dup .feat-ui-stack > * {
     white-space: normal;
+  }
+}
+
+/* ======================================================================
+ * Smallest stage modules (≤ 64px tall — laptops around 600–660px high).
+ * Rows turn single-line and compact (30px) so every list keeps at least one
+ * whole row down to the 44px point where the module itself steps aside;
+ * secondary details (contact, sub-label, deal terms) yield first. Placed last
+ * so it overrides the narrow two-line row layouts above.
+ * ==================================================================== */
+@container ui (max-height: 64px) {
+  /* row-gap only: the wrap-out lists keep their wide column gap. */
+  .feat.is-stage .feat-ui {
+    row-gap: 6px;
+    padding: 6px;
+  }
+
+  .feat.is-stage .feat-ui-follow__name,
+  .feat.is-stage .feat-ui-activity .feat-ui-label,
+  .feat.is-stage .feat-ui-partner__deal,
+  .feat.is-stage .feat-ui-partner__end .feat-ui-chip,
+  .feat.is-stage .feat-ui-partner__agreement,
+  .feat.is-stage .feat-ui-call__meta {
+    display: none;
+  }
+
+  .feat.is-stage .feat-ui-follow__inner,
+  .feat.is-stage .feat-ui-activity__inner,
+  .feat.is-stage .feat-ui-partner,
+  .feat.is-stage .feat-ui-call__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 9px 3px 4px;
+  }
+
+  .feat.is-stage .feat-ui-follow__icon,
+  .feat.is-stage .feat-ui-activity__icon,
+  .feat.is-stage .feat-ui-partner .feat-ui-avatar,
+  .feat.is-stage .feat-ui-call__phone {
+    width: 22px;
+    height: 22px;
+  }
+
+  .feat.is-stage .feat-ui-follow__icon,
+  .feat.is-stage .feat-ui-activity__icon,
+  .feat.is-stage .feat-ui-partner .feat-ui-avatar {
+    border-radius: 6px;
+  }
+
+  /* Back to one line from the narrow two-line layouts: a follow-up keeps its
+     kind and time / overdue tag, a partner its name and agreement mark. */
+  .feat.is-stage .feat-ui-follow__text,
+  .feat.is-stage .feat-ui-partner__text,
+  .feat.is-stage .feat-ui-partner__end {
+    display: flex;
+  }
+
+  .feat.is-stage .feat-ui-follow .feat-ui-chip {
+    height: 18px;
+    padding: 0 6px;
+  }
+
+  /* Activities, partners and the live call: one line, never wrapped. */
+  .feat.is-stage .feat-ui-activity__text .feat-ui-strong,
+  .feat.is-stage .feat-ui-partner__name,
+  .feat.is-stage .feat-ui-call__head .feat-ui-strong {
+    white-space: nowrap;
+  }
+
+  /* Daily report: the three headline numbers in tighter tiles. */
+  .feat.is-stage .feat-ui-daily__stat {
+    padding: 3px 8px;
+  }
+
+  .feat.is-stage .feat-ui-daily__value {
+    line-height: 1.15;
+  }
+
+  .feat.is-stage .feat-ui-daily__stat .feat-ui-muted {
+    line-height: 1.2;
+  }
+}
+
+/* Narrowest compact call row: the contact's name keeps the line to itself. */
+@container ui (max-height: 64px) and (max-width: 232px) {
+  .feat.is-stage .feat-ui-call__time {
+    display: none;
   }
 }

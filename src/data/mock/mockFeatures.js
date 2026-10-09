@@ -7,6 +7,10 @@
  * figures could read like business results carry a "Sample data" tag.
  * Money is USD in compact notation ($12.4k, $186k) — the same currency and
  * style as the hero dashboard and the default pricing currency.
+ * Dates share one sample "today": Tuesday 13 October 2026 (the page's year,
+ * and the same day the Roles mock-ups show), so the daily report, the month
+ * calendar and the relative dates ("Today", "Yesterday", upcoming closes)
+ * agree with each other and with real weekdays.
  */
 
 export const SAMPLE_TAG = 'Sample data'
@@ -160,7 +164,7 @@ export const MOCK_WEEKLY = {
 
 export const MOCK_DAILY = {
   title: 'Daily report',
-  date: 'Tue, 14 Oct',
+  date: 'Tue, 13 Oct',
   author: 'AK',
   rows: [
     { id: 'calls', label: 'Calls', value: '18' },
@@ -175,19 +179,20 @@ export const MOCK_DAILY = {
 /* Scene C — growth                                                    */
 /* ------------------------------------------------------------------ */
 
+/** October 2026 — the sample "today" (Tue 13) and the occasions coming up after it. */
 export const MOCK_CALENDAR = {
-  month: 'September',
+  month: 'October',
   weekdays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-  /** Index of the 1st in a Monday-first week (Tuesday). */
-  startOffset: 1,
-  days: 30,
-  today: 18,
+  /** Index of the 1st in a Monday-first week (1 Oct 2026 is a Thursday). */
+  startOffset: 3,
+  days: 31,
+  today: 13,
   /** Day → event kind, rendered as a marker in the grid. */
-  marks: { 13: 'clinic', 22: 'promo', 23: 'promo', 24: 'promo', 29: 'health' },
+  marks: { 17: 'clinic', 21: 'promo', 22: 'promo', 23: 'promo', 29: 'health' },
   events: [
-    { id: 'clinic', day: '13', month: 'Sep', title: 'Clinic open day', kind: 'Clinic occasion' },
-    { id: 'promo', day: '22', month: 'Sep', title: 'Health check promotion', kind: 'Promotion' },
-    { id: 'health', day: '29', month: 'Sep', title: 'World Heart Day', kind: 'Public health event' },
+    { id: 'clinic', day: '17', month: 'Oct', title: 'Clinic open day', kind: 'Clinic occasion' },
+    { id: 'promo', day: '21', month: 'Oct', title: 'Health check promotion', kind: 'Promotion' },
+    { id: 'health', day: '29', month: 'Oct', title: 'World Stroke Day', kind: 'Public health event' },
   ],
 }
 
