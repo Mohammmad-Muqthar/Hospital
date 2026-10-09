@@ -1,0 +1,1768 @@
+/*
+ * Features — product mock-UI illustrations (decorative, aria-hidden).
+ * Crisp HTML/CSS only; DM Sans at the mock-UI sizes (--fs-ui / --fs-ui-xs).
+ * On the desktop stage every module sits in a size container ("ui") and
+ * sheds secondary rows instead of clipping when the viewport is short.
+ */
+
+.feat-ui {
+  --ui-amber: #8a5d0f;
+  --ui-amber-bg: #fbf4e4;
+  --ui-amber-line: rgba(201, 138, 27, 0.26);
+  --ui-red: #a43f2f;
+  --ui-red-bg: #fbeeeb;
+  --ui-red-line: rgba(196, 81, 63, 0.24);
+  --ui-level-1: #e3f1ea;
+  --ui-level-2: #a9d9c4;
+  --ui-level-3: #3c9c7f;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-align: left;
+  list-style: none;
+}
+
+.feat-card--hero .feat-ui {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+}
+
+/* ---------- Primitives ---------- */
+.feat-ui-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 22px;
+  color: var(--color-text-subtle);
+}
+
+.feat-ui-bar__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.feat-ui-bar__title svg {
+  color: var(--color-primary);
+}
+
+.feat-ui-bar__meta {
+  margin-left: 2px;
+  padding-left: 8px;
+  border-left: 1px solid var(--color-border-strong);
+  color: var(--color-text-subtle);
+  font-weight: 500;
+}
+
+.feat-ui-bar__end,
+.feat-ui-bar__actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.feat-ui-tag {
+  padding: 2px 6px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 5px;
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.feat-ui-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feat.is-stage .feat-ui-chips {
+  flex: none;
+  max-height: 28px;
+  margin: -3px;
+  padding: 3px;
+  overflow: hidden;
+}
+
+.feat-ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.feat-ui-chip b {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.feat-ui-chip--emerald {
+  border-color: rgba(8, 107, 86, 0.16);
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.feat-ui-chip--solid {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.feat-ui-chip--amber {
+  border-color: var(--ui-amber-line);
+  background: var(--ui-amber-bg);
+  color: var(--ui-amber);
+}
+
+.feat-ui-chip--danger {
+  border-color: var(--ui-red-line);
+  background: var(--ui-red-bg);
+  color: var(--ui-red);
+}
+
+.feat-ui-chip--select {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.feat-ui-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.feat-ui-avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-mint);
+  color: var(--color-primary);
+  font-size: var(--fs-ui-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.feat-ui-avatar--ink {
+  background: var(--color-primary-dark);
+  color: #fff;
+}
+
+.feat-ui-avatar--soft {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.feat-ui-avatar--square {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+.feat-ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.feat-ui-strong {
+  color: var(--color-text);
+  font-size: var(--fs-ui);
+  font-weight: 600;
+}
+
+.feat-ui-muted {
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+}
+
+.feat-ui-label {
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+}
+
+.feat-ui-ellipsis {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feat-ui-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 7px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--fs-ui-xs);
+  font-weight: 600;
+}
+
+.feat-ui-btn--ghost {
+  gap: 5px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.feat-ui-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 13px;
+  margin-right: 1px;
+}
+
+.feat-ui-meter span {
+  width: 2.5px;
+  border-radius: 1px;
+  background: var(--color-border-strong);
+}
+
+.feat-ui-meter span.is-on {
+  background: var(--color-primary);
+}
+
+/* Stacked two-line labels inside rows never wrap (calendar event titles may). */
+.feat-ui-stack > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feat-ui-cal__event .feat-ui-stack > .feat-ui-strong {
+  white-space: normal;
+}
+
+/* White sub-surface used by records, rows and cards inside a module. */
+.feat-ui-lead,
+.feat-ui-queue__row,
+.feat-ui-deal,
+.feat-ui-follow__inner,
+.feat-ui-kpi,
+.feat-ui-reps,
+.feat-ui-partner,
+.feat-ui-activity__inner,
+.feat-ui-ticket,
+.feat-ui-cal__event,
+.feat-ui-call__head,
+.feat-ui-daily__head {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+/* ======================= Lead Management ======================= */
+.feat-ui-lead {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
+}
+
+.feat-ui-lead__id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feat-ui-lead__id .feat-ui-strong {
+  font-size: 0.8125rem;
+}
+
+.feat-ui-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--color-border);
+}
+
+.feat-ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.feat-ui-field__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.feat-ui-field__value .feat-ui-avatar {
+  width: 20px;
+  height: 20px;
+}
+
+.feat-ui-dup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--ui-amber-line);
+  border-radius: 10px;
+  background: var(--ui-amber-bg);
+}
+
+.feat-ui-dup > .feat-ui-stack {
+  flex: 1;
+}
+
+.feat-ui-dup .feat-ui-muted {
+  color: #7b6a4b;
+}
+
+.feat-ui-dup__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(201, 138, 27, 0.15);
+  color: #a06c0e;
+}
+
+.feat-ui-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feat-ui-queue__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px 6px 7px;
+}
+
+.feat-ui-queue__row .feat-ui-avatar--square {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+
+.feat-ui-queue__score {
+  min-width: 18px;
+  color: var(--color-text);
+  font-weight: 600;
+  text-align: right;
+}
+
+@container ui (max-width: 380px) {
+  .feat-ui-queue__source {
+    display: none;
+  }
+
+  .feat-ui-queue__row {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+}
+
+/* ======================= Cold Calling ======================= */
+.feat-ui-call__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+}
+
+.feat-ui-call__head > .feat-ui-stack {
+  flex: 1;
+}
+
+.feat-ui-call__phone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.feat-ui-call__time {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.feat-ui-call__outcomes {
+  flex: none;
+}
+
+.feat-ui-next {
+  display: flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid var(--color-border);
+}
+
+.feat-ui-next__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: var(--color-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ======================= Deal Pipeline ======================= */
+.feat-ui-kanban {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 0;
+}
+
+.feat-ui-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  min-height: 0;
+  padding: 5px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(201, 214, 206, 0.45);
+}
+
+.feat-ui-col__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 1px 2px 2px 3px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.feat-ui-col__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.feat-ui-col__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+}
+
+.feat-ui-col--won .feat-ui-col__label {
+  color: var(--color-primary);
+}
+
+.feat-ui-deal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 7px 9px;
+  box-shadow: var(--shadow-xs);
+}
+
+.feat-ui-deal__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.feat-ui-deal__value {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.feat-ui-deal__flag {
+  gap: 3px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+.feat-ui-deal--won {
+  border-color: rgba(8, 107, 86, 0.22);
+  background: linear-gradient(var(--color-mint), var(--color-mint)) padding-box;
+}
+
+/* Compact form for short stages (shown by the fit rules below). */
+.feat-ui-stages {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  max-height: 28px;
+  margin: -3px;
+  padding: 3px;
+  overflow: hidden;
+}
+
+.feat-ui-stages__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.feat-ui-stages__arrow {
+  color: var(--color-text-subtle);
+}
+
+.feat-ui-stages .feat-ui-chip b {
+  margin-left: 2px;
+}
+
+/* ======================= Follow-Ups ======================= */
+.feat-ui-follow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feat-ui-follow__row {
+  width: 100%;
+}
+
+.feat-ui-follow__inner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 9px 5px 5px;
+}
+
+.feat-ui-follow__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.feat-ui-follow__text {
+  flex: 1;
+}
+
+.feat-ui-follow__text .feat-ui-muted {
+  margin-left: 6px;
+}
+
+.feat-ui-follow__time {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.feat-ui-follow__row--overdue .feat-ui-follow__inner {
+  border-color: var(--ui-red-line);
+}
+
+.feat-ui-follow__row--overdue .feat-ui-follow__icon {
+  background: var(--ui-red-bg);
+  color: var(--ui-red);
+}
+
+/* ======================= Manager Dashboard ======================= */
+.feat-ui-dash {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.feat-ui-dash__filters {
+  flex: none;
+}
+
+.feat-ui-dash__kpis {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.4fr);
+  gap: 8px;
+}
+
+.feat-ui-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px 11px;
+}
+
+.feat-ui-kpi__value {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.feat-ui-kpi--won .feat-ui-kpi__value {
+  color: var(--color-primary);
+}
+
+.feat-ui-kpi--lost .feat-ui-kpi__value {
+  color: var(--color-text-muted);
+}
+
+.feat-ui-health {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+  margin: 6px 0 4px;
+}
+
+.feat-ui-health__seg {
+  border-radius: 3px;
+}
+
+.feat-ui-health__seg--healthy {
+  background: var(--color-primary);
+}
+
+.feat-ui-health__seg--risk {
+  background: #d9a441;
+}
+
+.feat-ui-health__seg--stale {
+  background: #d98b7c;
+}
+
+.feat-ui-health__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.feat-ui-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  white-space: nowrap;
+}
+
+.feat-ui-legend::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.feat-ui-legend--risk::before {
+  background: #d9a441;
+}
+
+.feat-ui-legend--stale::before {
+  background: #d98b7c;
+}
+
+.feat-ui-reps {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+  padding: 11px 12px;
+}
+
+.feat-ui-rep {
+  display: grid;
+  grid-template-columns: auto minmax(64px, 0.36fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.feat-ui-rep__name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feat-ui-rep__track {
+  display: block;
+  min-width: 0;
+}
+
+.feat-ui-rep__bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--color-surface-2);
+}
+
+.feat-ui-rep__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ui-level-2);
+}
+
+.feat-ui-rep__bar--lead > span {
+  background: var(--color-primary);
+}
+
+.feat-ui-rep__value {
+  min-width: 42px;
+  color: var(--color-text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.feat-ui-trend {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 92px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.feat-ui-trend__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.feat-ui-trend__plot {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 48px;
+}
+
+.feat-ui-trend__plot svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.feat-ui-trend__area {
+  fill: var(--color-mint);
+}
+
+.feat-ui-trend__line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.feat-ui-trend__dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(8, 107, 86, 0.25);
+}
+
+/* ======================= CRM Reports ======================= */
+.feat-ui-reports__filters {
+  flex: none;
+}
+
+.feat-ui-columns {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 150px;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.feat-ui-columns__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.feat-ui-columns__value {
+  color: var(--color-text);
+  font-size: var(--fs-ui-xs);
+  font-weight: 600;
+}
+
+.feat-ui-columns__track {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 24px;
+}
+
+.feat-ui-columns__bar {
+  display: flex;
+  align-items: flex-end;
+  width: min(100%, 36px);
+  height: 100%;
+  border-radius: 7px;
+}
+
+.feat-ui-columns__bar > span {
+  display: block;
+  width: 100%;
+  border-radius: 7px 7px 3px 3px;
+  background: var(--ui-level-2);
+}
+
+.feat-ui-columns__bar--lead > span {
+  background: var(--color-primary);
+}
+
+.feat-ui-columns__label {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feat-ui-reports__footer {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+@container ui (max-width: 270px) {
+  .feat-ui-bar__actions {
+    display: none;
+  }
+}
+
+.feat-ui-conv {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.feat-ui-conv__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.feat-ui-conv__row .feat-ui-avatar {
+  width: 22px;
+  height: 22px;
+}
+
+.feat-ui-conv__track {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--color-surface-2);
+}
+
+.feat-ui-conv__track > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--ui-level-2);
+}
+
+.feat-ui-conv__row:first-of-type .feat-ui-conv__track > span {
+  background: var(--color-primary);
+}
+
+.feat-ui-conv__value {
+  min-width: 30px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ======================= Weekly Board ======================= */
+.feat-ui-week {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: auto repeat(5, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 5px 6px;
+  min-height: 0;
+  padding: 9px 10px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.feat-ui-week__day {
+  padding-bottom: 1px;
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+  text-align: center;
+}
+
+.feat-ui-week__row {
+  display: contents;
+}
+
+.feat-ui-week__row .feat-ui-avatar {
+  align-self: center;
+  width: 20px;
+  height: 20px;
+}
+
+.feat:not(.is-stage) .feat-ui-week {
+  grid-auto-rows: 24px;
+}
+
+.feat-ui-week__cell {
+  display: block;
+  min-height: 0;
+  border-radius: 5px;
+  background: var(--color-surface-2);
+}
+
+.feat-ui-week__cell--1 {
+  background: var(--ui-level-1);
+}
+
+.feat-ui-week__cell--2 {
+  background: var(--ui-level-2);
+}
+
+.feat-ui-week__cell--3 {
+  background: var(--ui-level-3);
+}
+
+/* ======================= Daily Reports ======================= */
+.feat-ui-daily__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 7px;
+}
+
+.feat-ui-daily__head > .feat-ui-stack {
+  flex: 1;
+}
+
+.feat-ui-daily__doc {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.feat-ui-daily__rows {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.feat-ui-daily__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+}
+
+.feat-ui-daily__stat .feat-ui-muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feat-ui-daily__value {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.feat-ui-daily__outcome {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.feat-ui-daily__outcome > .feat-ui-ellipsis {
+  flex: 1;
+}
+
+.feat-ui-daily__check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--color-primary);
+}
+
+/* ======================= Marketing Calendar ======================= */
+.feat-ui-cal {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.feat-ui-cal__grid {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(20px, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.feat-ui-cal__wd {
+  padding: 7px 0 6px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+  text-align: center;
+}
+
+.feat-ui-cal__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 4px 5px 6px;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--fs-ui-xs);
+  font-weight: 500;
+}
+
+.feat-ui-cal__day:nth-child(7n) {
+  border-right: 0;
+}
+
+.feat-ui-cal__day:nth-last-child(-n + 7) {
+  border-bottom: 0;
+}
+
+.feat-ui-cal__day--empty {
+  background: var(--color-surface-2);
+}
+
+.feat-ui-cal__num {
+  display: inline-grid;
+  place-items: center;
+  align-self: flex-start;
+  min-width: 18px;
+  height: 18px;
+  margin: -1px 0 0 -3px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.feat-ui-cal__day--today .feat-ui-cal__num {
+  background: var(--color-primary-dark);
+  color: #fff;
+  font-weight: 600;
+}
+
+.feat-ui-cal__mark {
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+}
+
+.feat-ui-cal__day--clinic .feat-ui-cal__mark {
+  background: var(--ui-level-2);
+}
+
+.feat-ui-cal__day--promo .feat-ui-cal__mark {
+  background: #e4b65c;
+}
+
+.feat-ui-cal__day--health .feat-ui-cal__mark {
+  background: var(--color-primary);
+}
+
+.feat-ui-cal__day--clinic .feat-ui-cal__num,
+.feat-ui-cal__day--promo .feat-ui-cal__num,
+.feat-ui-cal__day--health .feat-ui-cal__num {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.feat-ui-cal__events {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feat-ui-cal__event {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 100%;
+  padding: 7px 9px 7px 7px;
+}
+
+.feat-ui-cal__event .feat-ui-strong {
+  line-height: 1.25;
+}
+
+.feat-ui-cal__event--key {
+  border-color: rgba(8, 107, 86, 0.22);
+}
+
+.feat-ui-cal__date {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  color: var(--color-text-subtle);
+  font-size: var(--fs-ui-xs);
+  line-height: 1.1;
+}
+
+.feat-ui-cal__date b {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.feat-ui-cal__date--clinic {
+  background: var(--ui-level-1);
+}
+
+.feat-ui-cal__date--promo {
+  background: var(--ui-amber-bg);
+}
+
+.feat-ui-cal__date--health {
+  background: var(--color-primary);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.feat-ui-cal__date--health b {
+  color: #fff;
+}
+
+@container ui (max-width: 520px) {
+  .feat-ui-cal__event {
+    gap: 7px;
+    padding: 6px 7px 6px 6px;
+  }
+
+  .feat-ui-cal__event .feat-ui-muted {
+    display: none;
+  }
+
+  .feat-ui-cal__date {
+    width: 30px;
+    height: 34px;
+  }
+}
+
+.feat:not(.is-stage) .feat-ui-cal__grid {
+  grid-auto-rows: minmax(34px, 1fr);
+}
+
+/* ======================= Channel Partners ======================= */
+.feat-ui--partners {
+  gap: 8px;
+}
+
+.feat-ui-partner {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+}
+
+.feat-ui-partner__text {
+  flex: 1;
+}
+
+.feat-ui-partner {
+  width: 100%;
+}
+
+.feat-ui-partner__end {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.feat-ui-partner__end .feat-ui-chip {
+  height: 20px;
+  padding: 0 6px;
+}
+
+.feat-ui-partner__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-amber);
+  font-size: var(--fs-ui-xs);
+  font-weight: 600;
+}
+
+.feat-ui-partner__status.is-signed {
+  color: var(--color-primary);
+}
+
+/* ======================= Client Activities ======================= */
+.feat-ui--activities {
+  gap: 6px;
+  margin: 0;
+}
+
+.feat-ui-activity {
+  width: 100%;
+}
+
+.feat-ui-activity__inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+}
+
+.feat-ui-activity__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.feat-ui-activity__text {
+  flex: 1;
+}
+
+.feat-ui-activity__meta {
+  flex: none;
+}
+
+/* ======================= Customer Support ======================= */
+.feat-ui-support {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.feat-ui-seg {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+}
+
+.feat-ui-seg__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.feat-ui-seg__item.is-active {
+  background: var(--color-mint);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.feat-ui-route {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.feat-ui-support__queue {
+  flex: none;
+  margin-top: 2px;
+}
+
+.feat-ui-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feat-ui-tickets__row {
+  width: 100%;
+}
+
+.feat-ui-ticket {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+}
+
+.feat-ui-ticket__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.feat-ui-ticket__text {
+  flex: 1;
+}
+
+.feat-ui-ticket__wait {
+  min-width: 38px;
+  text-align: right;
+}
+
+.feat-ui-ticket .feat-ui-chip {
+  height: 20px;
+  padding: 0 6px;
+}
+
+/* ======================================================================
+ * Desktop stage: fit-to-height behaviour. Every module sits in a "ui" size
+ * container there and sheds secondary rows instead of clipping. Lists wrap
+ * overflowing rows into a hidden second column, so only whole rows are
+ * ever visible — nothing is cut in half.
+ * ==================================================================== */
+.feat.is-stage .feat-ui-queue,
+.feat.is-stage .feat-ui-follow,
+.feat.is-stage .feat-ui-tickets,
+.feat.is-stage .feat-ui-col,
+.feat.is-stage .feat-ui--activities,
+.feat.is-stage .feat-ui--partners {
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  column-gap: 24px;
+  overflow: hidden;
+}
+
+.feat.is-stage .feat-ui-queue,
+.feat.is-stage .feat-ui-follow,
+.feat.is-stage .feat-ui-tickets {
+  /* room for the 3px hover ring without changing the visual alignment */
+  margin: -3px;
+  padding: 3px;
+}
+
+.feat.is-stage .feat-ui--activities,
+.feat.is-stage .feat-ui--partners {
+  flex: initial;
+  justify-content: center;
+}
+
+.feat.is-stage .feat-ui-col {
+  height: 100%;
+}
+
+.feat.is-stage .feat-ui-reps {
+  flex-wrap: wrap;
+  align-content: flex-start;
+  column-gap: 24px;
+  overflow: hidden;
+}
+
+.feat.is-stage .feat-ui-rep,
+.feat.is-stage .feat-ui-reps > .feat-ui-label {
+  width: 100%;
+}
+
+/* Lead record: shed the meta fields, then the header strip. */
+@container ui (max-height: 330px) {
+  .feat-ui-fields {
+    display: none;
+  }
+}
+
+@container ui (max-height: 240px) {
+  .feat-ui--lead > .feat-ui-bar {
+    display: none;
+  }
+}
+
+/* Cold calling: the next-step row goes first, then the outcomes. */
+@container ui (max-height: 150px) {
+  .feat-ui-next {
+    display: none;
+  }
+}
+
+@container ui (max-height: 100px) {
+  .feat-ui-call__outcomes {
+    display: none;
+  }
+}
+
+/* Pipeline: header strip, then the lanes give way to the stage strip. */
+@container ui (max-height: 170px) {
+  .feat-ui--pipeline > .feat-ui-bar {
+    display: none;
+  }
+}
+
+@container ui (max-height: 112px) {
+  .feat-ui-kanban {
+    display: none;
+  }
+
+  .feat-ui-stages {
+    display: flex;
+  }
+
+  .feat-ui--pipeline {
+    justify-content: center;
+  }
+}
+
+/* Dashboard: the trend yields first, then filters, then the KPI row. */
+@container ui (max-height: 440px) {
+  .feat-ui-trend {
+    display: none;
+  }
+}
+
+@container ui (max-height: 360px) {
+  .feat-ui-dash__filters {
+    display: none;
+  }
+}
+
+@container ui (max-height: 300px) {
+  .feat-ui-dash__kpis {
+    display: none;
+  }
+}
+
+/* Reports: rep list, footer and filters yield before the chart. */
+@container ui (max-height: 430px) {
+  .feat-ui-conv {
+    display: none;
+  }
+}
+
+@container ui (max-height: 300px) {
+  .feat-ui-reports__footer {
+    display: none;
+  }
+}
+
+@container ui (max-height: 240px) {
+  .feat-ui-reports__filters {
+    display: none;
+  }
+}
+
+/* Weekly board: header strip, then rows; below that the copy carries it. */
+@container ui (max-height: 190px) {
+  .feat-ui--weekly > .feat-ui-bar {
+    display: none;
+  }
+}
+
+@container ui (max-height: 130px) {
+  .feat-ui-week__row:nth-of-type(n + 4) {
+    display: none;
+  }
+}
+
+@container ui (max-height: 76px) {
+  .feat-ui--weekly {
+    display: none;
+  }
+}
+
+/* Daily report: keep the headline numbers. */
+@container ui (max-height: 170px) {
+  .feat-ui-daily__outcome {
+    display: none;
+  }
+}
+
+@container ui (max-height: 118px) {
+  .feat-ui--daily .feat-ui-daily__head {
+    display: none;
+  }
+}
+
+/* Calendar: the event strip leaves when short. */
+@container ui (max-height: 260px) {
+  .feat-ui-cal__events {
+    display: none;
+  }
+}
+
+/* Support: list label and header strip first, then the routing row. */
+@container ui (max-height: 200px) {
+  .feat-ui-support__queue,
+  .feat-ui--support > .feat-ui-bar {
+    display: none;
+  }
+}
+
+@container ui (max-height: 120px) {
+  .feat-ui-route {
+    display: none;
+  }
+}
+
+/* Very short modules (laptops around 600–650px tall): tighter well, no header strips. */
+@container ui (max-height: 110px) {
+  .feat-ui {
+    gap: 6px;
+    padding: 7px;
+  }
+
+  .feat-ui > .feat-ui-bar {
+    display: none;
+  }
+
+  .feat-ui-partner,
+  .feat-ui-call__head {
+    padding-block: 5px;
+  }
+
+  .feat-ui-activity__inner,
+  .feat-ui-follow__inner {
+    padding-block: 4px;
+  }
+}
+
+/* Too short for any module: keep the copy, drop the decorative illustration. */
+@container ui (max-height: 46px) {
+  .feat-ui {
+    display: none;
+  }
+}
+
+/* ======================================================================
+ * Narrow modules (1024–1200px desktop cards, tablets, phones)
+ * ==================================================================== */
+@container ui (max-width: 250px) {
+  .feat-ui-activity__meta,
+  .feat-ui-partner__end .feat-ui-chip {
+    display: none;
+  }
+
+  .feat-ui-partner .feat-ui-avatar--square {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+}
+
+@container ui (max-width: 240px) {
+  .feat-ui-next > .feat-ui-label {
+    display: none;
+  }
+
+  .feat-ui-next {
+    justify-content: flex-start;
+  }
+}
+
+@container ui (max-width: 220px) {
+  .feat-ui-partner .feat-ui-avatar {
+    display: none;
+  }
+}
+
+/* Flow layout (tablet / phone): two-by-two lanes, stacked agenda. */
+@container ui (max-width: 440px) {
+  .feat:not(.is-stage) .feat-ui-kanban {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container ui (max-width: 520px) {
+  .feat:not(.is-stage) .feat-ui-cal__events {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feat:not(.is-stage) .feat-ui-cal__event .feat-ui-muted {
+    display: block;
+  }
+
+  .feat:not(.is-stage) .feat-ui-cal__date {
+    width: 36px;
+    height: 38px;
+  }
+}
+
+/* Phones: keep lists short so twelve features stay a comfortable scroll. */
+@container ui (max-width: 380px) {
+  .feat:not(.is-stage) .feat-ui-queue__row:nth-child(n + 3),
+  .feat:not(.is-stage) .feat-ui-tickets__row:nth-child(n + 3),
+  .feat:not(.is-stage) .feat-ui-activity:nth-child(n + 4),
+  .feat:not(.is-stage) .feat-ui-partner:nth-child(n + 3) {
+    display: none;
+  }
+
+  .feat:not(.is-stage) .feat-ui-queue__row .feat-ui-chip {
+    display: none;
+  }
+
+  .feat:not(.is-stage) .feat-ui-queue__row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .feat:not(.is-stage) .feat-ui-dup .feat-ui-stack > * {
+    white-space: normal;
+  }
+}

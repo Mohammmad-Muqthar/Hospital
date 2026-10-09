@@ -1,9 +1,498 @@
-.feat-stub {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
+/*
+ * Phase 3 — Features.
+ *
+ * Two layout modes share one DOM:
+ *  - default (flow): mobile, tablet, short screens and reduced motion. A
+ *    composed, readable layout with nothing hidden in CSS.
+ *  - .feat.is-stage: added by the GSAP desktop branch only. The section
+ *    becomes a 100vh pinned stage and the three scenes are layered in 3D.
+ */
+
+.feat {
+  --feat-gap: clamp(14px, 1.5vw, 22px);
+  --feat-radius: 20px;
+  --feat-radius-hero: 24px;
+  --feat-shadow-hero:
+    0 1px 2px rgba(16, 60, 52, 0.05), 0 12px 28px -14px rgba(12, 44, 38, 0.16),
+    0 44px 90px -40px rgba(12, 44, 38, 0.32);
+  --feat-shadow-mid:
+    0 1px 2px rgba(16, 60, 52, 0.05), 0 10px 24px -14px rgba(12, 44, 38, 0.13),
+    0 32px 64px -36px rgba(12, 44, 38, 0.24);
+  --feat-shadow-small:
+    0 1px 2px rgba(16, 60, 52, 0.05), 0 8px 18px -12px rgba(12, 44, 38, 0.11),
+    0 22px 44px -30px rgba(12, 44, 38, 0.18);
+  --feat-shadow-lift:
+    0 2px 4px rgba(16, 60, 52, 0.04), 0 20px 40px -18px rgba(12, 44, 38, 0.22),
+    0 56px 100px -44px rgba(12, 44, 38, 0.34);
+
+  position: relative;
   background: var(--color-background);
   color: var(--color-text);
+  padding-block: var(--section-pad);
+}
+
+.feat-frame {
+  width: 100%;
+  max-width: calc(var(--container-max) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- Intro ---------- */
+.feat-intro {
+  text-align: center;
+}
+
+.feat-intro__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.feat-intro__title {
+  margin-top: 18px;
+  max-width: 17ch;
+}
+
+.feat-intro__lead {
+  margin-top: clamp(16px, 2vw, 24px);
+  max-width: 36em;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Scenes: flow layout ---------- */
+.feat-camera {
+  display: grid;
+  gap: clamp(36px, 4.5vw, 64px);
+  margin-top: clamp(48px, 6.5vw, 96px);
+}
+
+.feat-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: max(16px, var(--feat-gap));
+}
+
+.feat-panel {
+  position: relative;
+  min-width: 0;
+  container: card / inline-size;
+}
+
+/* Tablet: hero across the top, the wide/tall panel next, two compact panels side by side. */
+@media (min-width: 768px) {
+  .feat-scene {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'hero hero'
+      'medium medium'
+      'small1 small2';
+  }
+
+  .feat-panel[data-slot='hero'] {
+    grid-area: hero;
+  }
+
+  .feat-panel[data-slot='medium'] {
+    grid-area: medium;
+  }
+
+  .feat-panel[data-slot='small1'] {
+    grid-area: small1;
+  }
+
+  .feat-panel[data-slot='small2'] {
+    grid-area: small2;
+  }
+}
+
+/* Desktop flow (reduced motion / short screens): the three stage compositions, static. */
+@media (min-width: 1024px) {
+  .feat-scene[data-layout='a'] {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.56fr) minmax(0, 0.56fr);
+    grid-template-areas:
+      'hero medium medium'
+      'hero small1 small2';
+  }
+
+  .feat-scene[data-layout='b'] {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.04fr) minmax(0, 0.6fr);
+    grid-template-areas:
+      'medium hero small1'
+      'medium hero small2';
+  }
+
+  .feat-scene[data-layout='c'] {
+    grid-template-columns: minmax(0, 0.56fr) minmax(0, 0.56fr) minmax(0, 1.04fr);
+    grid-template-areas:
+      'small1 small2 hero'
+      'medium medium hero';
+  }
+}
+
+/* ---------- Card ---------- */
+.feat-card {
+  --feat-pad: clamp(20px, 1.7vw, 26px);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--feat-pad);
+  border: 1px solid var(--color-border);
+  border-radius: var(--feat-radius);
+  background: var(--color-surface);
+  box-shadow: var(--feat-shadow-small);
+}
+
+/* Hover shadow layer (decorative, faded in by Motion on fine pointers). */
+.feat-card__lift {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: var(--feat-shadow-lift);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.feat-card__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.feat-card__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(8, 107, 86, 0.12);
+  border-radius: 11px;
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.feat-card__title {
+  margin-top: 14px;
   font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  line-height: 1.22;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+}
+
+.feat-card__desc {
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: var(--fs-body-sm);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.feat-card__ui {
+  position: relative;
+  min-width: 0;
+  margin-top: 18px;
+  container: ui / inline-size;
+}
+
+/* Hero — the feature that leads each composition. */
+.feat-card--hero {
+  --feat-pad: clamp(22px, 2.2vw, 34px);
+
+  border-radius: var(--feat-radius-hero);
+  box-shadow: var(--feat-shadow-hero);
+}
+
+.feat-card--hero .feat-card__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.feat-card--hero .feat-card__title {
+  margin-top: clamp(16px, 2.2vh, 22px);
   font-size: var(--fs-h3);
+  line-height: 1.16;
+}
+
+.feat-card--hero .feat-card__desc {
+  max-width: 44ch;
+  margin-top: 10px;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+}
+
+.feat-card--hero .feat-card__ui {
+  margin-top: clamp(18px, 2.6vh, 28px);
+}
+
+/* Medium panels share a slightly stronger elevation and title. */
+.feat-card--wide,
+.feat-card--tall,
+.feat-card--split {
+  box-shadow: var(--feat-shadow-mid);
+}
+
+.feat-card--wide .feat-card__title,
+.feat-card--tall .feat-card__title,
+.feat-card--split .feat-card__title {
+  font-size: clamp(1.1875rem, 1rem + 0.45vw, 1.5rem);
+}
+
+.feat-card--wide .feat-card__desc,
+.feat-card--tall .feat-card__desc,
+.feat-card--split .feat-card__desc {
+  font-size: 1rem;
+}
+
+/* Wide: icon beside a title/description header, module full width beneath. */
+.feat-card--wide .feat-card__text {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 16px;
+  align-items: start;
+}
+
+.feat-card--wide .feat-card__icon {
+  grid-row: span 2;
+}
+
+.feat-card--wide .feat-card__title {
+  margin-top: 1px;
+}
+
+.feat-card--wide .feat-card__desc {
+  max-width: 52ch;
+  margin-top: 4px;
+}
+
+/* Split: text column beside the module. */
+@container card (min-width: 560px) {
+  .feat-card--split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    column-gap: clamp(18px, 2vw, 28px);
+  }
+
+  .feat-card--split .feat-card__ui {
+    margin-top: 0;
+  }
+}
+
+/* Flip: compact module on top, title row and description underneath. */
+.feat-card--flip .feat-card__ui {
+  order: -1;
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+.feat-card--flip .feat-card__text {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+
+.feat-card--flip .feat-card__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.feat-card--flip .feat-card__title {
+  margin-top: 0;
+}
+
+.feat-card--flip .feat-card__desc {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+/* Small: text first, compact module pinned to the bottom. */
+.feat-card--small .feat-card__ui {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+/* Hero on tablet/mobile flow: text beside the module when there is room. */
+@container card (min-width: 620px) {
+  .feat:not(.is-stage) .feat-card--hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    column-gap: clamp(24px, 3vw, 40px);
+    align-items: start;
+  }
+
+  .feat:not(.is-stage) .feat-card--hero .feat-card__ui {
+    margin-top: 0;
+  }
+}
+
+/* ======================================================================
+ * Desktop stage (class set by the GSAP desktop branch)
+ * ==================================================================== */
+.feat.is-stage {
+  height: 100vh;
+  padding: 0;
+  overflow: clip;
+}
+
+.feat.is-stage .feat-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: none;
+  padding: calc(var(--nav-h) + clamp(12px, 2.6vh, 30px)) var(--gutter) clamp(16px, 3.4vh, 40px);
+}
+
+.feat.is-stage .feat-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1380px;
+  height: 100%;
+  max-height: 820px;
+  perspective: 1600px;
+  perspective-origin: 50% 42%;
+}
+
+.feat.is-stage .feat-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 3vh;
+}
+
+.feat.is-stage .feat-camera {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  transform-style: preserve-3d;
+}
+
+.feat.is-stage .feat-scene {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.feat.is-stage .feat-scene[data-layout='a'] {
+  grid-template-rows: minmax(0, 0.94fr) minmax(0, 1.06fr);
+}
+
+.feat.is-stage .feat-scene[data-layout='b'] {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.feat.is-stage .feat-scene[data-layout='c'] {
+  grid-template-rows: minmax(0, 1.06fr) minmax(0, 0.94fr);
+}
+
+/* Only the scene in view takes pointer input (hover); the transparent camera
+   layer never blocks the heading underneath it. */
+.feat.is-stage .feat-camera {
+  pointer-events: none;
+}
+
+.feat.is-stage .feat-scene[data-active] {
+  pointer-events: auto;
+}
+
+/* Stage panels have a fixed box: let the module take the remaining height. */
+.feat.is-stage .feat-panel {
+  container: card / size;
+}
+
+.feat.is-stage .feat-card {
+  overflow: hidden;
+}
+
+.feat.is-stage .feat-card__text {
+  flex: none;
+}
+
+.feat.is-stage .feat-card__ui {
+  flex: 1 1 0;
+  min-height: 0;
+  container: ui / size;
+}
+
+.feat.is-stage .feat-card--small .feat-card__ui {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.feat.is-stage .feat-card--small .feat-card__text {
+  margin-bottom: 16px;
+}
+
+/* Compact modules sit centred in their well when there is spare height. */
+.feat.is-stage .feat-card--small .feat-ui,
+.feat.is-stage .feat-card--flip .feat-ui {
+  justify-content: center;
+}
+
+.feat.is-stage .feat-card--split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: clamp(18px, 2vw, 28px);
+}
+
+.feat.is-stage .feat-card--split .feat-card__ui {
+  margin-top: 0;
+}
+
+/* Narrow or short small cards: icon joins the title row to give the module more height. */
+@container card (max-width: 300px) or (max-height: 300px) {
+  .feat-card--small .feat-card__text {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+  }
+
+  .feat-card--small .feat-card__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .feat-card--small .feat-card__title {
+    margin-top: 0;
+  }
+
+  .feat-card--small .feat-card__desc {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+}
+
+/* Short stage cards: tighten the typography rhythm before anything clips. */
+@container card (max-height: 330px) {
+  .feat-card__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .feat-card__title {
+    margin-top: 10px;
+  }
+
+  .feat-card--flip .feat-card__ui {
+    margin-bottom: 14px;
+  }
 }
