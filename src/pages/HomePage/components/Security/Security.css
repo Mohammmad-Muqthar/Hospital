@@ -57,17 +57,23 @@
 
 /*
  * The shared .t-h2 spec (size, leading, tracking) — the same as Features,
- * How It Works and Roles. The only extra cap is the column width: the three
- * designed lines never re-wrap ("Private by default." measures ≈ 8.66em).
+ * How It Works and Roles. The only extra cap is the column width, so the
+ * three designed lines fit as set: "Private by default." measures ≈ 8.66em,
+ * and 11.2cqi leaves it ≈ 3% of slack (font rendering can never tip it
+ * onto a fourth line).
  */
 .sec-title {
-  font-size: min(var(--fs-h2), 11.5cqi);
+  font-size: min(var(--fs-h2), 11.2cqi);
   color: var(--color-text);
 }
 
+/*
+ * Each designed line starts on its own line, but may still wrap: with user
+ * text-spacing overrides (WCAG 1.4.12) a line can outgrow the column, and it
+ * must re-flow rather than widen the page.
+ */
 .sec-title__line {
   display: block;
-  white-space: nowrap;
 }
 
 .sec-lead {
@@ -190,7 +196,7 @@
 
 .sec.is-pinned .sec-title {
   /* short laptop viewports: capped by height so the column fits */
-  font-size: min(var(--fs-h2), 11.5cqi, 7.2vh);
+  font-size: min(var(--fs-h2), 11.2cqi, 7.2vh);
 }
 
 .sec.is-pinned .sec-lead {
@@ -298,8 +304,12 @@
     transform var(--dur-base) var(--ease-out);
 }
 
-.sec-nav__btn:hover {
-  color: var(--color-text);
+/* Hover only where it exists: on touch a tapped item would keep the hover
+   colour after the story moves on, reading as a second current item. */
+@media (hover: hover) {
+  .sec-nav__btn:hover {
+    color: var(--color-text);
+  }
 }
 
 .sec-nav__btn[aria-current] {
@@ -420,8 +430,10 @@
     font-size: var(--fs-body-sm);
   }
 
+  /* The scene is width-bound on phones; the height is headroom for its
+     counter-scaled (legible) labels above and around it. */
   .sec.is-scrolly .sec-visual {
-    height: clamp(220px, 42svh, 380px);
+    height: clamp(260px, 50svh, 440px);
   }
 }
 
@@ -466,6 +478,36 @@
 
   .sec.is-scrolly .sec-nav__btn {
     min-height: 30px;
+  }
+}
+
+/*
+ * Touch input (iPads in landscape, touch laptops): the index rows become
+ * 44px targets, the same rule the footer follows. In the pinned scene four
+ * such rows would be far taller than the reading area they index (and run
+ * into the architecture), so there the index becomes two rows of two —
+ * 88px, still within the reading area's height, top-aligned with its title.
+ * Two columns reach further into the stage, so the stage keeps a band of
+ * that height free at its foot: the architecture is fitted and centred
+ * above it and never dips into the index, whatever the camera does. The
+ * smaller stage is fitted by its height on short screens, so a top inset
+ * keeps the raised access panel clear of the navbar there.
+ */
+@media (any-pointer: coarse) {
+  .sec.is-pinned .sec-nav__btn,
+  .sec.is-scrolly .sec-nav__btn {
+    min-height: 44px;
+  }
+
+  .sec.is-pinned .sec-nav {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    column-gap: clamp(14px, 1.4vw, 24px);
+  }
+
+  .sec.is-pinned .sec-stage {
+    padding-top: 16px;
+    padding-bottom: 88px;
   }
 }
 

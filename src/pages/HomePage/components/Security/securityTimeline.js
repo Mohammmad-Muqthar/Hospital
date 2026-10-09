@@ -1,6 +1,6 @@
 import { gsap, EASE } from '../../../../lib/gsap'
 import { CHAMBER, ROUTED_REGION_INDEX } from '../../../../data/mock/mockSecurity'
-import { SCENE, hubOffsetFromRegion, spreadOffset } from './securityGeometry'
+import { SCENE, fitScene, hubOffsetFromRegion, spreadOffset } from './securityGeometry'
 
 /**
  * Timeline labels, in story order. Feature i of SECURITY.features maps to
@@ -141,6 +141,11 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   const tokenFaces = q('.sx-puck .sx-face')
   const chip = q('.sx-chip')[0]
   const features = q('.sec-feature')
+  const stage = q('.sx')[0]
+  const isDense = () => {
+    const { width, height } = stage.getBoundingClientRect()
+    return fitScene(width, height).dense
+  }
 
   const hub = hubOffsetFromRegion(ROUTED_REGION_INDEX)
   // Hovers just above the chamber roofs while it travels down the corridor.
@@ -251,7 +256,13 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   moveCamera(tl, view, cfg.cam.final, { duration: 0.8, ease: EASE.soft }, f)
   tl.to(rig, { x: 0, y: 0, z: 0, duration: 0.8, ease: EASE.soft }, f)
   tl.to(slots, { ...spread(SCENE.restGap), duration: 0.8 }, f)
-  tl.to(tags, { opacity: 1, x: 0, duration: 0.35, stagger: 0.05, ease: EASE.out }, f + 0.35)
+  // The layer tags return as a recap, except on dense (phone) stages, where
+  // they would crowd the docked request chip. Evaluated per refresh.
+  tl.to(
+    tags,
+    { opacity: () => (isDense() ? 0 : 1), x: 0, duration: 0.35, stagger: 0.05, ease: EASE.out },
+    f + 0.35,
+  )
   tl.addLabel('final', BEATS.final)
   // Short hold so the final composition is read before the pin releases.
   tl.to({}, { duration: BEATS.end - BEATS.final }, BEATS.final)

@@ -10,7 +10,7 @@ import {
   ROUTED_REGION_INDEX,
   SUPPORT_TOKEN,
 } from '../../../../data/mock/mockSecurity'
-import { SCENE, chamberRest, regionRest } from './securityGeometry'
+import { SCENE, chamberRest, fitScene, regionRest } from './securityGeometry'
 import './SecurityArchitecture.css'
 
 /**
@@ -223,16 +223,12 @@ function SecurityArchitecture({ regions }) {
     const apply = () => {
       const { width, height } = root.getBoundingClientRect()
       if (!width || !height) return
-      // Mock labels are counter-scaled when the scene shrinks so they stay legible.
-      const labelScaleFor = (fit) => Math.min(Math.max(SCENE.labelFit / fit, 1), SCENE.maxLabelScale)
-      const firstFit = Math.min(width / SCENE.frame.w, height / SCENE.frame.h, SCENE.maxFit)
-      // Enlarged labels (the access panel above all) need headroom the
-      // reference frame doesn't include: reserve it, so on short stages they
-      // stay inside the visual instead of rising under the navbar.
-      const frameH = SCENE.frame.h + SCENE.labelHeadroom * (labelScaleFor(firstFit) - 1)
-      const fit = Math.min(width / SCENE.frame.w, height / frameH, SCENE.maxFit)
+      // Mock labels are counter-scaled when the scene shrinks so they stay
+      // legible; on dense (phone) stages fewer of them show at once (CSS).
+      const { fit, labelScale, dense } = fitScene(width, height)
       viewport.style.setProperty('--fit', fit.toFixed(4))
-      viewport.style.setProperty('--label-scale', labelScaleFor(fit).toFixed(4))
+      viewport.style.setProperty('--label-scale', labelScale.toFixed(4))
+      root.toggleAttribute('data-dense', dense)
     }
     apply()
     const ro = new ResizeObserver(apply)
