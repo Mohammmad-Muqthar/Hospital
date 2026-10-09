@@ -107,6 +107,13 @@ p {
   border-radius: 4px;
 }
 
+/* Sections receive programmatic focus after in-page navigation (so the next
+   Tab continues there); they are landmarks, not controls — no ring. */
+section[tabindex='-1']:focus,
+main[tabindex='-1']:focus {
+  outline: none;
+}
+
 /* ---------- Utilities ---------- */
 .container {
   width: 100%;

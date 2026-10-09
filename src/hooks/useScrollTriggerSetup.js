@@ -173,7 +173,7 @@ export default function useScrollTriggerSetup() {
         const y = yForAnchor(ranges, saved.anchor)
         if (y != null) jumpTo(y)
       } else if (hash && hash.length > 1) {
-        scrollToSection(hash, { smooth: false, updateHash: false })
+        scrollToSection(hash, { smooth: false, updateHash: false, moveFocus: false })
         settleScrubs()
       }
       anchor = anchorFor(ranges, window.scrollY)
