@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { gsap, useGSAP, MQ, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
+import { gsap, ScrollTrigger, useGSAP, MQ, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
 import { getNavOffset } from '../../../../lib/scroll'
 
 /* ------------------------------------------------------------------ */
@@ -267,7 +267,33 @@ function buildStage(root, variantKey, onStepChange) {
     lens.classList.toggle('is-flat', square)
   }
 
+  // The step announced to assistive tech (aria-current) follows the
+  // timeline's time; React hears about it only when the index changes.
   let lastStep = -2
+  const syncStep = (time) => {
+    let index = -1
+    T.steps.forEach((start, k) => {
+      if (time >= start + T.stepDur * 0.45) index = k
+    })
+    if (index !== lastStep) {
+      lastStep = index
+      onStepChange(index)
+    }
+  }
+
+  // State derived from the timeline (not animated by it) must be re-derived
+  // after every ScrollTrigger refresh (resize, rotation, breakpoint switch):
+  // the refresh rewinds the timeline to 0 to measure, then restores its time
+  // with events suppressed, so onUpdate never sees the restored frame.
+  // Updates fired while the page refreshes (the measuring frame) are ignored,
+  // and onRefresh — which runs once the time is restored — re-syncs, so
+  // aria-current and the crisp flat lens never fall out of step with what is
+  // on screen (no scroll needed to recover).
+  const syncDerived = (animation) => {
+    syncStep(animation.time())
+    syncLensFlat()
+  }
+
   const tl = gsap.timeline({
     defaults: { ease: 'power2.inOut' },
     scrollTrigger: {
@@ -278,18 +304,10 @@ function buildStage(root, variantKey, onStepChange) {
       scrub: SCRUB,
       anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
+      onRefresh: (self) => syncDerived(self.animation),
     },
     onUpdate() {
-      const time = this.time()
-      let index = -1
-      T.steps.forEach((start, k) => {
-        if (time >= start + T.stepDur * 0.45) index = k
-      })
-      if (index !== lastStep) {
-        lastStep = index
-        onStepChange(index)
-      }
-      syncLensFlat()
+      if (!ScrollTrigger.isRefreshing) syncDerived(this)
     },
   })
 
