@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { gsap, MQ, EASE, SCRUB, useGSAP } from '../../../../lib/gsap'
+import { gsap, ScrollTrigger, MQ, EASE, SCRUB, useGSAP } from '../../../../lib/gsap'
 import { getNavOffset } from '../../../../lib/scroll'
 import {
   APPROACH,
@@ -13,15 +13,31 @@ import {
   getNavLayout,
 } from './rolesScene'
 import { ROLE_SESSIONS } from '../../../../data/mock/mockRoles'
+import { measureFit } from './workspace/fit'
+
+/**
+ * Where the stage has side columns (selector and description beside the
+ * workspace) — Roles.css. Below it the selector is a row above the
+ * workspace.
+ */
+export const COLUMNS_QUERY = '(min-width: 1200px)'
 
 /**
  * Where the pinned scene runs — the same query as the pinned layout in
- * Roles.css and the React `pinned` flag. Wide laptops pin from 600px tall;
- * the narrower two-column layout (1024–1279) needs 700px so the selector,
- * description and workspace all fit (shorter screens get the flow layout).
+ * Roles.css and the React `pinned` flag. Narrower screens (tablets in either
+ * orientation, small laptop windows) can't give the workspace a legible size
+ * beside the selector and description inside one viewport, so they get the
+ * flow layout with tap/click selection.
  */
-const SIZE_OK = ['(min-width: 1280px) and (min-height: 600px)', '(min-width: 1024px) and (min-height: 700px)']
-export const PINNED_QUERY = SIZE_OK.map((q) => `${q} and ${MQ.motionOK}`).join(', ')
+export const PINNED_QUERY = `(min-width: 1200px) and (min-height: 600px) and ${MQ.motionOK}`
+
+/**
+ * Pinned frames up to 800px tall dock the heading (the docked layout in
+ * Roles.css): the stage owns the whole frame and the first scroll hands it
+ * over from the heading to the workspace. Includes the pinned conditions,
+ * so it never changes (and never rebuilds the scene) in flow layouts.
+ */
+const DOCK_QUERY = `(min-width: 1200px) and (min-height: 600px) and (max-height: 800px) and ${MQ.motionOK}`
 
 /**
  * Flow layouts (tablet, mobile, short desktop; motion OK): no pin and no
@@ -63,6 +79,13 @@ function buildFlowReveal(q, { mobile }) {
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 const sineInOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2
 
+/** Layout offset of `el` from the top of `root` (ignores transforms). */
+function offsetWithin(el, root) {
+  let y = 0
+  for (let n = el; n && n !== root; n = n.offsetParent) y += n.offsetTop
+  return y
+}
+
 /**
  * Approach (pre-pin) scrub for the pinned desktop scene, read top to bottom
  * as: the light arrives → the heading → the workspace → selector and
@@ -84,7 +107,6 @@ function buildApproach(root, q) {
   const range = { trigger: root, start: 'top bottom', end: 'top top', invalidateOnRefresh: true }
 
   const veil = q('.roles__veil')[0]
-  const inner = q('.roles__inner')[0]
   const eyebrow = q('.roles__eyebrow')[0]
   gsap.set(veil, { autoAlpha: 1, transformOrigin: '50% 0%' })
 
@@ -93,7 +115,7 @@ function buildApproach(root, q) {
   let rest = 0.25 // band height at rest / full band height
   const measure = () => {
     edge = clamp(1 - getNavOffset() / window.innerHeight, 0.8, 0.97)
-    const textTop = inner.offsetTop + eyebrow.offsetTop
+    const textTop = offsetWithin(eyebrow, root)
     rest = clamp((textTop * VEIL.restFactor) / Math.max(1, veil.offsetHeight), 0.05, 1)
   }
   measure()
@@ -142,13 +164,64 @@ function buildApproach(root, q) {
 }
 
 /**
+ * Docked layout geometry (short pinned frames, see Roles.css): the stage
+ * fills the frame and the heading overlays its top. At pin progress 0 the
+ * scene must sit below the heading, so it is shifted down by half the
+ * overlap (every column is centred in the stage) and the workspace scaled
+ * to fit the room left under the heading. Measured from layout offsets and
+ * the window's fit size, so it is independent of the transforms applied.
+ */
+function dockGeometry(root) {
+  const inner = root.querySelector('.roles__inner')
+  const head = root.querySelector('.roles__head')
+  const stage = root.querySelector('.roles__stage')
+  const gap = parseFloat(getComputedStyle(inner).getPropertyValue('--roles-dock-gap')) || 24
+  const overlap = Math.max(0, offsetWithin(head, root) + head.offsetHeight + gap - offsetWithin(stage, root))
+  const fit = measureFit(root.querySelector('.rw-fit'))
+  const room = stage.offsetHeight - overlap
+  return {
+    shift: Math.round(overlap / 2),
+    scale: fit ? clamp(Math.floor((room / fit.height) * 1000) / 1000, 0.5, 1) : 1,
+    lift: Math.round(Math.min(40, overlap * 0.4)),
+  }
+}
+
+/**
+ * Docked layouts only: the opening hand-over from the heading to the
+ * product. Progress 0 (where anchor links land) shows the heading with the
+ * scene composed below it; scrolling on, the heading lifts away while the
+ * selector and description rise into place and the workspace settles at its
+ * full, legible size (scale 1 — crisp at rest). Scrubbed, so it reverses.
+ */
+function buildDock(tl, root, q, duration) {
+  const geo = () => dockGeometry(root)
+  // The heading clears first (it is gone before the rising window reaches
+  // it, so the two never read on top of each other); the scene follows a
+  // beat later and settles with the end of the hand-over.
+  const fade = duration * 0.42
+  const rise = { duration: duration * 0.88, ease: 'power2.inOut' }
+  const riseAt = duration - rise.duration
+  tl.fromTo(q('.roles__head'), { y: 0 }, { y: () => -geo().lift, duration: fade, ease: 'power1.in' }, 0)
+    .fromTo(q('.roles__head'), { opacity: 1 }, { opacity: 0, duration: fade, ease: 'none' }, 0)
+    .fromTo(q('.roles-sel, .roles-desc'), { y: () => geo().shift }, { y: 0, ...rise }, riseAt)
+    .fromTo(
+      q('.roles__ws-col'),
+      { y: () => geo().shift, scale: () => geo().scale },
+      { y: 0, scale: 1, ...rise },
+      riseAt,
+    )
+}
+
+/**
  * The pinned master timeline: Admin → Sales Manager → Sales Executive →
  * Receptionist. The app frame stays; role modules leave and arrive in depth,
  * the sidebar re-flows to the role's navigation, and the description
- * cross-fades. React state only mirrors the timeline (onActive).
+ * cross-fades. React state only mirrors the timeline (onActive). Docked
+ * layouts open with the heading → workspace hand-over (buildDock).
  */
-function buildMaster(root, q, roles, onActive) {
-  const { firstHold, transition: T, hold, labelInset, lastHold, pinVh } = SCENE
+function buildMaster(root, q, roles, onActive, { dock }) {
+  const { firstHold, transition: T, hold, labelInset, lastHold } = SCENE
+  const pinVh = dock ? SCENE.pinVhDocked : SCENE.pinVh
   const S = SWAP
   const views = q('.rw-view')
   const descs = q('.roles-desc__panel')
@@ -175,6 +248,19 @@ function buildMaster(root, q, roles, onActive) {
   gsap.set(tilt, { rotationX: 0, rotationY: 0, z: 0 })
 
   const switchTimes = []
+  const indexAt = (time) => switchTimes.reduce((index, s) => (time >= s ? index + 1 : index), 0)
+  // Mirror the timeline into React state, for real renders only:
+  //  - while ScrollTrigger refreshes (any resize) it renders the timeline at
+  //    0 with the page momentarily scrolled to the top, then restores it
+  //    silently — the 'refresh' listener below re-syncs afterwards;
+  //  - after a resize out of the pinned layout, the CSS layout changes (and
+  //    the page scrolls) before gsap.matchMedia tears this scene down; those
+  //    last renders must not pick the role the flow layout starts with.
+  const pinnedNow = window.matchMedia(PINNED_QUERY)
+  const sync = () => {
+    const st = tl.scrollTrigger
+    if (st && pinnedNow.matches && !ScrollTrigger.isRefreshing) onActive(indexAt(tl.time()))
+  }
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
     scrollTrigger: {
@@ -187,21 +273,27 @@ function buildMaster(root, q, roles, onActive) {
       invalidateOnRefresh: true,
     },
     onUpdate() {
-      const time = tl.time()
-      // Reverting (refresh, breakpoint change, unmount) renders the timeline at
-      // 0 even though the page is still scrolled into the scene — and when it
-      // is being killed its ScrollTrigger is already detached. Neither is a
-      // real state change, so React state is left alone.
+      // A revert (breakpoint change, unmount) renders the timeline at 0
+      // although the page is still scrolled into the scene — and when it is
+      // being killed its ScrollTrigger is already detached. Not real changes.
       const st = tl.scrollTrigger
-      if (!st || (time === 0 && st.scroll() > st.start + 1)) return
-      let index = 0
-      for (const s of switchTimes) if (time >= s) index += 1
-      onActive(index)
+      if (!st || (tl.time() === 0 && st.scroll() > st.start + 1)) return
+      sync()
     },
   })
+  // After every refresh, re-derive the role from the restored timeline.
+  ScrollTrigger.addEventListener('refresh', sync)
+  tl.data = { release: () => ScrollTrigger.removeEventListener('refresh', sync) }
 
-  tl.addLabel(ROLE_LABELS[0], 0)
   let at = firstHold
+  if (dock) {
+    buildDock(tl, root, q, SCENE.dock)
+    // Admin is "arrived at" once the hand-over has settled.
+    tl.addLabel(ROLE_LABELS[0], SCENE.dock + SCENE.dockLabelInset)
+    at = SCENE.dockHold
+  } else {
+    tl.addLabel(ROLE_LABELS[0], 0)
+  }
 
   for (let from = 0; from < roles.length - 1; from += 1) {
     const to = from + 1
@@ -315,8 +407,8 @@ export default function useRolesScene(rootRef, roles, setActiveIndex) {
       // trigger in hooks/useScrollTriggerSetup.js.)
       const mm = gsap.matchMedia()
 
-      mm.add({ pinned: PINNED_QUERY, motionOK: MQ.motionOK, mobile: MQ.mobile }, (ctx) => {
-        const { pinned, motionOK, mobile } = ctx.conditions
+      mm.add({ pinned: PINNED_QUERY, motionOK: MQ.motionOK, mobile: MQ.mobile, docked: DOCK_QUERY }, (ctx) => {
+        const { pinned, motionOK, mobile, docked } = ctx.conditions
         if (!motionOK) return undefined
 
         if (!pinned) {
@@ -333,9 +425,11 @@ export default function useRolesScene(rootRef, roles, setActiveIndex) {
         }
         activeRef.current = 0
         setActiveIndex(0)
-        timelineRef.current = buildMaster(root, q, roles, onActive)
+        const master = buildMaster(root, q, roles, onActive, { dock: docked })
+        timelineRef.current = master
 
         return () => {
+          master.data.release()
           timelineRef.current = null
         }
       })

@@ -2,8 +2,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { animate, motion } from 'motion/react'
 import { Bell, Command, Search } from 'lucide-react'
 import { NAV_ITEMS, ROLE_SESSIONS, WORKSPACE } from '../../../../data/mock/mockRoles'
+import { MQ } from '../../../../lib/gsap'
 import { MOTION_EASE, SPRING } from '../../../../lib/motion'
 import { Avatar } from './workspace/parts'
+import { measureFit } from './workspace/fit'
 import { NAV_ICONS } from './workspace/navIcons'
 import Swap from './workspace/Swap'
 import AdminView from './workspace/AdminView'
@@ -20,29 +22,29 @@ const VIEWS = {
   receptionist: ReceptionistView,
 }
 
-/** Design size of the window per variant (px). The window is zoomed to fit its box. */
-const DESIGN = {
-  full: { w: 800, h: 520, max: 1.14 },
-  compact: { w: 340, h: 452, max: 1.12 },
-}
-
-/** Sets --rw-s on the fit box so the window fills it (contain) — no React state. */
-function useFitScale(ref, { w, h, max }) {
+/**
+ * Sets --rw-s on the fit box so the window fills it (contain) — no React
+ * state. Re-applied when the box resizes and when the design size switches
+ * between the phone and desktop windows (a CSS breakpoint).
+ */
+function useFitScale(ref) {
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return undefined
     const apply = () => {
-      const cw = el.clientWidth
-      const ch = el.clientHeight
-      if (!cw || !ch) return
-      const s = Math.min(cw / w, ch / h, max)
-      el.style.setProperty('--rw-s', String(Math.max(0.3, Math.round(s * 1000) / 1000)))
+      const fit = measureFit(el)
+      if (fit) el.style.setProperty('--rw-s', String(fit.s))
     }
     apply()
     const ro = new ResizeObserver(apply)
     ro.observe(el)
-    return () => ro.disconnect()
-  }, [ref, w, h, max])
+    const mql = window.matchMedia(MQ.mobile)
+    mql.addEventListener('change', apply)
+    return () => {
+      ro.disconnect()
+      mql.removeEventListener('change', apply)
+    }
+  }, [ref])
 }
 
 function NavItem({ id, roleId, layout, tabs, reduce }) {
@@ -50,11 +52,17 @@ function NavItem({ id, roleId, layout, tabs, reduce }) {
   const NavIcon = NAV_ICONS[icon]
   const y = layout.slot * NAV_SLOT
   // In tab mode an item that stays visible across a role change glides to
-  // its new slot; one that (re)appears jumps to its slot and fades in.
-  // (Adjusting state while rendering when a prop changes — no refs read.)
-  const [track, setTrack] = useState({ roleId, visible: layout.visible, glide: false })
-  if (track.roleId !== roleId) {
-    setTrack({ roleId, visible: layout.visible, glide: track.visible && layout.visible })
+  // its new slot; one that (re)appears jumps to its slot and fades in. A
+  // switch between tab and pinned mode always snaps (the outer element is
+  // GSAP's then). (Adjusting state while rendering when a prop changes.)
+  const [track, setTrack] = useState({ roleId, tabs, visible: layout.visible, glide: false })
+  if (track.roleId !== roleId || track.tabs !== tabs) {
+    setTrack({
+      roleId,
+      tabs,
+      visible: layout.visible,
+      glide: track.roleId !== roleId && track.tabs === tabs && track.visible && layout.visible,
+    })
   }
   const { glide } = track
   const target = !tabs ? { y: 0, opacity: 1 } : layout.visible ? { y, opacity: 1 } : { opacity: 0 }
@@ -81,7 +89,7 @@ function Sidebar({ roles, activeIndex, tabs, reduce }) {
   const layout = getNavLayout(roleId)
   const activeSlot = layout[ROLE_SESSIONS[roleId].activeNav].slot
   return (
-    <div className="rw-side">
+    <div className="rw-side rw-x-full">
       <div className="rw-clinic">
         <span className="rw-clinic__mark">{WORKSPACE.clinic.initials}</span>
         <span className="rw-clinic__text">
@@ -143,11 +151,17 @@ function TitleStack({ roles, activeIndex, tabs, reduce }) {
  * continuous; the four role views are stacked in the content area and only
  * one is shown at a time — by the scrubbed GSAP timeline in pinned mode, or
  * by Motion in tab mode. Purely illustrative, so it is aria-hidden.
+ *
+ * The markup is the same at every breakpoint: the phone window (a narrower
+ * design without the sidebar and the secondary modules) is produced by CSS
+ * alone (.rw-x-full / .rw-x-compact). So the DOM GSAP builds the pinned
+ * scene from never depends on React having re-rendered after a breakpoint
+ * change (gsap.matchMedia rebuilds inside the media-query change event,
+ * before React commits).
  */
-export default function CRMWorkspace({ roles, activeIndex, tabs, reduce, variant = 'full' }) {
+export default function CRMWorkspace({ roles, activeIndex, tabs, reduce }) {
   const fitRef = useRef(null)
-  const design = DESIGN[variant]
-  useFitScale(fitRef, design)
+  useFitScale(fitRef)
 
   // Tab mode: a brief, subtle perspective sway when the role changes
   // (Motion owns .rw-sway; GSAP never touches it).
@@ -158,24 +172,18 @@ export default function CRMWorkspace({ roles, activeIndex, tabs, reduce, variant
     const dir = activeIndex > lastIndex.current ? 1 : -1
     lastIndex.current = activeIndex
     if (!tabs || reduce || !swayRef.current) return undefined
-    const amp = variant === 'compact' ? 2.2 : 4
+    const amp = window.matchMedia(MQ.mobile).matches ? 2.2 : 4
     const controls = animate(
       swayRef.current,
       { rotateY: [0, -amp * dir, 0], rotateX: [0, amp * 0.45, 0], scale: [1, 0.985, 1] },
       { duration: 0.8, ease: MOTION_EASE },
     )
     return () => controls.stop()
-  }, [activeIndex, tabs, reduce, variant])
-
-  const compact = variant === 'compact'
+  }, [activeIndex, tabs, reduce])
 
   return (
-    <div className={`rw rw--${variant}`} aria-hidden="true">
-      <div
-        className="rw-fit"
-        ref={fitRef}
-        style={{ '--rw-dw': design.w, '--rw-dh': design.h, '--rw-max': design.max }}
-      >
+    <div className="rw" aria-hidden="true">
+      <div className="rw-fit" ref={fitRef}>
         <div className="rw-approach">
           <div className="rw-floor" />
           <div className="rw-tilt">
@@ -187,41 +195,38 @@ export default function CRMWorkspace({ roles, activeIndex, tabs, reduce, variant
                     <i />
                     <i />
                   </span>
-                  {!compact && <span className="rw-chrome__title">{WORKSPACE.windowTitle}</span>}
+                  <span className="rw-chrome__title rw-x-full">{WORKSPACE.windowTitle}</span>
                   <span className="rw-chrome__sample">{WORKSPACE.sampleLabel}</span>
                 </div>
 
                 <div className="rw-body">
-                  {!compact && <Sidebar roles={roles} activeIndex={activeIndex} tabs={tabs} reduce={reduce} />}
+                  <Sidebar roles={roles} activeIndex={activeIndex} tabs={tabs} reduce={reduce} />
 
                   <div className="rw-main">
                     <div className="rw-top">
-                      {compact && <span className="rw-clinic__mark rw-clinic__mark--top">{WORKSPACE.clinic.initials}</span>}
+                      <span className="rw-clinic__mark rw-clinic__mark--top rw-x-compact">{WORKSPACE.clinic.initials}</span>
                       <TitleStack roles={roles} activeIndex={activeIndex} tabs={tabs} reduce={reduce} />
-                      {compact ? (
-                        <div className="rw-top__avatar rw-stack">
-                          {roles.map((r, i) => (
-                            <Swap key={r.id} index={i} active={i === activeIndex} tabs={tabs} reduce={reduce} className="rw-user__layer" lift={4}>
-                              <span className="rw-top__role">{r.title}</span>
-                              <Avatar initials={ROLE_SESSIONS[r.id].user.initials} size="sm" />
-                            </Swap>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="rw-top__tools">
-                          <span className="rw-search">
-                            <Search size={13} strokeWidth={1.9} />
-                            <span>{WORKSPACE.searchPlaceholder}</span>
-                            <span className="rw-kbd">
-                              <Command size={10} strokeWidth={2} />K
-                            </span>
+                      <div className="rw-top__avatar rw-stack rw-x-compact">
+                        {roles.map((r, i) => (
+                          <Swap key={r.id} index={i} active={i === activeIndex} tabs={tabs} reduce={reduce} className="rw-user__layer" lift={4}>
+                            <span className="rw-top__role">{r.title}</span>
+                            <Avatar initials={ROLE_SESSIONS[r.id].user.initials} size="sm" />
+                          </Swap>
+                        ))}
+                      </div>
+                      <div className="rw-top__tools rw-x-full">
+                        <span className="rw-search">
+                          <Search size={13} strokeWidth={1.9} />
+                          <span>{WORKSPACE.searchPlaceholder}</span>
+                          <span className="rw-kbd">
+                            <Command size={10} strokeWidth={2} />K
                           </span>
-                          <span className="rw-iconbtn">
-                            <Bell size={14} strokeWidth={1.8} />
-                            <i className="rw-iconbtn__dot" />
-                          </span>
-                        </div>
-                      )}
+                        </span>
+                        <span className="rw-iconbtn">
+                          <Bell size={14} strokeWidth={1.8} />
+                          <i className="rw-iconbtn__dot" />
+                        </span>
+                      </div>
                     </div>
 
                     <div className="rw-content rw-stack">
@@ -238,7 +243,7 @@ export default function CRMWorkspace({ roles, activeIndex, tabs, reduce, variant
                             lift={10}
                             delay={0.14}
                           >
-                            <View variant={variant} />
+                            <View />
                           </Swap>
                         )
                       })}

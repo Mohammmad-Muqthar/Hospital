@@ -2,7 +2,7 @@
  * Roles — one CRM, four perspectives.
  * Layout is driven by media queries only (never by React state), so GSAP
  * measures the final layout when it builds the pinned scene.
- * Pinned layout = (≥1280 × ≥600 or ≥1024 × ≥700) and motion OK.
+ * Pinned layout = ≥1200 × ≥600 and motion OK (docked heading ≤ 800 tall).
  */
 .roles {
   /* Colour of the environment we arrive from (How It Works). */
@@ -269,10 +269,26 @@
   }
 }
 
-/* ---------- Desktop ---------------------------------------------------- */
-@media (min-width: 1024px) {
+/* ---------- Narrow desktops & tablets landscape (1024–1199, flow) -------- */
+/* Selector row above a full-width workspace, description below — the
+   tablet composition with more room. The window may grow a little beyond
+   its desktop cap here (text stays crisp: zoom), but no taller than lets the
+   selector row and the whole window share one landscape screen (a tap must
+   show its result), and keeps the left axis of the heading, the selector
+   and the description. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .roles__ws-col .rw-fit {
+    --rw-max: 1.2;
+
+    max-width: clamp(720px, (100svh - var(--nav-h) - 108px) * var(--rw-dw) / var(--rw-dh), 960px);
+    margin-inline: 0;
+  }
+}
+
+/* ---------- Desktop (≥ 1200): selector, workspace, description ---------- */
+@media (min-width: 1200px) {
   .roles__stage {
-    grid-template-columns: minmax(220px, 0.32fr) minmax(0, 1fr);
+    grid-template-columns: minmax(228px, 0.32fr) minmax(0, 1fr);
     grid-template-areas:
       '. ws'
       'sel ws'
@@ -294,18 +310,16 @@
     min-height: 50px;
     font-size: clamp(1.125rem, 0.95rem + 0.3vw, 1.25rem);
   }
-
 }
 
-/* Narrow laptops: selector + description share the left column, so keep
-   them compact (icon inline with the title). Every role title fits on one
-   line beside the icon (≈ 172px for "Sales Executive" at this size), so the
-   title row has the same height for every role and the text never jumps. */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .roles__stage {
-    grid-template-columns: minmax(228px, 0.32fr) minmax(0, 1fr);
-  }
-
+/* Narrow laptops (1200–1365): selector + description share the left column,
+   so the workspace gets ≈ 75% of the width (in three columns it would be
+   squeezed to ≈ 0.85× its design size and its UI type would drop below
+   10px). Keep them compact (icon inline with the title). Every role title
+   fits on one line beside the icon (≈ 172px for "Sales Executive" at this
+   size), so the title row has the same height for every role and the text
+   never jumps. */
+@media (min-width: 1200px) and (max-width: 1365px) {
   .roles-sel__tab {
     min-height: 44px;
     font-size: 1.0625rem;
@@ -328,17 +342,19 @@
   }
 }
 
-/* Three columns: selector · workspace · description. The description column
-   is wide enough for every role title on ONE line (nowrap, sized to fit), so
-   the title block has the same height for every role and the description
-   text starts on the same line whichever role is active. The workspace keeps
-   the dominant share (≈ 55% of the viewport at 1440). */
-@media (min-width: 1280px) {
+/* Three columns (≥ 1366): selector · workspace · description. The side
+   columns are as narrow as their content allows, so the workspace keeps
+   ≈ 62% of the stage (it renders at ≈ 0.97× its design size at 1366 and
+   1.1× on large screens). The description column fits every role title on
+   ONE line (nowrap, sized to fit), so the title block has the same height
+   for every role and the description text starts on the same line
+   whichever role is active. */
+@media (min-width: 1366px) {
   .roles__stage {
-    grid-template-columns: minmax(172px, 0.86fr) minmax(0, 3.9fr) minmax(250px, 1.3fr);
+    grid-template-columns: minmax(172px, 0.8fr) minmax(0, 3.9fr) minmax(236px, 1.2fr);
     grid-template-areas: 'sel ws desc';
     grid-template-rows: minmax(0, 1fr);
-    column-gap: clamp(28px, 2.8vw, 56px);
+    column-gap: clamp(28px, 2.4vw, 48px);
     align-items: center;
   }
 
@@ -353,9 +369,9 @@
 
   .roles-desc__title {
     margin-top: 20px;
-    /* "Sales Executive" is the longest title: ≈ 7.5em of Sora semibold,
-       which fits the column's 250px minimum at this size. */
-    font-size: clamp(1.75rem, 1.2rem + 0.9vw, 2.125rem);
+    /* "Sales Executive" is the longest title: ≈ 7.5em of Sora semibold
+       (224px at 1366, 255px at the 34px cap), inside the column's minimum. */
+    font-size: clamp(1.75rem, 1.1rem + 0.9vw, 2.125rem);
     white-space: nowrap;
   }
 
@@ -366,8 +382,7 @@
 
 /* ---------- Pinned stage (desktop, motion OK) --------------------------- */
 /* Keep in sync with PINNED_QUERY in useRolesScene.js. */
-@media (min-width: 1280px) and (min-height: 600px) and (prefers-reduced-motion: no-preference),
-  (min-width: 1024px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 1200px) and (min-height: 600px) and (prefers-reduced-motion: no-preference) {
   .roles {
     height: 100vh;
     padding-block: var(--nav-h) 0;
@@ -382,10 +397,13 @@
      bottom padding is also the clearance for the window's shadow (see
      .rw-sway::before), which must fade out inside the section. */
   .roles__inner {
+    --roles-pad-top: clamp(16px, 2.9vh, 40px);
+    --roles-pad-bottom: clamp(40px, 7vh, 76px);
+
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding-block: clamp(16px, 2.9vh, 40px) clamp(40px, 7vh, 76px);
+    padding-block: var(--roles-pad-top) var(--roles-pad-bottom);
   }
 
   .roles__head {
@@ -423,12 +441,25 @@
   }
 }
 
-/* Short laptop screens (1280–1536 × 720–864): a two-line headline would
-   leave the workspace ~410px tall (its type then renders below 10px). The
-   headline runs on one line instead, with the intro beside it, so the
-   workspace gets the height it needs. Falls back to wrapping if the font
-   metrics are wider than expected (the first track can shrink). */
-@media (min-width: 1280px) and (min-height: 600px) and (max-height: 880px) and (prefers-reduced-motion: no-preference) {
+/* Tall pinned viewports (large monitors): the stage never grows taller than
+   the largest window it can hold, and the heading + stage are centred in
+   the frame as ONE block — no empty band between the heading and the
+   workspace, the spare height shared above and below. */
+@media (min-width: 1200px) and (min-height: 801px) and (prefers-reduced-motion: no-preference) {
+  .roles__inner {
+    justify-content: center;
+  }
+
+  .roles__stage {
+    /* The window at its largest: 520 design px × 1.14 (CRMWorkspace.css). */
+    max-height: 600px;
+  }
+}
+
+/* Short laptop screens (≤ 880px tall): the headline runs on one line with
+   the intro beside it. Falls back to wrapping if the font metrics are wider
+   than expected (the first track can shrink). */
+@media (min-width: 1200px) and (min-height: 600px) and (max-height: 880px) and (prefers-reduced-motion: no-preference) {
   .roles__head {
     grid-template-columns: minmax(0, max-content) minmax(18rem, 1fr);
     column-gap: clamp(40px, 4vw, 72px);
@@ -445,16 +476,30 @@
   }
 }
 
-/* Very short pinned viewports (e.g. a 1366 × 768 laptop's ≈ 660px browser
-   viewport): every spare pixel goes to the workspace. The window's shadow is
-   shortened to match the smaller bottom clearance (CRMWorkspace.css). */
-@media (min-width: 1024px) and (min-height: 600px) and (max-height: 720px) and (prefers-reduced-motion: no-preference) {
+/* Docked heading (pinned, ≤ 800px tall — e.g. a 1366 × 768 laptop's
+   ≈ 660px browser viewport, 1536 × 864 at 125% ≈ 730px, 1280 × 720): with
+   the heading above it the workspace would render at ≈ 0.8× its design
+   size (UI type below 9px). So the stage owns the full frame and the heading
+   overlays its top: at pin progress 0 (where anchor links land) the scene
+   is laid out below the heading with the workspace scaled to fit; the first
+   scroll hands the frame over — the heading lifts away and the workspace
+   settles at full size (useRolesScene.js, buildDock). */
+@media (min-width: 1200px) and (min-height: 600px) and (max-height: 800px) and (prefers-reduced-motion: no-preference) {
   .roles__inner {
-    padding-block: 12px 36px;
+    --roles-pad-top: clamp(20px, 3.6vh, 32px);
+    --roles-pad-bottom: clamp(36px, 6vh, 48px);
+    /* Space between the heading and the scene below it at progress 0. */
+    --roles-dock-gap: clamp(16px, 3vh, 28px);
+  }
+
+  .roles__head {
+    position: absolute;
+    top: var(--roles-pad-top);
+    right: var(--gutter);
+    left: var(--gutter);
   }
 
   .roles__stage {
-    margin-top: 16px;
+    margin-top: 0;
   }
 }
-

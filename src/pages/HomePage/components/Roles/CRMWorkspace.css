@@ -1,8 +1,9 @@
 /*
  * CRM workspace mock-up (decorative, aria-hidden).
  * All sizes inside .rw-window are DESIGN pixels: the window is laid out at a
- * fixed design size (800 × 520 full, 340 × 452 compact) and `zoom`ed to fit
- * its box, so text is rendered natively at the final size (crisp at any DPR).
+ * fixed design size (800 × 520 desktop, 340 × 452 phone — see .rw-fit) and
+ * `zoom`ed to fit its box, so text is rendered natively at the final size
+ * (crisp at any DPR).
  */
 .rw {
   --rw-ink: #142622;
@@ -30,6 +31,12 @@
 
 /* Fit box: the window is centred in it at scale --rw-s (set by ResizeObserver). */
 .rw-fit {
+  /* Design size of the window (px) and its largest zoom. The phone window
+     overrides these below; useFitScale reads them. */
+  --rw-dw: 800;
+  --rw-dh: 520;
+  --rw-max: 1.14;
+
   position: relative;
   width: 100%;
   max-width: calc(var(--rw-dw) * var(--rw-max) * 1px);
@@ -69,10 +76,10 @@
 
 /* The window's elevation lives on an un-zoomed layer: shadows painted by a
    zoomed element get clipped to its box once it is composited in 3D.
-   Every shadow fades out within ~40px below the window, inside the pinned
-   stage's bottom padding (clamp(40px, 7vh, 76px)), so the section's clip
-   never cuts a shadow tail into a visible edge at the Roles → Security
-   boundary. */
+   Every shadow fades out within ~52px below the window, inside the pinned
+   stage's bottom padding (clamp(40px, 7vh, 76px) above 800px tall), so the
+   section's clip never cuts a shadow tail into a visible edge at the
+   Roles → Security boundary. */
 .rw-sway::before {
   content: '';
   position: absolute;
@@ -86,9 +93,10 @@
   pointer-events: none;
 }
 
-/* Short viewports: the pinned stage keeps only 36px below the window, so the
-   long shadow layer is shortened to fade out within it. */
-@media (max-height: 720px) {
+/* Short viewports: the pinned stage keeps only ≈ 40px below the window
+   (docked layout, Roles.css), so the long shadow layer is shortened to fade
+   out within it. */
+@media (max-height: 800px) {
   .rw-sway::before {
     box-shadow:
       0 0 0 1px rgb(16 60 52 / 0.07),
@@ -96,10 +104,6 @@
       0 12px 26px -12px rgb(10 40 34 / 0.22),
       0 22px 36px -20px rgb(10 40 34 / 0.26);
   }
-}
-
-.rw--compact .rw-sway::before {
-  border-radius: calc(16px * var(--rw-s, 1));
 }
 
 /* Grounding: a soft contact shadow on the "floor" under the window. It
@@ -1503,21 +1507,11 @@
   color: var(--rw-subtle);
 }
 
-/* ---------- Compact variant (mobile) ------------------------------------ */
-.rw--compact .rw-window {
-  border-radius: 16px;
-}
-
-.rw--compact .rw-chrome {
-  height: 28px;
-}
-
-.rw--compact .rw-top {
-  height: 52px;
-  padding: 0 12px;
-  gap: 10px;
-}
-
+/* ---------- Phone window (≤ 767px) -------------------------------------- */
+/* The markup is identical at every breakpoint (the pinned GSAP scene must
+   never depend on React re-rendering after a breakpoint change). The phone
+   window is a CSS variant: a narrower design without the sidebar and the
+   secondary modules (.rw-x-full); .rw-x-compact parts exist only here. */
 .rw-clinic__mark--top {
   width: 30px;
   height: 30px;
@@ -1541,60 +1535,107 @@
   white-space: nowrap;
 }
 
-.rw--compact .rw-content {
-  padding: 12px;
+@media (min-width: 768px) {
+  .rw .rw-x-compact {
+    display: none;
+  }
+
+  /* Named grid areas apply to the desktop window only. */
+  .rw .rw-mod {
+    grid-area: var(--a, auto);
+  }
+
+  .rw-grid--exec .rw-card:not(.rw-activity) {
+    padding-block: 11px;
+  }
+
+  .rw-grid--exec .rw-lead {
+    height: 32px;
+  }
 }
 
-.rw-grid--admin-c,
-.rw-grid--manager-c,
-.rw-grid--exec-c,
-.rw-grid--recep-c {
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-}
+@media (max-width: 767px) {
+  .rw .rw-x-full {
+    display: none;
+  }
 
-.rw--compact .rw-table__row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  height: 31px;
-}
+  .rw-fit {
+    --rw-dw: 340;
+    --rw-dh: 452;
+    --rw-max: 1.12;
+  }
 
-.rw--compact .rw-rep {
-  grid-template-columns: 96px minmax(0, 1fr) 36px;
-}
+  .rw-sway::before {
+    border-radius: calc(16px * var(--rw-s, 1));
+  }
 
-.rw--compact .rw-activity {
-  display: grid;
-  gap: 10px;
-  padding: 10px 12px;
-}
+  .rw .rw-window {
+    border-radius: 16px;
+  }
 
-.rw--compact .rw-activity__meters {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
+  .rw .rw-chrome {
+    height: 28px;
+  }
 
-.rw--compact .rw-activity__row {
-  gap: 6px;
-  font-size: 11.5px;
-}
+  .rw .rw-top {
+    padding: 0 12px;
+    gap: 10px;
+  }
 
-.rw--compact .rw-follow__item {
-  grid-template-columns: 30px minmax(0, 1fr) auto;
-  gap: 9px;
-  padding: 8px 9px;
-}
+  .rw .rw-content {
+    padding: 12px;
+  }
 
-.rw--compact .rw-follow__icon {
-  width: 30px;
-  height: 30px;
-}
+  .rw .rw-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: none;
+    align-content: start;
+  }
 
-.rw--compact .rw-form {
-  gap: 10px;
-  padding: 12px;
-}
+  /* Admin: the user table leads, permissions follow. */
+  .rw .rw-users {
+    order: -1;
+  }
 
-/* Named grid areas apply to the full layout only. */
-.rw--full .rw-mod {
-  grid-area: var(--a, auto);
+  .rw .rw-table__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    height: 31px;
+  }
+
+  .rw .rw-rep {
+    grid-template-columns: 96px minmax(0, 1fr) 36px;
+  }
+
+  .rw .rw-activity {
+    display: grid;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .rw .rw-activity__meters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .rw .rw-activity__row {
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .rw .rw-follow__item {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 8px 9px;
+  }
+
+  .rw .rw-follow__icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .rw .rw-form {
+    gap: 10px;
+    padding: 12px;
+  }
 }
