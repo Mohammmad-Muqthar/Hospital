@@ -173,10 +173,28 @@ anchor id sits on the pinned `<section>` element.
 4. Never put transforms, filters or `overflow` on ancestors of a pinned section.
 5. `lib/sharedMediaQueries.js` makes identical media queries share one
    `MediaQueryList` so a breakpoint crossing triggers one ScrollTrigger refresh.
+6. Use `ANTICIPATE_PIN` from `src/lib/gsap.js` for `anticipatePin` on every pinned
+   trigger (0.3 — larger values pin sections early on PageDown / scrollbar drags).
 
 ---
 
-## 7. Browser support
+## 7. Design decisions worth knowing
+
+- **Hero video has no pause button.** The brief asked for the play/pause control to be
+  removed. The video never autoplays for visitors with *reduce motion* enabled, and it
+  pauses whenever the hero is off screen. WCAG 2.2.2 asks for a pause control on
+  moving content longer than 5 seconds; if you need strict WCAG 2.2 AA conformance,
+  add a small pause toggle back to `HeroBackground.jsx`.
+- **Pin lengths:** Hero ≈ 3.1, Features 3.8, How it works ≈ 3.2, Roles ≈ 3.15 and
+  Security 2.8 viewport heights on desktop; phones pin only the Hero and How it works,
+  and only for short distances. Short or narrow screens get composed, non-pinned
+  layouts instead of cramped pinned ones.
+- **Mock data is illustrative** and labelled "Sample data" where it could be read as
+  real results; all mock money is in USD.
+
+---
+
+## 8. Browser support
 
 Current evergreen browsers (Chrome/Edge, Safari 16+, Firefox). The layouts use
 CSS container queries, `color-mix()`, `overflow: clip` and `svh` units.
