@@ -68,7 +68,11 @@
 }
 
 /* The window's elevation lives on an un-zoomed layer: shadows painted by a
-   zoomed element get clipped to its box once it is composited in 3D. */
+   zoomed element get clipped to its box once it is composited in 3D.
+   Every shadow fades out within ~40px below the window, inside the pinned
+   stage's bottom padding (clamp(40px, 7vh, 76px)), so the section's clip
+   never cuts a shadow tail into a visible edge at the Roles → Security
+   boundary. */
 .rw-sway::before {
   content: '';
   position: absolute;
@@ -77,22 +81,35 @@
   box-shadow:
     0 0 0 1px rgb(16 60 52 / 0.07),
     0 2px 4px rgb(10 40 34 / 0.04),
-    0 18px 40px -18px rgb(10 40 34 / 0.22),
-    0 50px 100px -40px rgb(10 40 34 / 0.34);
+    0 14px 30px -14px rgb(10 40 34 / 0.22),
+    0 30px 48px -26px rgb(10 40 34 / 0.3);
   pointer-events: none;
+}
+
+/* Short viewports: the pinned stage keeps only 36px below the window, so the
+   long shadow layer is shortened to fade out within it. */
+@media (max-height: 720px) {
+  .rw-sway::before {
+    box-shadow:
+      0 0 0 1px rgb(16 60 52 / 0.07),
+      0 2px 4px rgb(10 40 34 / 0.04),
+      0 12px 26px -12px rgb(10 40 34 / 0.22),
+      0 22px 36px -20px rgb(10 40 34 / 0.26);
+  }
 }
 
 .rw--compact .rw-sway::before {
   border-radius: calc(16px * var(--rw-s, 1));
 }
 
-/* Grounding: a soft contact shadow on the "floor" under the window. */
+/* Grounding: a soft contact shadow on the "floor" under the window. It
+   reaches zero alpha 5% of the window height below it (inside the stage). */
 .rw-floor {
   position: absolute;
   left: 6%;
   right: 6%;
-  bottom: -9%;
-  height: 16%;
+  bottom: -5%;
+  height: 11%;
   background: radial-gradient(50% 50% at 50% 50%, rgb(10 40 34 / 0.16) 0%, rgb(10 40 34 / 0.06) 45%, rgb(10 40 34 / 0) 100%);
   pointer-events: none;
 }
@@ -108,7 +125,7 @@
   border-radius: 14px;
   background: var(--rw-surface);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.35;
   letter-spacing: -0.003em;
   color: var(--rw-text);
@@ -163,7 +180,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--rw-subtle);
   white-space: nowrap;
@@ -174,7 +191,7 @@
   border: 1px solid var(--rw-line);
   border-radius: 6px;
   background: var(--rw-surface);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--rw-muted);
@@ -215,7 +232,7 @@
   border-radius: 8px;
   background: var(--rw-mint);
   color: var(--rw-forest);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -226,13 +243,13 @@
 }
 
 .rw-clinic__name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #f3f8f5;
 }
 
 .rw-clinic__branch {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #9db5ab;
 }
 
@@ -265,7 +282,7 @@
   gap: 10px;
   height: 32px;
   padding: 0 10px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: #b5cbc1;
   transition: color 260ms var(--ease-out);
@@ -311,13 +328,13 @@
 }
 
 .rw-user__name {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #f3f8f5;
 }
 
 .rw-user__role {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #9db5ab;
 }
 
@@ -352,7 +369,7 @@
 }
 
 .rw-title__text {
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 650;
   letter-spacing: -0.015em;
   color: var(--rw-ink);
@@ -360,7 +377,7 @@
 }
 
 .rw-title__crumb {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-subtle);
   white-space: nowrap;
 }
@@ -383,7 +400,7 @@
   border-radius: 8px;
   background: var(--rw-canvas);
   color: var(--rw-subtle);
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .rw-search > span:first-of-type {
@@ -399,7 +416,7 @@
   border: 1px solid var(--rw-line);
   border-radius: 5px;
   background: var(--rw-surface);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--rw-muted);
 }
@@ -474,7 +491,7 @@
 }
 
 .rw-card__title {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--rw-ink);
@@ -482,7 +499,7 @@
 }
 
 .rw-card__meta {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-subtle);
   white-space: nowrap;
 }
@@ -499,13 +516,13 @@
 .rw-avatar--md {
   width: 28px;
   height: 28px;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .rw-avatar--sm {
-  width: 22px;
-  height: 22px;
-  font-size: 9.5px;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
 }
 
 .rw-avatar--mint {
@@ -535,20 +552,23 @@
   min-width: 0;
 }
 
+/* Two-line name + sub (assigned leads): a tighter leading keeps the pair
+   inside its 32px row with air above and below. */
 .rw-person__text {
   display: grid;
   min-width: 0;
+  line-height: 1.2;
 }
 
 .rw-person__name {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--rw-ink);
   white-space: nowrap;
 }
 
 .rw-person__sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-subtle);
   white-space: nowrap;
 }
@@ -556,10 +576,10 @@
 .rw-tag {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  height: 21px;
   padding: 0 7px;
   border-radius: 5px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -642,17 +662,17 @@
 /* Fields */
 .rw-fields {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .rw-field {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
 }
 
 .rw-field__label {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--rw-muted);
 }
@@ -667,7 +687,7 @@
   border: 1px solid var(--rw-line);
   border-radius: 7px;
   background: var(--rw-surface);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--rw-ink);
   white-space: nowrap;
 }
@@ -720,7 +740,7 @@
   gap: 5px;
   height: 26px;
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--rw-muted);
   white-space: nowrap;
@@ -746,7 +766,7 @@
   border-radius: 8px;
   background: var(--rw-emerald);
   box-shadow: 0 1px 1px rgb(4 40 32 / 0.2), 0 4px 10px -4px rgb(8 107 86 / 0.5);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #fff;
 }
@@ -756,7 +776,7 @@
   padding: 4px 5px;
   overflow: hidden;
   border-radius: 6px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 550;
   line-height: 1.25;
   white-space: nowrap;
@@ -818,14 +838,14 @@
 
 .rw-drop__label {
   align-self: end;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--rw-ink);
 }
 
 .rw-drop__meta {
   align-self: start;
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--rw-subtle);
 }
 
@@ -849,12 +869,12 @@
 }
 
 .rw-swatch__label {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-muted);
 }
 
 .rw-swatch__value {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--rw-ink);
   font-variant-numeric: tabular-nums;
@@ -870,7 +890,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--rw-text);
 }
 
@@ -894,7 +914,7 @@
 .rw-table__row--head {
   height: 24px;
   border-top: 0;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -905,7 +925,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--rw-text);
 }
 
@@ -946,13 +966,13 @@
 }
 
 .rw-terms__version {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 650;
   color: var(--rw-ink);
 }
 
 .rw-terms__meta {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--rw-subtle);
 }
 
@@ -962,7 +982,7 @@
   justify-content: space-between;
   height: 27px;
   border-top: 1px solid var(--rw-line-soft);
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .rw-config__row:first-of-type {
@@ -976,7 +996,7 @@
 
 /* ---------- Sales Manager ----------------------------------------------- */
 .rw-grid--manager {
-  grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   grid-template-rows: 58px minmax(0, 1.04fr) minmax(0, 1fr);
   grid-template-areas:
     'kpi kpi'
@@ -998,7 +1018,7 @@
 }
 
 .rw-kpi__label {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--rw-muted);
 }
@@ -1016,9 +1036,10 @@
   color: var(--rw-ink);
 }
 
+/* Four 26px rows + 2px gaps: the list ends inside the card's bottom padding. */
 .rw-reps {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .rw-rep {
@@ -1026,12 +1047,12 @@
   grid-template-columns: 112px minmax(0, 1fr) 40px;
   align-items: center;
   gap: 12px;
-  height: 28px;
+  height: 26px;
 }
 
 .rw-rep__count {
   text-align: right;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 650;
   color: var(--rw-ink);
 }
@@ -1046,7 +1067,7 @@
   grid-template-columns: 88px minmax(0, 1fr) 22px;
   align-items: center;
   gap: 8px;
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .rw-stage__label {
@@ -1092,7 +1113,7 @@
 .rw-board__grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
 }
 
 .rw-board__day {
@@ -1101,7 +1122,7 @@
   gap: 5px;
   min-width: 0;
   min-height: 92px;
-  padding: 6px;
+  padding: 5px;
   border-radius: 8px;
   background: #f7f9f8;
   box-shadow: inset 0 0 0 1px var(--rw-line-soft);
@@ -1109,7 +1130,7 @@
 
 .rw-board__name {
   padding: 0 2px 2px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -1131,10 +1152,39 @@
 }
 
 .rw-chart {
+  display: grid;
+  gap: 5px;
+}
+
+.rw-chart__plot {
+  position: relative;
+  height: 54px;
+}
+
+.rw-chart__plot svg {
   display: block;
   width: 100%;
-  height: 78px;
+  height: 100%;
   overflow: visible;
+}
+
+.rw-chart__axis {
+  position: relative;
+  height: 15px;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--rw-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.rw-chart__axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.rw-chart__axis span.is-last {
+  transform: translateX(-100%);
 }
 
 .rw-chart__grid {
@@ -1154,15 +1204,13 @@
 }
 
 .rw-chart__dot {
-  fill: #fff;
-  stroke: var(--rw-emerald);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
-
-.rw-chart__label {
-  font-size: 9.5px;
-  fill: var(--rw-subtle);
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--rw-emerald);
 }
 
 /* ---------- Sales Executive --------------------------------------------- */
@@ -1202,7 +1250,7 @@
 .rw-activity__row {
   display: flex;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--rw-muted);
 }
 
@@ -1264,21 +1312,21 @@
 }
 
 .rw-follow__lead {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--rw-ink);
 }
 
 .rw-follow__detail {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-muted);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .rw-follow__due {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--rw-text);
 }
@@ -1302,7 +1350,7 @@
 
 .rw-opps {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .rw-grid--exec .rw-card:not(.rw-activity) {
@@ -1332,7 +1380,7 @@
 
 .rw-opp__name {
   overflow: hidden;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--rw-ink);
   white-space: nowrap;
@@ -1340,14 +1388,14 @@
 }
 
 .rw-opp__value {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 650;
   color: var(--rw-ink);
   white-space: nowrap;
 }
 
 .rw-opp__stage {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-muted);
 }
 
@@ -1382,7 +1430,7 @@
 }
 
 .rw-today__label {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--rw-muted);
   white-space: nowrap;
 }
@@ -1434,13 +1482,13 @@
 }
 
 .rw-recent__name {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--rw-ink);
 }
 
 .rw-recent__sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--rw-subtle);
 }
 
@@ -1451,7 +1499,7 @@
 }
 
 .rw-recent__time {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--rw-subtle);
 }
 
@@ -1487,7 +1535,7 @@
 }
 
 .rw-top__role {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--rw-muted);
   white-space: nowrap;
@@ -1527,7 +1575,7 @@
 
 .rw--compact .rw-activity__row {
   gap: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
 }
 
 .rw--compact .rw-follow__item {

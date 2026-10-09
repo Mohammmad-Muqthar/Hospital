@@ -2,48 +2,60 @@ import { useId } from 'react'
 import { MANAGER_VIEW } from '../../../../../data/mock/mockRoles'
 import { Avatar, Card, Meter, Tag } from './parts'
 
-/** Deterministic SVG area chart for the "New leads" report preview. */
+/**
+ * Deterministic area chart for the "New leads" report preview. The plot is a
+ * stretched SVG (non-scaling strokes); the end dot and the week labels are
+ * HTML so they never inherit the plot's non-uniform scale (no squashed
+ * circle, no stretched glyphs).
+ */
 function TrendChart({ series, labels }) {
   const gradientId = `rw-area-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const W = 220
-  const H = 86
-  const padTop = 10
-  const padBottom = 16
+  const H = 60
+  const padTop = 8
+  const padBottom = 2
   const max = Math.max(...series) * 1.1
   const step = W / (series.length - 1)
   const pts = series.map((v, i) => [i * step, padTop + (1 - v / max) * (H - padTop - padBottom)])
   const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
   const area = `${line} L${W} ${H - padBottom} L0 ${H - padBottom} Z`
   const [lx, ly] = pts[pts.length - 1]
+  const pct = (v, total) => `${((v / total) * 100).toFixed(2)}%`
   return (
-    <svg className="rw-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#34b994" stopOpacity="0.22" />
-          <stop offset="1" stopColor="#34b994" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[0.33, 0.66].map((f) => (
-        <line
-          key={f}
-          x1="0"
-          x2={W}
-          y1={padTop + f * (H - padTop - padBottom)}
-          y2={padTop + f * (H - padTop - padBottom)}
-          className="rw-chart__grid"
-        />
-      ))}
-      <path d={area} fill={`url(#${gradientId})`} />
-      <path d={line} className="rw-chart__line" />
-      <circle cx={lx - 0.5} cy={ly} r="3.2" className="rw-chart__dot" />
-      {labels.map((l, i) =>
-        i % 2 === 1 ? (
-          <text key={l} x={i * step} y={H - 3} className="rw-chart__label" textAnchor="middle">
-            {l}
-          </text>
-        ) : null,
-      )}
-    </svg>
+    <div className="rw-chart">
+      <div className="rw-chart__plot">
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#34b994" stopOpacity="0.22" />
+              <stop offset="1" stopColor="#34b994" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0.33, 0.66].map((f) => (
+            <line
+              key={f}
+              x1="0"
+              x2={W}
+              y1={padTop + f * (H - padTop - padBottom)}
+              y2={padTop + f * (H - padTop - padBottom)}
+              className="rw-chart__grid"
+            />
+          ))}
+          <path d={area} fill={`url(#${gradientId})`} />
+          <path d={line} className="rw-chart__line" />
+        </svg>
+        <span className="rw-chart__dot" style={{ left: pct(lx, W), top: pct(ly, H) }} />
+      </div>
+      <div className="rw-chart__axis">
+        {labels.map((l, i) =>
+          i % 2 === 1 ? (
+            <span key={l} className={i === labels.length - 1 ? 'is-last' : undefined} style={{ left: pct(i * step, W) }}>
+              {l}
+            </span>
+          ) : null,
+        )}
+      </div>
+    </div>
   )
 }
 
