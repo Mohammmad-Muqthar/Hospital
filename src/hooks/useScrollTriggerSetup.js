@@ -16,6 +16,12 @@ export default function useScrollTriggerSetup() {
     let cancelled = false
     let raf = 0
 
+    // One inert, page-level trigger that lives outside every section's
+    // gsap.matchMedia(). When a breakpoint change reverts all section
+    // contexts at once, ScrollTrigger would otherwise see zero triggers,
+    // forget the recorded scroll position and jump the page to the top.
+    const keeper = ScrollTrigger.create({ start: 0, end: 'max' })
+
     const refresh = () => {
       if (cancelled) return
       ScrollTrigger.sort()
@@ -37,6 +43,7 @@ export default function useScrollTriggerSetup() {
 
     return () => {
       cancelled = true
+      keeper.kill()
       cancelAnimationFrame(raf)
       window.removeEventListener('load', refresh)
     }

@@ -15,6 +15,9 @@
 }
 
 html {
+  /* Dark canvas: the page opens on the dark hero and ends on the dark
+     footer, so overscroll bounce at either end never flashes off-white. */
+  background: var(--color-dark);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* No `scroll-behavior: smooth` here: it fights ScrollTrigger's refresh.
@@ -70,8 +73,8 @@ a {
   text-decoration: none;
 }
 
-ul[role='list'],
-ol[role='list'] {
+/* :where() keeps this reset at zero specificity so section classes win. */
+:where(ul[role='list'], ol[role='list']) {
   list-style: none;
   padding: 0;
 }
