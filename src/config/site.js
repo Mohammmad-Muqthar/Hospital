@@ -39,7 +39,7 @@ export const siteConfig = {
    * to a still cinematic background automatically.
    */
   hero: {
-    videoSrc: env.VITE_HERO_VIDEO_SRC || '/videos/hero.mp4',
+    videoSrc: env.VITE_HERO_VIDEO_SRC || '/videos/hero1.mp4',
     videoSrcWebm: env.VITE_HERO_VIDEO_WEBM || '',
     posterSrc: env.VITE_HERO_POSTER_SRC || '',
   },
