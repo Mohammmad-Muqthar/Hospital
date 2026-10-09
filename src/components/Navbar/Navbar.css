@@ -188,10 +188,14 @@
 }
 
 /* The rising copy fades in a touch later than the resting label fades out,
-   so the two never read as a doubled word mid-transition. */
-.nav__link-text--rise {
+   so the two never read as a doubled word mid-transition. Empty alt text
+   ("/ ''") keeps it out of the link's accessible name. */
+.nav__link-mask::after {
+  content: attr(data-label);
+  content: attr(data-label) / '';
   position: absolute;
   inset: 100% 0 auto;
+  display: block;
   opacity: 0;
   transition:
     transform 560ms var(--ease-out),
@@ -302,13 +306,11 @@
 
   .nav__link:hover .nav__link-text {
     transform: translateY(-100%);
-  }
-
-  .nav__link:hover .nav__link-text:not(.nav__link-text--rise) {
     opacity: 0;
   }
 
-  .nav__link:hover .nav__link-text--rise {
+  .nav__link:hover .nav__link-mask::after {
+    transform: translateY(-100%);
     opacity: 1;
   }
 
@@ -561,7 +563,7 @@
     transition: none;
   }
 
-  .nav__link-text--rise {
+  .nav__link-mask::after {
     display: none;
   }
 
@@ -573,7 +575,7 @@
     transform: none;
   }
 
-  .nav__link:hover .nav__link-text:not(.nav__link-text--rise) {
+  .nav__link:hover .nav__link-text {
     opacity: 1;
   }
 }
