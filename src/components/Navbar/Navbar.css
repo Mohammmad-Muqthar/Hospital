@@ -61,12 +61,20 @@
   transition: opacity var(--nav-fade) var(--ease-out);
 }
 
-/* Scrolled: a defined, translucent near-black bar with a soft shadow
-   (no decorative line). Solid fallback when backdrop-filter is missing. */
+/* Scrolled: one opaque near-black surface with a soft shadow (no decorative
+   line), identical over the video, the teal scene and the off-white sections.
+   Deliberately NOT translucent glass: a dark tint can only attenuate what is
+   beneath it, so on this mostly off-white page any translucency turns the bar
+   charcoal grey (0.88 alpha: luminance 40 over light sections vs 12 over the
+   hero), and the backdrop blur is weak at the bar's top and bottom edges, so
+   content crossing them (the Pricing CTAs, How It Works' last line of text)
+   ghosts through as crisp shapes — still measurable at 0.98 alpha, by which
+   point the glass itself is no longer visible. Opaque is also cheaper: no
+   backdrop blur re-rendered on every scroll frame. */
 .nav__bar {
   position: absolute;
   inset: 0;
-  background: rgba(8, 11, 10, 0.95);
+  background: var(--color-dark);
   box-shadow: 0 12px 28px -20px rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
@@ -74,14 +82,6 @@
   transition:
     opacity var(--nav-fade) var(--ease-out),
     visibility 0s linear var(--nav-fade);
-}
-
-@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .nav__bar {
-    background: rgba(8, 11, 10, 0.88);
-    -webkit-backdrop-filter: saturate(140%) blur(14px);
-    backdrop-filter: saturate(140%) blur(14px);
-  }
 }
 
 .nav[data-scrolled='true'] .nav__bar {
