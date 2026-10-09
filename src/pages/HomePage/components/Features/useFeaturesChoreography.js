@@ -1,12 +1,14 @@
 import { gsap, MQ, SCRUB, useGSAP } from '../../../../lib/gsap'
 import {
   ACTIVE_SWITCH,
+  APPROACH,
   BEATS,
   CAMERA,
   ENTER,
+  ENTER_AT,
   EXIT,
-  FADE_IN,
-  FADE_OUT,
+  EXIT_AT,
+  INTRO_EXIT,
   LABELS,
   PIN_VH,
   TOTAL,
@@ -28,7 +30,10 @@ const LAYOUT_KEYS = ['a', 'b', 'c']
 function buildStage(root) {
   const q = gsap.utils.selector(root)
   const stage = q('.feat-stage')[0]
+  // The approach docks the inner block; the master timeline moves the outer
+  // header — two timelines never animate the same element.
   const intro = q('.feat-intro')[0]
+  const introInner = q('.feat-intro__inner')[0]
   const introParts = q('.feat-intro__part')
   const camera = q('.feat-camera')[0]
   const sceneEls = q('.feat-scene')
@@ -50,7 +55,11 @@ function buildStage(root) {
   })
   const REST = { x: 0, y: 0, z: 0, rotationX: 0, rotationY: 0 }
 
-  /* ---- Approach (pre-pin): heading comes forward from depth and settles ---- */
+  /* ---- Approach (pre-pin): heading docks behind the hero and comes forward ---- */
+  // The section rises one viewport height during the approach. The heading
+  // block rides APPROACH.DOCK viewports above its resting place — so it
+  // follows the hero's last row closely instead of arriving a screen later —
+  // then decelerates into place, reaching zero speed as the pin takes over.
   const approach = gsap.timeline({
     scrollTrigger: {
       trigger: root,
@@ -60,12 +69,28 @@ function buildStage(root) {
       invalidateOnRefresh: true,
     },
   })
+  // power1.in is quadratic: the offset's rate at the end is 2 × DOCK / (1 − DOCK_START)
+  // viewports per viewport scrolled = exactly the scroll speed, so the heading lands
+  // with zero on-screen velocity (no overshoot, no bump when the pin takes over).
   approach.fromTo(
-    introParts,
-    { z: -200, y: 44, opacity: 0, transformPerspective: 1200 },
-    { z: 0, y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', stagger: 0.09 },
-    0.32,
+    introInner,
+    { y: () => -APPROACH.DOCK * window.innerHeight },
+    { y: 0, duration: 1 - APPROACH.DOCK_START, ease: 'power1.in' },
+    APPROACH.DOCK_START,
   )
+  // One tween per part (not a `stagger`): every part's hidden start state is
+  // rendered immediately, so no part shows early and then blinks out when its
+  // turn comes.
+  introParts.forEach((part, i) => {
+    const at = APPROACH.revealAt + i * APPROACH.stagger
+    approach.fromTo(part, { opacity: 0 }, { opacity: 1, duration: APPROACH.fade, ease: 'sine.out' }, at)
+    approach.fromTo(
+      part,
+      { z: -200, y: 28, transformPerspective: 1200 },
+      { z: 0, y: 0, duration: APPROACH.settle, ease: 'power2.out' },
+      at,
+    )
+  })
   approach.to({}, { duration: 0 }, 1) // normalise the approach to 0 → 1
 
   /* ---- Master timeline (pinned) ---- */
@@ -94,11 +119,16 @@ function buildStage(root) {
   })
   Object.entries(LABELS).forEach(([name, at]) => tl.addLabel(name, at))
 
-  // Intro: the heading recedes up and back as the stage takes over.
+  // Intro: the heading recedes up and back, and has dissolved before scene A
+  // rises into the space it occupied.
   const [introStart, introEnd] = BEATS.introOut
   const [fadeStart, fadeEnd] = BEATS.introFade
-  tl.to(intro, { y: () => -0.24 * sh(), z: -320, duration: introEnd - introStart, ease: 'power2.inOut' }, introStart)
-  tl.to(intro, { opacity: 0, duration: fadeEnd - fadeStart, ease: 'sine.out' }, fadeStart)
+  tl.to(
+    intro,
+    { y: () => INTRO_EXIT.y * sh(), z: INTRO_EXIT.z, duration: introEnd - introStart, ease: INTRO_EXIT.ease },
+    introStart,
+  )
+  tl.to(intro, { opacity: 0, duration: fadeEnd - fadeStart, ease: 'sine.inOut' }, fadeStart)
 
   // Camera: starts tilted, resolves to identity for scene A, then makes a
   // small move during each hand-over and is back at identity on every hold.
@@ -115,32 +145,37 @@ function buildStage(root) {
     tl.to(camera, { rotationX: 0, rotationY: 0, z: 0, duration: half, ease: 'sine.inOut' }, s + half)
   }
 
-  const enterScene = (index, start) => {
+  // Each slot travels on its own path and fades in its own window (see the
+  // hand-over notes in choreography.js): incoming panels only become visible
+  // where the outgoing ones have already dissolved — no double exposure.
+  const enterScene = (index) => {
+    const start = ENTER_AT[index]
     const vectors = ENTER[LAYOUT_KEYS[index]]
     for (const slot of SLOTS) {
       const el = scenes[index][slot]
       const v = vectors[slot]
-      const at = start + v.at
-      tl.fromTo(el, pose(v), { ...REST, duration: v.dur, ease: 'power3.out' }, at)
-      tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: v.dur * FADE_IN, ease: 'sine.out' }, at)
+      const [fadeAt, fadeDur] = v.fade
+      tl.fromTo(el, pose(v), { ...REST, duration: v.dur, ease: 'power3.out' }, start + v.at)
+      tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: fadeDur, ease: 'sine.inOut' }, start + fadeAt)
     }
   }
-  const exitScene = (index, start) => {
+  const exitScene = (index) => {
+    const start = EXIT_AT[index]
     const vectors = EXIT[LAYOUT_KEYS[index]]
     for (const slot of SLOTS) {
       const el = scenes[index][slot]
       const v = vectors[slot]
-      const at = start + v.at
-      tl.to(el, { ...pose(v), duration: v.dur, ease: 'sine.inOut' }, at)
-      tl.to(el, { opacity: 0, duration: v.dur * FADE_OUT.dur, ease: 'sine.inOut' }, at + v.dur * FADE_OUT.delay)
+      const [fadeAt, fadeDur] = v.fade
+      tl.to(el, { ...pose(v), duration: v.dur, ease: 'sine.inOut' }, start + v.at)
+      tl.to(el, { opacity: 0, duration: fadeDur, ease: 'sine.inOut' }, start + fadeAt)
     }
   }
 
-  enterScene(0, BEATS.enterA[0])
-  exitScene(0, BEATS.exitA[0])
-  enterScene(1, BEATS.enterB[0])
-  exitScene(1, BEATS.exitB[0])
-  enterScene(2, BEATS.enterC[0])
+  enterScene(0)
+  exitScene(0)
+  enterScene(1)
+  exitScene(1)
+  enterScene(2)
 
   // Pad to the full length so the final hold is part of the pin.
   tl.to({}, { duration: 0 }, TOTAL)
