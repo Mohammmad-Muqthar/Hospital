@@ -36,13 +36,13 @@
   text-align: center;
 }
 
+/* Size, leading and tracking come from the shared .t-h2 (same as every
+   section h2); only the spacing and the emerald second line are local.
+   Grid, so the masks' negative margins below never collapse into each
+   other: the line pitch stays exactly the shared heading leading. */
 .price-title {
+  display: grid;
   margin-top: clamp(16px, 1.6vw, 22px);
-  font-family: var(--font-display);
-  font-size: var(--fs-h2);
-  font-weight: var(--fw-semibold);
-  line-height: 1.04;
-  letter-spacing: -0.042em;
   color: var(--color-text);
 }
 
@@ -513,6 +513,12 @@ ul.price-plan__specs {
   font-size: var(--fs-small);
   line-height: 1.5;
   color: var(--color-text-muted);
+}
+
+/* GSAP entrance target for the CTA (the shared .btn keeps its own CSS
+   hover transition). Flex, so the inline-flex button adds no line gap. */
+.price-foot__cta {
+  display: flex;
 }
 
 /* ---------------------------------------------------------------- */
