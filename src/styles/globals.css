@@ -21,6 +21,9 @@ html {
   /* Browser scroll anchoring shifts scrollY while pinned sections reflow on
      resize; ScrollTrigger and useScrollTriggerSetup restore position instead. */
   overflow-anchor: none;
+  /* Focus moved by Tab (forward or back) is scrolled clear of the fixed
+     navbar. lib/scroll.js uses window.scrollTo, so landings are unaffected. */
+  scroll-padding-top: calc(var(--nav-h) + 16px);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* No `scroll-behavior: smooth` here: it fights ScrollTrigger's refresh.

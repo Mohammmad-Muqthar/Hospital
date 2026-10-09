@@ -14,11 +14,13 @@
  *  1. window.matchMedia(query) returns ONE live MediaQueryList per query
  *     string, so re-registering the same handler on it is de-duplicated by
  *     the browser.
- *  2. A change handler registered on several lists runs at most once per
- *     task. Every query is re-evaluated live inside the handler (GSAP reads
- *     `.matches` for all of its queries), so a single run sees every change.
+ *  2. A handler registered through the legacy addListener() on several
+ *     lists runs at most once per task. GSAP is the only caller of that API
+ *     here, and its handler re-reads `.matches` for all of its queries, so a
+ *     single run sees every change.
  *
- * Handlers registered on a single list (React hooks, Motion) are unaffected.
+ * addEventListener('change') is left native: React hooks, Motion and any
+ * host-app code receive every event exactly as without this module.
  * Must be imported before any matchMedia() consumer runs (see lib/gsap.js).
  */
 const FLAG = '__trionixSharedMediaQueries'
@@ -50,13 +52,13 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && 
     return wrapper
   }
 
+  // Only the legacy addListener/removeListener path is coalesced: GSAP is the
+  // one caller of it on this page, and its handler re-reads every query.
+  // addEventListener stays native, so app or host code that listens to
+  // several queries with one handler still receives every change event.
   const share = (mql) => {
     const add = mql.addEventListener.bind(mql)
     const remove = mql.removeEventListener.bind(mql)
-    mql.addEventListener = (type, handler, options) =>
-      add(type, type === 'change' && handler ? coalesced(handler) : handler, options)
-    mql.removeEventListener = (type, handler, options) =>
-      remove(type, type === 'change' && handler ? coalesced(handler) : handler, options)
     mql.addListener = (handler) => handler && add('change', coalesced(handler))
     mql.removeListener = (handler) => handler && remove('change', coalesced(handler))
     return mql

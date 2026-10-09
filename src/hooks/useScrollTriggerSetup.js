@@ -40,6 +40,12 @@ function measureRanges() {
 }
 
 function anchorFor(ranges, scrollY) {
+  // The very top and bottom are anchors of their own: a reader who hasn't
+  // scrolled yet (or has reached the end) stays exactly there across a
+  // resize or rotation, instead of being re-seated a few px into a pin.
+  const max = document.documentElement.scrollHeight - window.innerHeight
+  if (scrollY <= 1) return { edge: 'top' }
+  if (max > 0 && scrollY >= max - 1) return { edge: 'bottom' }
   if (!ranges.length) return null
   const probe = scrollY + window.innerHeight * PROBE
   let range = ranges[0]
@@ -48,9 +54,11 @@ function anchorFor(ranges, scrollY) {
 }
 
 function yForAnchor(ranges, anchor) {
+  const max = document.documentElement.scrollHeight - window.innerHeight
+  if (anchor?.edge === 'top') return 0
+  if (anchor?.edge === 'bottom') return Math.max(0, max)
   const range = anchor && ranges.find((r) => r.key === anchor.key)
   if (!range) return null
-  const max = document.documentElement.scrollHeight - window.innerHeight
   const y = range.top + anchor.progress * range.height - window.innerHeight * PROBE
   return Math.round(Math.min(Math.max(0, y), Math.max(0, max)))
 }
