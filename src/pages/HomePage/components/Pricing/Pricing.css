@@ -17,6 +17,8 @@
   --price-stack: 560px;
   --price-fig: clamp(3rem, 4.2vw, 4rem);
   --price-surface-tint: #eef5f1;
+  /* Currency option height: 40px for a mouse, 44px for fingers (below). */
+  --price-switch-h: 40px;
 
   position: relative;
   /* Off-white, settling into a barely deeper tone behind the plans so the
@@ -96,7 +98,7 @@
   align-items: center;
   justify-content: center;
   min-width: 76px;
-  min-height: 40px;
+  min-height: var(--price-switch-h);
   padding: 0 18px;
   border-radius: 10px;
   font-family: var(--font-body);
@@ -136,6 +138,16 @@
 @media (hover: hover) and (pointer: fine) {
   .price-switch__option[aria-checked='false']:hover {
     color: var(--color-text);
+  }
+}
+
+/* 44px touch targets. Size follows the input, not the viewport: iPads in
+   landscape, large touch tablets and touch laptops get the desktop grid
+   but are tapped with a finger. The stacked layout (phones, tablet
+   portrait) keeps its 44px whatever the pointer reports. */
+@media (any-pointer: coarse), (max-width: 1023px) {
+  .price {
+    --price-switch-h: 44px;
   }
 }
 
@@ -527,10 +539,6 @@ ul.price-plan__specs {
 @media (max-width: 1023px) {
   .price {
     --price-fig: 3.5rem;
-  }
-
-  .price-switch__option {
-    min-height: 44px;
   }
 
   .price-insight,
