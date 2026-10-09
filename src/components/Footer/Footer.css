@@ -15,6 +15,10 @@
   --foot-muted: var(--color-text-on-dark-muted);
   --foot-accent: var(--color-accent);
   --foot-link-shift: 4px;
+  /* Link rows: compact for a mouse, 44px wherever a finger may tap (see the
+     input-modality block below). The text line itself is always 1.5rem. */
+  --foot-link-h: 36px;
+  --foot-link-gap: 2px;
 
   position: relative;
   isolation: isolate;
@@ -106,15 +110,16 @@
 /* ---------- Link columns ---------- */
 .foot__links {
   display: grid;
-  gap: 2px;
-  /* Pull the first row up so its text sits on the description's first line. */
-  margin-top: -6px;
+  gap: var(--foot-link-gap);
+  /* Pull the first row up by its half-leading so its text sits on the
+     description's first line whatever the row height. */
+  margin-top: calc((1.5rem - var(--foot-link-h)) / 2);
 }
 
 .foot__link {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: var(--foot-link-h);
   /* Room for a symmetric focus ring; the negative margin keeps the text on
      the column's grid line. */
   padding-inline: 8px;
@@ -211,6 +216,17 @@
   }
 }
 
+/* ---------- Touch: 44px link rows at every width ----------
+   Target size follows the input, not the viewport: touch tablets, iPads in
+   landscape (desktop grid) and touch laptops get finger-sized rows; the
+   first-row pull-up above keeps the column's text line where it was. */
+@media (any-pointer: coarse) {
+  .foot {
+    --foot-link-h: 44px;
+    --foot-link-gap: 0px;
+  }
+}
+
 /* ---------- Compact desktop: give the statement room for one line ---------- */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .foot {
@@ -243,6 +259,8 @@
   .foot {
     --foot-col-gap: 24px;
     --foot-head-h: auto;
+    --foot-link-h: 44px;
+    --foot-link-gap: 0px;
   }
 
   .foot__inner {
@@ -271,13 +289,9 @@
     margin-bottom: 6px;
   }
 
+  /* Headings are auto-height here, so the rows start right under them. */
   .foot__links {
-    gap: 0;
     margin-top: 0;
-  }
-
-  .foot__link {
-    min-height: 44px;
   }
 
   .foot__care .foot__heading {
