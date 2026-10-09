@@ -50,6 +50,10 @@ export const MOCK_CALL = {
   next: { label: 'Next step', value: 'Site visit · Thu 11:00' },
 }
 
+/**
+ * One deal per stage: every lane always shows all of its cards (the count
+ * chip never promises a card the module has no room to show).
+ */
 export const MOCK_PIPELINE = {
   title: 'Pipeline',
   meta: 'Corporate',
@@ -63,10 +67,7 @@ export const MOCK_PIPELINE = {
     {
       id: 'qualified',
       label: 'Qualified',
-      deals: [
-        { name: 'Metro Cabs', value: '$9.6k', close: '02 Nov', stale: 'Stale 9d' },
-        { name: 'Greenfield School', value: '$24.5k', close: '21 Oct' },
-      ],
+      deals: [{ name: 'Metro Cabs', value: '$9.6k', close: '02 Nov', stale: 'Stale 9d' }],
     },
     {
       id: 'proposal',
@@ -164,7 +165,7 @@ export const MOCK_DAILY = {
   rows: [
     { id: 'calls', label: 'Calls', value: '18' },
     { id: 'visits', label: 'Visits', value: '3' },
-    { id: 'followups', label: 'Follow-ups', value: '7' },
+    { id: 'leads', label: 'Leads', value: '7' },
   ],
   outcome: '2 deals moved forward',
   status: 'Submitted',
