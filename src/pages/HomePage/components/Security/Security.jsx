@@ -6,29 +6,29 @@ import { gsap, ScrollTrigger, useGSAP, MQ, EASE, SCRUB } from '../../../../lib/g
 import { scrollToTimelineLabel } from '../../../../lib/scroll'
 import SecurityArchitecture from './SecurityArchitecture'
 import SecurityFeatureContent from './SecurityFeatureContent'
-import {
-  BEATS,
-  BEAT_SPACING,
-  FEATURE_LABELS,
-  FEATURE_SWITCH_TIMES,
-  buildSecurityTimeline,
-} from './securityTimeline'
+import { BEATS, FEATURE_LABELS, FEATURE_SWITCH_TIMES, buildSecurityTimeline } from './securityTimeline'
 import './Security.css'
 
 /** Desktop pin distance, in viewport heights (spec budget ≤ 300%). */
 const PIN_VH = 2.8
-/** Gap (px) between the sticky stage and the line where a feature block is "read". */
-const READ_GAP = 36
+/**
+ * The pinned scene holds the whole composition (intro, reading area, index
+ * and architecture) in one viewport, so it needs room: from 620px tall on
+ * wide screens, 740px on 1024–1279 (the narrower text column wraps more).
+ * Shorter screens get the sticky scroll-by scene instead of a crushed pin.
+ */
+const PIN_QUERY = '(min-width: 1280px) and (min-height: 620px), (min-width: 1024px) and (min-height: 740px)'
 
 const REGIONS = SECURITY.features.find((f) => f.regions)?.regions ?? []
 
 /**
  * Phase 6 — Secure by design.
- * Desktop (≥1024 × ≥600): the section pins for 280vh while one master
+ * Desktop (see PIN_QUERY): the section pins for 280vh while one master
  * timeline transforms a single CSS-3D architecture through four states.
- * Smaller / shorter screens: no pin — the compact architecture sticks under
- * the navbar while the four feature blocks scroll by and scrub the same
- * timeline. Reduced motion: one composed static state, all features listed.
+ * Smaller / shorter screens: no pin — after the intro, the compact
+ * architecture and a caption slot stick under the navbar together while a
+ * short track scrubs the same timeline (≈190svh in all). Reduced motion: one
+ * composed static state, all features listed.
  */
 export default function Security() {
   const rootRef = useRef(null)
@@ -51,12 +51,12 @@ export default function Security() {
       const mm = gsap.matchMedia()
 
       mm.add(
-        { motionOK: MQ.motionOK, cinematic: MQ.cinematic },
+        { motionOK: MQ.motionOK, pinned: PIN_QUERY },
         ({ conditions }) => {
           if (!conditions.motionOK) return undefined
 
           /* ---------------- Pinned desktop scene ---------------- */
-          if (conditions.cinematic) {
+          if (conditions.pinned) {
             root.classList.add('is-pinned')
 
             // Opening: restrained editorial entrance during the approach.
@@ -72,7 +72,6 @@ export default function Security() {
             })
             addIntroTweens(intro, q)
             intro.from(q('.sec-features'), { opacity: 0, y: 24, duration: 0.4, ease: EASE.out }, 0.5)
-            intro.from(q('.sec-nav'), { opacity: 0, duration: 0.3 }, 0.65)
             addVisualEntrance(intro, q, 0)
 
             const tl = buildSecurityTimeline(q, { mode: 'desktop', withText: true })
@@ -86,6 +85,8 @@ export default function Security() {
               scrub: SCRUB,
               anticipatePin: 1,
               invalidateOnRefresh: true,
+              // A refresh re-renders the timeline with events suppressed: resync the index.
+              onRefresh: () => syncActive(tl.time()),
             })
             timelineRef.current = tl
 
@@ -97,6 +98,9 @@ export default function Security() {
           }
 
           /* ---------------- Scroll-by sequence (tablet / mobile / short) ---------------- */
+          // After the intro, the scene (visual + caption slot) sticks under the
+          // navbar while the track scrolls past; the track (never sticky itself)
+          // is the trigger, so positions measure correctly at any refresh.
           root.classList.add('is-scrolly')
 
           const intro = gsap.timeline({
@@ -111,43 +115,45 @@ export default function Security() {
           })
           addIntroTweens(intro, q)
 
+          const track = q('.sec-track')[0]
+          const sceneEl = q('.sec-scene')[0]
+          // px of scroll per timeline unit: the track's run (its length beyond the
+          // scene, i.e. how long the scene stays stuck) holds branch → end.
+          const unit = () => Math.max(0, track.offsetHeight - sceneEl.offsetHeight) / (BEATS.end - BEATS.branch)
+          const stuckTop = () => parseFloat(getComputedStyle(sceneEl).top) || 0
+          // `branch` is reached exactly as the scene sticks; the run-up before
+          // it plays while the scene arrives, and `end` as it unsticks.
+          const masterStart = () => `top ${Math.round(stuckTop() + BEATS.branch * unit())}px`
+
           const stage = gsap.timeline({
             defaults: { ease: 'none' },
             scrollTrigger: {
-              trigger: q('.sec-stage')[0],
+              trigger: track,
               start: 'top 100%',
-              end: 'top 55%',
+              end: masterStart,
               scrub: SCRUB,
               invalidateOnRefresh: true,
             },
           })
           addVisualEntrance(stage, q, 0)
 
-          const list = q('.sec-features__list')[0]
-          const firstBlock = q('.sec-feature')[0]
-          const stageEl = q('.sec-stage')[0]
-          // px of scroll per timeline unit: each feature block owns BEAT_SPACING units.
-          const unit = () => firstBlock.offsetHeight / BEAT_SPACING
-          // Read line (px from the viewport top): just below the sticky stage when the
-          // stage sits above the blocks; mid-viewport when it sits beside them.
-          const line = () => {
-            const stuckTop = parseFloat(getComputedStyle(stageEl).top) || 0
-            const below = stuckTop + stageEl.offsetHeight + READ_GAP
-            return Math.round(below < window.innerHeight * 0.8 ? below : window.innerHeight * 0.42)
-          }
-          const tl = buildSecurityTimeline(q, { mode: 'compact', withText: false })
+          const tl = buildSecurityTimeline(q, { mode: 'compact', withText: true })
+          tl.eventCallback('onUpdate', () => syncActive(tl.time()))
           ScrollTrigger.create({
-            trigger: list,
+            trigger: track,
             animation: tl,
-            // label `branch` meets the read line exactly when block 0 does, etc.
-            start: () => `top-=${Math.round(BEATS.branch * unit())} ${line()}px`,
-            end: () => `top+=${Math.round((BEATS.end - BEATS.branch) * unit())} ${line()}px`,
+            start: masterStart,
+            end: () => `+=${Math.round(BEATS.end * unit())}`,
             scrub: SCRUB,
             invalidateOnRefresh: true,
+            onRefresh: () => syncActive(tl.time()),
           })
+          timelineRef.current = tl
 
           return () => {
             root.classList.remove('is-scrolly')
+            timelineRef.current = null
+            syncActive(0)
           }
         },
       )
@@ -182,27 +188,35 @@ export default function Security() {
           </ul>
         </header>
 
-        <div className="sec-stage">
-          <div className="sec-visual">
-            <SecurityArchitecture regions={REGIONS} />
-          </div>
-          <div className="sec-nav" role="group" aria-label="Review security features">
-            {SECURITY.features.map((feature, i) => (
-              <button
-                key={feature.id}
-                type="button"
-                className="sec-nav__btn"
-                aria-current={active === i ? 'step' : undefined}
-                onClick={() => jumpTo(i)}
-              >
-                {feature.title}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Layout-neutral wrappers (display: contents) except in the scroll-by
+            sequence, where the track gives the scroll distance and the scene
+            (visual + caption) sticks under the navbar. */}
+        <div className="sec-track">
+          <div className="sec-scene">
+            <div className="sec-stage">
+              <div className="sec-visual">
+                <SecurityArchitecture regions={REGIONS} />
+              </div>
+            </div>
 
-        <div className="sec-features">
-          <SecurityFeatureContent features={SECURITY.features} />
+            <div className="sec-features">
+              <SecurityFeatureContent features={SECURITY.features} />
+              {/* The reading area's own index: jumps the pinned timeline to a feature. */}
+              <div className="sec-nav" role="group" aria-label="Review security features">
+                {SECURITY.features.map((feature, i) => (
+                  <button
+                    key={feature.id}
+                    type="button"
+                    className="sec-nav__btn"
+                    aria-current={active === i ? 'step' : undefined}
+                    onClick={() => jumpTo(i)}
+                  >
+                    {feature.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

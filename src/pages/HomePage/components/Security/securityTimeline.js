@@ -24,8 +24,19 @@ export const BEATS = {
 /** Spacing between consecutive feature labels (in timeline units). */
 export const BEAT_SPACING = 2
 
-/** Time at which the reading area hands over to the next feature. */
-export const FEATURE_SWITCH_TIMES = [1.7, 3.7, 5.6]
+/** Start of each scene transition (B, C, D); the reading area hands over there too. */
+const HANDOVERS = [1.5, 3.5, 5.4]
+
+/**
+ * Reading-area hand-over is strictly sequential: the outgoing feature is
+ * fully gone (TEXT_OUT) before the incoming one starts (TEXT_IN_AT), so the
+ * two never share pixels in the stacked cell — no ghost text at any stop.
+ */
+const TEXT_OUT = 0.2
+const TEXT_IN_AT = 0.24
+
+/** Time at which the active feature (aria-current) switches: between out and in. */
+export const FEATURE_SWITCH_TIMES = HANDOVERS.map((t) => t + (TEXT_OUT + TEXT_IN_AT) / 2)
 
 /** Camera / spacing presets per motion mode. Angles in degrees. */
 const MODES = {
@@ -63,20 +74,43 @@ const MODES = {
   },
 }
 
-const cam = ({ rx, rz }) => ({ '--cam-rx': `${rx}deg`, '--cam-rz': `${rz}deg` })
+/**
+ * The camera is three transform tweens sharing one time, duration and ease:
+ * tilt on the scene, turn on the plane, and the matching counter-rotation on
+ * every billboard anchor (so labels keep facing the viewer). Plain transforms
+ * on 14 elements — nothing inherited is animated across the 3D tree.
+ */
+function setCamera(view, { rx, rz }) {
+  gsap.set(view.scene, { rotationX: rx })
+  gsap.set(view.plane, { rotation: rz })
+  gsap.set(view.billboards, {
+    x: 0,
+    y: 0,
+    z: (i, el) => Number(el.dataset.bz) || 0,
+    rotation: -rz,
+    rotationY: 0,
+    rotationX: -rx,
+  })
+}
+
+function moveCamera(tl, view, { rx, rz }, vars, at) {
+  tl.to(view.scene, { rotationX: rx, ...vars }, at)
+  tl.to(view.plane, { rotation: rz, ...vars }, at)
+  tl.to(view.billboards, { rotationX: -rx, rotation: -rz, ...vars }, at)
+}
 
 /**
  * Build the single master timeline for the Security architecture.
  * `q` is a gsap.utils.selector scoped to the section. Returns the paused
  * timeline (the caller attaches it to a ScrollTrigger).
  *
- * Every tween animates transforms, opacity, or the scene's two camera
- * custom properties. No two tweens animate the same property of the same
- * element at overlapping times, so scrubbing backwards is exact.
+ * Every tween animates transforms or opacity. No two tweens animate the same
+ * property of the same element at overlapping times, so scrubbing backwards
+ * is exact.
  */
 export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } = {}) {
   const cfg = MODES[mode]
-  const scene = q('.sx-scene')[0]
+  const view = { scene: q('.sx-scene')[0], plane: q('.sx-plane')[0], billboards: q('.sx-bb') }
   const rig = q('.sx-rig')[0]
   const slots = q('.sx-slot')
   const chambers = q('.sx-chamber')
@@ -121,7 +155,7 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   })
 
   /* ---------- Start state (progress 0: a composed, unified platform) ---------- */
-  gsap.set(scene, cam(cfg.cam.start))
+  setCamera(view, cfg.cam.start)
   gsap.set(rig, { x: 0, y: 0, z: 0 })
   gsap.set(slots, spread(cfg.gaps.tight))
   gsap.set(chambers, { z: -(CHAMBER.h - 12) })
@@ -152,15 +186,15 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   tl.to(chambers, { z: 0, duration: 0.8, stagger: 0.06, ease: 'power3.inOut' }, 0)
   tl.to(slots, { ...spread(cfg.gaps.branch), duration: 0.9 }, 0.08)
   tl.to(aos, { opacity: 1, duration: 0.7 }, 0.1)
-  tl.to(scene, { ...cam(cfg.cam.branch), duration: 0.9, ease: EASE.soft }, 0.05)
+  moveCamera(tl, view, cfg.cam.branch, { duration: 0.9, ease: EASE.soft }, 0.05)
   tl.to(names, { opacity: 1, y: 0, duration: 0.45, stagger: 0.05, ease: EASE.out }, 0.5)
   tl.addLabel('branch', BEATS.branch)
 
   /* ---------- B · Tenant data isolation: walls rise, data layers reveal ---------- */
-  const b = 1.5
+  const [b, c, d] = HANDOVERS
   if (withText) crossfade(tl, features[0], features[1], b)
   tl.to(names, { opacity: 0, y: -6, duration: 0.3, ease: 'none' }, b + 0.1)
-  tl.to(scene, { ...cam(cfg.cam.isolation), duration: 1.3, ease: EASE.soft }, b)
+  moveCamera(tl, view, cfg.cam.isolation, { duration: 1.3, ease: EASE.soft }, b)
   tl.to(slots, { ...spread(cfg.gaps.isolation), duration: 1.1 }, b)
   tl.to(walls, { z: 0, duration: 0.8, stagger: 0.06, ease: 'power3.out' }, b + 0.2)
   tl.to(wallPlanes, { opacity: 1, duration: 0.6, ease: 'none' }, b + 0.2)
@@ -177,12 +211,11 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   tl.addLabel('isolation', BEATS.isolation)
 
   /* ---------- C · Consent-gated support: request → approval → gate opens ---------- */
-  const c = 3.5
   if (withText) crossfade(tl, features[1], features[2], c)
   tl.to(tags, { opacity: 0, x: 6, duration: 0.25, ease: 'none' }, c)
   tl.to(activeChamber, { z: 0, duration: 0.5 }, c)
   tl.to(activeAo, { opacity: 1, scale: 1, duration: 0.5 }, c)
-  tl.to(scene, { ...cam(cfg.cam.consent), duration: 1.1, ease: EASE.soft }, c)
+  moveCamera(tl, view, cfg.cam.consent, { duration: 1.1, ease: EASE.soft }, c)
   tl.to(rig, { ...cfg.rig.consent, duration: 1.1, ease: EASE.soft }, c)
   tl.to(focusChamber, { z: cfg.lift * 0.75, duration: 0.5 }, c + 0.2)
   tl.to(focusAo, { opacity: 0.6, scale: 1.05, duration: 0.5 }, c + 0.2)
@@ -194,13 +227,12 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   tl.addLabel('consent', BEATS.consent)
 
   /* ---------- D · Country-routed help: a request token docks at its desk ---------- */
-  const d = 5.4
   if (withText) crossfade(tl, features[2], features[3], d)
   tl.to(panel, { opacity: 0, y: -8, duration: 0.3, ease: 'none' }, d)
   tl.to(gate, { rotationZ: 0, duration: 0.4 }, d + 0.05)
   tl.to(focusChamber, { z: 0, duration: 0.45 }, d)
   tl.to(focusAo, { opacity: 1, scale: 1, duration: 0.45 }, d)
-  tl.to(scene, { ...cam(cfg.cam.routing), duration: 1.2, ease: EASE.soft }, d)
+  moveCamera(tl, view, cfg.cam.routing, { duration: 1.2, ease: EASE.soft }, d)
   tl.to(rig, { ...cfg.rig.routing, duration: 1.2, ease: EASE.soft }, d)
   tl.to(regionLifts, { z: 0, duration: 0.5, stagger: 0.06, ease: 'power3.out' }, d + 0.15)
   tl.to(regionLabels, { opacity: 1, y: 0, duration: 0.3, stagger: 0.05, ease: EASE.out }, d + 0.4)
@@ -216,7 +248,7 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
 
   /* ---------- Final: settle into the composed architecture ---------- */
   const f = 7.2
-  tl.to(scene, { ...cam(cfg.cam.final), duration: 0.8, ease: EASE.soft }, f)
+  moveCamera(tl, view, cfg.cam.final, { duration: 0.8, ease: EASE.soft }, f)
   tl.to(rig, { x: 0, y: 0, z: 0, duration: 0.8, ease: EASE.soft }, f)
   tl.to(slots, { ...spread(SCENE.restGap), duration: 0.8 }, f)
   tl.to(tags, { opacity: 1, x: 0, duration: 0.35, stagger: 0.05, ease: EASE.out }, f + 0.35)
@@ -227,8 +259,13 @@ export function buildSecurityTimeline(q, { mode = 'desktop', withText = true } =
   return tl
 }
 
-/** Reading-area handover: outgoing lifts away, incoming settles in. */
+/** Reading-area handover: the outgoing feature lifts away, then the incoming one settles in. */
 function crossfade(tl, from, to, at) {
-  tl.to(from, { opacity: 0, y: -14, duration: 0.25, ease: 'power1.in' }, at)
-  tl.fromTo(to, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: EASE.out, immediateRender: false }, at + 0.15)
+  tl.to(from, { opacity: 0, y: -14, duration: TEXT_OUT, ease: 'power1.in' }, at)
+  tl.fromTo(
+    to,
+    { opacity: 0, y: 16 },
+    { opacity: 1, y: 0, duration: 0.35, ease: EASE.out, immediateRender: false },
+    at + TEXT_IN_AT,
+  )
 }
