@@ -1,15 +1,20 @@
 /*
  * CRM workspace mock-up (decorative, aria-hidden).
  * All sizes inside .rw-window are DESIGN pixels: the window is laid out at a
- * fixed design size (800 × 520 desktop, 340 × 452 phone — see .rw-fit) and
+ * fixed design size (800 × 520 desktop; 700 × 520 tablet with an icon rail;
+ * 800 × 472 on the shortest pinned frames; 340 × 452 phone — see .rw-fit) and
  * `zoom`ed to fit its box, so text is rendered natively at the final size
  * (crisp at any DPR).
  */
 .rw {
-  --rw-ink: #142622;
+  /* The same text greys as every other product mock-up on the page (the
+     system tokens), so the three CRM views read as one product. Tertiary
+     labels (--rw-subtle) stay ≥ 4.6:1 on every surface of the window;
+     hierarchy comes from size and weight, not from washed-out greys. */
+  --rw-ink: var(--color-text);
   --rw-text: #2a3c37;
-  --rw-muted: #5b6c66;
-  --rw-subtle: #87978f;
+  --rw-muted: var(--color-text-muted);
+  --rw-subtle: var(--color-text-subtle);
   --rw-line: #e3eae5;
   --rw-line-soft: #edf2ee;
   --rw-surface: #ffffff;
@@ -77,7 +82,7 @@
 /* The window's elevation lives on an un-zoomed layer: shadows painted by a
    zoomed element get clipped to its box once it is composited in 3D.
    Every shadow fades out within ~52px below the window, inside the pinned
-   stage's bottom padding (clamp(40px, 7vh, 76px) above 800px tall), so the
+   stage's bottom padding (clamp(40px, 7vh, 76px) above 880px tall), so the
    section's clip never cuts a shadow tail into a visible edge at the
    Roles → Security boundary. */
 .rw-sway::before {
@@ -93,10 +98,10 @@
   pointer-events: none;
 }
 
-/* Short viewports: the pinned stage keeps only ≈ 40px below the window
-   (docked layout, Roles.css), so the long shadow layer is shortened to fade
-   out within it. */
-@media (max-height: 800px) {
+/* Short viewports: the pinned stage keeps only ≈ 36–48px below the window
+   (docked layout, ≤ 880px tall, Roles.css), so the long shadow layer is
+   shortened to fade out within it. */
+@media (max-height: 880px) {
   .rw-sway::before {
     box-shadow:
       0 0 0 1px rgb(16 60 52 / 0.07),
@@ -708,8 +713,9 @@
   background: var(--rw-emerald);
 }
 
+/* Lighter than any label (it is a placeholder), still 4.4:1 on the field. */
 .rw-placeholder {
-  color: #a1aea8;
+  color: #6b7c75;
 }
 
 .rw-select {
@@ -1551,6 +1557,220 @@
 
   .rw-grid--exec .rw-lead {
     height: 32px;
+  }
+}
+
+/* ---------- Short pinned window (≤ 660px tall) ---------------------------- */
+/* On the shortest pinned frames (e.g. a 1366 × 768 laptop's ≈ 600–650px
+   browser viewport) the stage is ≈ 460–510px tall, which would settle the
+   520-tall window at ≈ 0.88× (UI type below 10px). Here the window is
+   designed 472 tall instead — the same modules and composition with a
+   tighter vertical rhythm (chrome, top bar, gaps, row heights) — so it
+   settles at ≈ 0.97–1.03× (the width then limits it). Keep in sync with
+   DESIGN_QUERIES in CRMWorkspace.jsx. */
+@media (min-width: 1200px) and (min-height: 600px) and (max-height: 660px) and (prefers-reduced-motion: no-preference) {
+  .rw-fit {
+    --rw-dh: 472;
+  }
+
+  .rw .rw-chrome {
+    height: 28px;
+  }
+
+  .rw .rw-top {
+    height: 46px;
+  }
+
+  .rw .rw-side {
+    padding-top: 12px;
+  }
+
+  .rw .rw-clinic {
+    padding-bottom: 12px;
+    margin-bottom: 6px;
+  }
+
+  .rw .rw-content {
+    padding: 12px 14px;
+  }
+
+  .rw .rw-grid,
+  .rw .rw-col {
+    gap: 10px;
+  }
+
+  .rw .rw-card {
+    padding: 10px 13px;
+  }
+
+  .rw .rw-card__head {
+    margin-bottom: 8px;
+  }
+
+  /* Admin */
+  .rw .rw-grid--admin {
+    grid-template-rows: 140px minmax(0, 1fr);
+  }
+
+  .rw .rw-fields {
+    gap: 6px;
+  }
+
+  .rw .rw-field {
+    gap: 3px;
+  }
+
+  .rw .rw-input {
+    height: 27px;
+  }
+
+  .rw .rw-brand {
+    gap: 8px;
+  }
+
+  .rw .rw-drop {
+    height: 44px;
+  }
+
+  .rw .rw-perms {
+    gap: 7px;
+  }
+
+  .rw .rw-table__row {
+    height: 30px;
+  }
+
+  .rw .rw-table__row--head {
+    height: 20px;
+  }
+
+  .rw .rw-config__row {
+    height: 24px;
+  }
+
+  /* Sales Manager */
+  .rw .rw-grid--manager {
+    grid-template-rows: 52px minmax(0, 1.04fr) minmax(0, 1fr);
+  }
+
+  .rw .rw-kpi {
+    padding: 6px 13px;
+  }
+
+  .rw .rw-kpi__value {
+    font-size: 18px;
+  }
+
+  .rw .rw-rep {
+    height: 24px;
+  }
+
+  .rw .rw-stages {
+    gap: 5px;
+  }
+
+  .rw .rw-board__day {
+    min-height: 0;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .rw .rw-chart__plot {
+    height: 42px;
+  }
+
+  /* Sales Executive */
+  .rw .rw-grid--exec {
+    grid-template-rows: 48px auto minmax(0, 1fr);
+  }
+
+  .rw .rw-activity {
+    padding: 6px 14px;
+  }
+
+  .rw .rw-follow__list {
+    gap: 6px;
+  }
+
+  .rw .rw-follow__item {
+    padding: 7px 10px;
+  }
+
+  .rw .rw-grid--exec .rw-card:not(.rw-activity) {
+    padding-block: 9px;
+  }
+
+  .rw .rw-opps {
+    gap: 4px;
+  }
+
+  .rw .rw-opp {
+    gap: 3px;
+  }
+
+  /* Receptionist */
+  .rw .rw-form {
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .rw .rw-textarea {
+    height: 42px;
+  }
+
+  .rw .rw-recent__item {
+    height: 44px;
+  }
+
+  .rw .rw-today__cell {
+    padding: 6px 9px;
+  }
+}
+
+/* ---------- Tablet window (768–879px) ------------------------------------ */
+/* A portrait tablet's column (≈ 700–800px) would squeeze the 800px desktop
+   window to ≈ 0.88× (UI type below 10px). Here the window is designed 700
+   wide instead: the sidebar collapses to an icon rail — the content area
+   keeps the desktop width (644 vs 636), so every role view keeps its
+   composition — and the window renders at ≥ 1× (crisp, ≥ 11px type). The
+   rail still re-flows per role (each person sees only their items). */
+@media (min-width: 768px) and (max-width: 879px) {
+  .rw-fit {
+    --rw-dw: 700;
+  }
+
+  .rw .rw-side {
+    width: 56px;
+    padding-inline: 8px;
+  }
+
+  .rw .rw-clinic {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .rw .rw-clinic__text,
+  .rw .rw-nav__inner > span,
+  .rw .rw-user__text {
+    display: none;
+  }
+
+  .rw .rw-nav__inner {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .rw .rw-nav__inner svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rw .rw-user {
+    padding-inline: 0;
+  }
+
+  .rw .rw-user__layer .rw-swap__inner {
+    justify-content: center;
   }
 }
 

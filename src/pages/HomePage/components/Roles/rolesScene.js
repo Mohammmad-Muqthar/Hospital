@@ -46,6 +46,8 @@ export const SCENE = {
   dock: 0.5,
   dockLabelInset: 0.06,
   dockHold: 0.92,
+  /** Docked layouts: smallest workspace scale at progress 0 (of its resting size). */
+  dockMinScale: 0.88,
   /** Docked layouts: 0.32 more timeline at the same scroll pace (≤ 3.2). */
   pinVhDocked: 3.15,
 }
@@ -59,28 +61,46 @@ export const TRANSITION_TILT = [
 
 /**
  * Role swap rhythm inside one transition (timeline seconds after it starts;
- * the transition lasts SCENE.transition = 1). Outgoing modules fade fast
- * (gone by ≈ 0.24) and the incoming ones begin at 0.22, so the content area
- * is never empty yet two role states are never readable together (at the
- * crossover both layers are below ≈ 15% opacity). Text layers (sidebar
- * items, title, user, description) fully clear before their replacement.
+ * the transition lasts SCENE.transition = 1).
+ *
+ * Modules hand the window over as a wave sweeping down, across or up the
+ * content area (whichever keeps the most of it readable for that pair of
+ * layouts): each outgoing module recedes when the wave reaches its leading
+ * edge (`wave` × its position in the content area), and each incoming
+ * module rises in as soon as the wave has reached it AND every outgoing
+ * module under its footprint has faded below ≈ 6% (`clearAt` of the
+ * fade). So the new role builds up where the old one has already gone
+ * while the rest of the old one is still readable: the content area is
+ * never empty, and no two modules are readable on top of each other
+ * (useRolesScene.js, scheduleSwap).
+ * Text layers (title, user, description) clear just before their
+ * replacement arrives, and do so ahead of the module wave — so the brief
+ * moment where an area of the content changes hands never coincides with
+ * the moment the title or the description changes: no frame is blank.
  */
 export const SWAP = {
   outAt: 0,
-  outDuration: 0.2,
-  outStagger: 0.01,
-  inAt: 0.22,
+  outDuration: 0.13,
+  /** Delay of the wave from one side of the content area to the other. */
+  wave: 0.22,
+  /** Fraction of an outgoing fade after which its area may be re-used (opacity ≈ 0.06). */
+  clearAt: 0.75,
+  inAt: 0.06,
+  inFade: 0.18,
   inDuration: 0.46,
-  inStagger: 0.05,
-  navOutAt: 0.06,
-  slideAt: 0.14,
-  slideDuration: 0.32,
-  navInAt: 0.3,
-  labelOutAt: 0.1,
-  labelInAt: 0.28,
-  descOutAt: 0.04,
-  descInAt: 0.3,
-  switchAt: 0.3,
+  navOutAt: 0.02,
+  navOutDuration: 0.12,
+  slideAt: 0.03,
+  slideDuration: 0.24,
+  navInAt: 0.12,
+  navInStep: 0.025,
+  labelOutAt: 0.02,
+  labelOutDuration: 0.09,
+  labelInAt: 0.08,
+  descOutAt: 0,
+  descOutDuration: 0.1,
+  descInAt: 0.1,
+  switchAt: 0.1,
 }
 
 /**

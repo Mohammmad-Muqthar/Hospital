@@ -23,9 +23,20 @@ const VIEWS = {
 }
 
 /**
+ * Design-size breakpoints of the window (CRMWorkspace.css): the phone window
+ * (≤ 767), the tablet window with an icon rail (768–879), and the short
+ * pinned window (≤ 660px tall).
+ */
+const DESIGN_QUERIES = [
+  MQ.mobile,
+  '(min-width: 768px) and (max-width: 879px)',
+  `(min-width: 1200px) and (min-height: 600px) and (max-height: 660px) and ${MQ.motionOK}`,
+]
+
+/**
  * Sets --rw-s on the fit box so the window fills it (contain) — no React
  * state. Re-applied when the box resizes and when the design size switches
- * between the phone and desktop windows (a CSS breakpoint).
+ * between the phone, tablet and desktop windows (CSS breakpoints).
  */
 function useFitScale(ref) {
   useLayoutEffect(() => {
@@ -38,11 +49,11 @@ function useFitScale(ref) {
     apply()
     const ro = new ResizeObserver(apply)
     ro.observe(el)
-    const mql = window.matchMedia(MQ.mobile)
-    mql.addEventListener('change', apply)
+    const mqls = DESIGN_QUERIES.map((q) => window.matchMedia(q))
+    mqls.forEach((mql) => mql.addEventListener('change', apply))
     return () => {
       ro.disconnect()
-      mql.removeEventListener('change', apply)
+      mqls.forEach((mql) => mql.removeEventListener('change', apply))
     }
   }, [ref])
 }

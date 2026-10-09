@@ -1,7 +1,8 @@
 /**
  * Fit scale of the workspace window, from the fit box's size and the design
  * size of the current breakpoint (--rw-dw / --rw-dh / --rw-max, set in
- * CRMWorkspace.css: the desktop window is 800 × 520, the phone window
+ * CRMWorkspace.css: the desktop window is 800 × 520 (800 × 472 on the
+ * shortest pinned frames, 700 × 520 with the tablet icon rail), the phone window
  * 340 × 452). Shared by the fit hook and the pinned scene, so both always
  * agree on the window's resting size.
  */
