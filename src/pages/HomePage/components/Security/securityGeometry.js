@@ -19,6 +19,8 @@ export const SCENE = {
   /** Below this fit, billboard labels are scaled up (up to maxLabelScale). */
   labelFit: 0.86,
   maxLabelScale: 1.75,
+  /** Extra frame height (reference px) per unit of label up-scaling. */
+  labelHeadroom: 110,
   deck: { w: deckW, d: deckD },
   /** Gap between chambers at rest (final state). */
   restGap: 44,
@@ -37,7 +39,7 @@ export const SCENE = {
   token: { w: 28, d: 28, h: 10 },
 }
 
-/** Recessed zones on the plate: the tenant grid and the support desk rail. */
+/** Recessed zones painted on the plate (deck-relative): the tenant grid and the support desk rail. */
 SCENE.trays = {
   grid: { left: 50, top: 6, width: deckW - 100, height: 330, borderRadius: 18 },
   desks: { left: 66, top: 344, width: deckW - 132, height: 72, borderRadius: 14 },

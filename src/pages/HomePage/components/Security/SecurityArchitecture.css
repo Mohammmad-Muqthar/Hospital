@@ -4,9 +4,10 @@
  * Rest values here are the composed FINAL state of the story (also used for
  * reduced motion / no JS). The master timeline sets other start states in
  * JS and travels back to these. GSAP never touches the `transform` of a
- * face or billboard (their orientation is static CSS); it moves the
- * preserve-3d containers and fades leaf faces. Opacity is never animated on
- * a preserve-3d container (that would flatten the 3D context).
+ * face (its orientation is static CSS); it moves the preserve-3d containers,
+ * turns the camera (scene / plane) with each billboard anchor's matching
+ * counter-rotation, and fades leaf faces. Opacity is never animated on a
+ * preserve-3d container (that would flatten the 3D context).
  */
 
 .sx {
@@ -22,6 +23,9 @@
   --sx-body-front: linear-gradient(to bottom, #dfe8e3 0%, #d2ddd7 100%);
   --sx-wall: rgba(225, 240, 233, 0.34);
   --sx-wall-edge: rgba(8, 107, 86, 0.2);
+  /* Composed final camera (rest state only — see "Camera" below). */
+  --cam-rx: 57deg;
+  --cam-rz: -38deg;
 
   position: relative;
   width: 100%;
@@ -50,15 +54,32 @@
   transform-style: preserve-3d;
 }
 
+/*
+ * Camera. --cam-rx / --cam-rz are the composed FINAL camera, constant here:
+ * they only define the CSS rest state. While the story plays, GSAP tweens
+ * the scene's rotateX, the plane's rotateZ and each billboard's own
+ * counter-rotation directly (transforms on 14 elements per frame instead of
+ * an inherited custom property invalidating the whole 3D tree).
+ * Centring uses margins, not `translate`, so GSAP owns `transform` alone.
+ */
 .sx-scene {
-  --cam-rx: 57deg;
-  --cam-rz: -38deg;
+  --scene-top-share: 0.49;
   position: absolute;
   left: 50%;
   top: 50%;
-  translate: -50% -49%;
+  width: var(--scene-w);
+  height: var(--scene-d);
+  margin-left: calc(var(--scene-w) / -2);
+  margin-top: calc(var(--scene-d) * var(--scene-top-share) * -1);
   transform-style: preserve-3d;
-  transform: rotateX(var(--cam-rx)) rotateZ(var(--cam-rz));
+  transform: rotateX(var(--cam-rx));
+}
+
+.sx-plane {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateZ(var(--cam-rz));
 }
 
 /* ---------------------------------------------------------------- */
@@ -111,9 +132,11 @@
   border-radius: 40px;
   transform: translateZ(-2px);
   background: rgba(16, 60, 52, 0.16);
+  /* Kept tight on purpose: a blur's far tail is invisible on off-white but
+     inflates this perspective-drawn layer (~40% less area than 90px/40px). */
   box-shadow:
-    0 0 26px 10px rgba(16, 60, 52, 0.14),
-    18px 26px 90px 40px rgba(16, 60, 52, 0.1);
+    0 0 20px 8px rgba(16, 60, 52, 0.13),
+    14px 22px 60px 14px rgba(16, 60, 52, 0.11);
 }
 
 .sx-plinth > .sx-face--top {
@@ -359,7 +382,8 @@
 /* ---------------------------------------------------------------- */
 /* Billboards (labels that always face the viewer)                   */
 /* ---------------------------------------------------------------- */
-.sx-bb {
+.sx-bb,
+.sx-bb__face {
   position: absolute;
   width: 0;
   height: 0;
@@ -367,13 +391,23 @@
      keep the anchor in the 3D context so its children are real planes. */
   transform-style: preserve-3d;
   transform-origin: 0 0;
-  /* After facing the camera, labels are biased toward it so nearby glass
-     and slabs never cut through them. */
-  transform: translateZ(var(--bz, 0px)) rotateZ(calc(var(--cam-rz) * -1)) rotateX(calc(var(--cam-rx) * -1))
-    translateZ(var(--bb-bias, 150px)) scale(var(--label-scale, 1));
 }
 
-.sx-bb > * {
+/* Anchor: lifted to its height, then turned to face the camera (GSAP
+   drives the two rotations while the camera moves). */
+.sx-bb {
+  transform: translateZ(var(--bz, 0px)) rotateZ(calc(var(--cam-rz) * -1)) rotateX(calc(var(--cam-rx) * -1));
+}
+
+/* After facing the camera, labels are biased toward it so nearby glass and
+   slabs never cut through them; counter-scaled on small stages. */
+.sx-bb__face {
+  left: 0;
+  top: 0;
+  transform: translateZ(var(--bb-bias, 150px)) scale(var(--label-scale, 1));
+}
+
+.sx-bb__face > * {
   position: absolute;
   font-family: var(--font-body);
   white-space: nowrap;
@@ -382,7 +416,7 @@
 
 /* Zero-width flex anchor: centres its child over the anchor point without
    using CSS translate (the child stays free for GSAP transforms). */
-.sx-bb > .sx-bb__center {
+.sx-bb__face > .sx-bb__center {
   left: 0;
   bottom: 0;
   transform-style: preserve-3d;
@@ -672,6 +706,6 @@
 
   /* labels are counter-scaled here, so give the raised parts more headroom */
   .sx-scene {
-    translate: -50% -43%;
+    --scene-top-share: 0.43;
   }
 }
