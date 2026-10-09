@@ -44,13 +44,18 @@ No smooth-scroll library is used on purpose: native scrolling plus ScrollTrigger
 
 ---
 
-## 2. Assets you need to add
+## 2. Assets
 
-These files were not part of the supplied material, so the site ships with
-graceful fallbacks until you add them:
-
-| Asset | Put it here | Fallback until then |
+| Asset | Location | Status |
 | --- | --- | --- |
+| Hero background video | `public/videos/hero1.mp4` (H.264, 1280×720, 6 s loop, 1.9 MB) | **Included.** A 1920×1080 export would look crisper on large desktop screens. Optionally add a `.webm` and a poster image (see §3). |
+| Official Trionix Hospital logo (transparent PNG/SVG, white wordmark for dark backgrounds) | `public/images/trionix-hospital-logo.png` | **Still needed.** Until it is added, a plain "Trionix Hospital" text label is shown (the logo is never redrawn in code). |
+
+If the video file is missing or fails to load, the hero falls back to a still
+deep-forest cinematic background automatically. Paths can be changed without
+code via a `.env.local` file (see below).
+
+--- | --- | --- |
 | Official Trionix Hospital logo (transparent PNG/SVG, white wordmark for dark backgrounds) | `public/images/trionix-hospital-logo.png` | plain "Trionix Hospital" text label (the logo is never redrawn in code) |
 | Hero background video | `public/videos/hero.mp4` (optional `hero.webm`, poster image) | a still deep-forest cinematic background |
 
@@ -66,7 +71,7 @@ overridden with Vite env variables:
 ```bash
 # .env.local
 VITE_LOGO_SRC=/images/trionix-hospital-logo.png
-VITE_HERO_VIDEO_SRC=/videos/hero.mp4
+VITE_HERO_VIDEO_SRC=/videos/hero1.mp4
 VITE_HERO_VIDEO_WEBM=/videos/hero.webm
 VITE_HERO_POSTER_SRC=/images/hero-poster.jpg
 VITE_TRIAL_URL=https://app.example.com/signup      # "Start trial" buttons   (default /signup)
