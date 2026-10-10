@@ -16,9 +16,22 @@ export const SCENE = {
   /** Reference box the projected scene is fitted into. */
   frame: { w: 820, h: 700 },
   maxFit: 1.12,
-  /** Below this fit, billboard labels are scaled up (up to maxLabelScale). */
+  /**
+   * Below this fit, billboard labels are counter-scaled so they keep this
+   * share of their CSS size on screen. Phones fit the scene at ≈ 0.38–0.45,
+   * so they need up to ≈ 2.3×; the cap only guards degenerate stages. With
+   * no mock label set under 13px (SecurityArchitecture.css), every label
+   * renders at ≥ 11px.
+   */
   labelFit: 0.86,
-  maxLabelScale: 1.75,
+  maxLabelScale: 2.5,
+  /**
+   * From this counter-scale up (phones) labels are large next to the scene
+   * around them: the stage is "dense" and shows fewer of them at once.
+   */
+  denseLabelScale: 1.8,
+  /** Extra frame height (reference px) per unit of label up-scaling. */
+  labelHeadroom: 110,
   deck: { w: deckW, d: deckD },
   /** Gap between chambers at rest (final state). */
   restGap: 44,
@@ -37,10 +50,29 @@ export const SCENE = {
   token: { w: 28, d: 28, h: 10 },
 }
 
-/** Recessed zones on the plate: the tenant grid and the support desk rail. */
+/** Recessed zones painted on the plate (deck-relative): the tenant grid and the support desk rail. */
 SCENE.trays = {
   grid: { left: 50, top: 6, width: deckW - 100, height: 330, borderRadius: 18 },
   desks: { left: 66, top: 344, width: deckW - 132, height: 72, borderRadius: 14 },
+}
+
+const labelScaleFor = (fit) => Math.min(Math.max(SCENE.labelFit / fit, 1), SCENE.maxLabelScale)
+
+/**
+ * Fit the reference scene into a stage of `width` × `height` px: the scene
+ * scale, the billboard labels' counter-scale, and whether the stage is dense.
+ * One function for the markup (CSS variables) and the timeline, so both
+ * always agree on the current layout.
+ */
+export function fitScene(width, height) {
+  const firstFit = Math.min(width / SCENE.frame.w, height / SCENE.frame.h, SCENE.maxFit)
+  // Enlarged labels (the access panel above all) need headroom the reference
+  // frame doesn't include: reserve it, so on short stages they stay inside
+  // the visual instead of rising under the navbar.
+  const frameH = SCENE.frame.h + SCENE.labelHeadroom * (labelScaleFor(firstFit) - 1)
+  const fit = Math.min(width / SCENE.frame.w, height / frameH, SCENE.maxFit)
+  const labelScale = labelScaleFor(fit)
+  return { fit, labelScale, dense: labelScale >= SCENE.denseLabelScale }
 }
 
 /** Rest (final) top-left position of a chamber on the deck. */

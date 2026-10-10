@@ -235,29 +235,41 @@
 }
 
 .hero__title {
+  /* width-driven, but capped by height so short laptop screens keep the whole composition */
+  --hero-title-size: min(clamp(2.75rem, 0.6rem + 6.15vw, 6.5rem), 11.6vh);
+
   margin: 0;
   color: var(--hero-text);
   font-family: var(--font-display);
-  /* width-driven, but capped by height so short laptop screens keep the whole composition */
-  font-size: min(clamp(2.75rem, 0.6rem + 6.15vw, 6.5rem), 11.6vh);
+  /* --hero-title-fit (heroCopyFit.js) is 1 unless user text settings would
+     push the copy out of the pinned stage. */
+  font-size: calc(var(--hero-title-size) * var(--hero-title-fit, 1));
   font-weight: 600;
   line-height: 1.02;
   letter-spacing: -0.042em;
 }
 
+/* One set of words; the wide / narrow line breaks are switched by CSS.
+   Lines may still wrap (white-space: normal): the designed breaks always fit,
+   but enlarged text spacing (WCAG 1.4.12) or zoom must reflow, not clip. */
 .hero__lines {
   display: block;
   perspective-origin: 50% 50%;
 }
 
-.hero__lines--narrow {
-  display: none;
+/* Inline-block so the timeline can move each line's words through depth.
+   A single word wider than the column (only under enlarged text spacing on
+   the narrowest phones) breaks instead of being clipped. */
+.hero__word {
+  display: inline-block;
+  overflow-wrap: anywhere;
+  backface-visibility: hidden;
 }
 
-.hero__line {
-  display: block;
-  white-space: nowrap;
-  backface-visibility: hidden;
+@media (min-width: 768px) {
+  .hero__br--narrow {
+    display: none;
+  }
 }
 
 .hero__word--accent {
@@ -316,17 +328,13 @@
 
 @media (max-width: 767px) {
   .hero__title {
-    font-size: clamp(2.5rem, 1.6rem + 4.4vw, 3.5rem);
+    --hero-title-size: clamp(2.5rem, 1.6rem + 4.4vw, 3.5rem);
     line-height: 1.04;
     letter-spacing: -0.04em;
   }
 
-  .hero__lines--wide {
+  .hero__br--wide {
     display: none;
-  }
-
-  .hero__lines--narrow {
-    display: block;
   }
 }
 
@@ -607,6 +615,26 @@
       0 22px 44px -28px rgba(10, 40, 34, 0.36);
     backface-visibility: hidden;
     pointer-events: none;
+  }
+
+  /* 2×2 card layouts: the dashboard splits into quadrants instead of strips,
+     so each piece is already larger than its card (never scaled up). The
+     dashboard's width and height are rounded to even pixels, so the halves
+     stay on whole pixels and the swap from the unified preview is seamless. */
+  @media (max-width: 1023px) {
+    .hero__slice {
+      top: calc(var(--row) * 50%);
+      left: calc(var(--col) * 50%);
+      width: 50%;
+      height: 50%;
+    }
+
+    .hero__slice-dash {
+      top: calc(var(--row) * -100%);
+      left: calc(var(--col) * -100%);
+      width: 200%;
+      height: 200%;
+    }
   }
 
   .hero__slice-back {

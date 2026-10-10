@@ -66,7 +66,7 @@ export function LeadArt() {
         {queue.map((lead) => (
           <li key={lead.name} className="feat-ui-queue__row">
             <Avatar initials={lead.initials} tone="soft" square />
-            <span className="feat-ui-strong feat-ui-ellipsis">{lead.name}</span>
+            <span className="feat-ui-strong feat-ui-queue__name">{lead.name}</span>
             <span className="feat-ui-muted feat-ui-queue__source">{lead.source}</span>
             <span className="feat-ui-queue__score t-tabular">{lead.score}</span>
             <Chip>{lead.status}</Chip>
@@ -87,8 +87,8 @@ export function CallArt() {
           <PhoneOutgoing size={14} strokeWidth={2} />
         </span>
         <span className="feat-ui-stack">
-          <strong className="feat-ui-strong feat-ui-ellipsis">{contact.name}</strong>
-          <span className="feat-ui-muted">{contact.meta}</span>
+          <strong className="feat-ui-strong">{contact.name}</strong>
+          <span className="feat-ui-muted feat-ui-call__meta">{contact.meta}</span>
         </span>
         <span className="feat-ui-call__time t-tabular">{contact.duration}</span>
       </div>
@@ -133,7 +133,7 @@ export function PipelineArt() {
             {col.deals.map((deal) => {
               const card = (
                 <>
-                  <span className="feat-ui-strong feat-ui-ellipsis">{deal.name}</span>
+                  <span className="feat-ui-strong feat-ui-deal__name">{deal.name}</span>
                   <span className="feat-ui-deal__meta">
                     <span className="feat-ui-deal__value t-tabular">{deal.value}</span>
                     {deal.stale ? (
@@ -141,7 +141,7 @@ export function PipelineArt() {
                         {deal.stale}
                       </Chip>
                     ) : (
-                      <span className="feat-ui-muted t-tabular">{deal.close}</span>
+                      <span className="feat-ui-muted t-tabular feat-ui-deal__close">{deal.close}</span>
                     )}
                   </span>
                 </>
@@ -193,14 +193,16 @@ export function FollowUpsArt() {
               <span className="feat-ui-follow__icon">
                 <ItemIcon size={13} strokeWidth={2} />
               </span>
-              <span className="feat-ui-follow__text feat-ui-ellipsis">
-                <strong className="feat-ui-strong">{item.kind}</strong>
-                <span className="feat-ui-muted">{item.name}</span>
+              <span className="feat-ui-follow__text">
+                <strong className="feat-ui-strong feat-ui-follow__kind">{item.kind}</strong>
+                <span className="feat-ui-muted feat-ui-follow__name">{item.name}</span>
               </span>
               {item.overdue ? (
-                <span className="feat-ui-chip feat-ui-chip--danger">{MOCK_FOLLOWUPS.overdueLabel}</span>
+                <span className="feat-ui-chip feat-ui-chip--danger feat-ui-follow__end">
+                  {MOCK_FOLLOWUPS.overdueLabel}
+                </span>
               ) : (
-                <span className="feat-ui-follow__time t-tabular">{item.time}</span>
+                <span className="feat-ui-follow__time feat-ui-follow__end t-tabular">{item.time}</span>
               )}
             </>
           )

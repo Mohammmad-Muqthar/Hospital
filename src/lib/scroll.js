@@ -45,7 +45,7 @@ export function scrollToY(y, { smooth = true } = {}) {
  * Scroll to an in-page section by id (with or without leading '#').
  * Returns true when the target exists so callers can preventDefault().
  */
-export function scrollToSection(id, { smooth = true, updateHash = true } = {}) {
+export function scrollToSection(id, { smooth = true, updateHash = true, moveFocus = true } = {}) {
   const cleanId = String(id).replace(/^#/, '')
   if (!cleanId) return false
   const el = document.getElementById(cleanId)
@@ -54,7 +54,18 @@ export function scrollToSection(id, { smooth = true, updateHash = true } = {}) {
   if (updateHash && window.location.hash !== `#${cleanId}`) {
     window.history.replaceState(null, '', cleanId === 'top' ? window.location.pathname : `#${cleanId}`)
   }
+  if (moveFocus) focusSection(el)
   return true
+}
+
+/**
+ * Move the sequential focus starting point into a section without scrolling
+ * (the scroll is already handled), so the next Tab continues inside it like
+ * a native anchor jump would. Sections get tabindex="-1" on demand.
+ */
+export function focusSection(el) {
+  if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1')
+  el.focus({ preventScroll: true })
 }
 
 /**

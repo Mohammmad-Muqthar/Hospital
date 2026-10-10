@@ -106,7 +106,10 @@
 }
 
 .how-device {
-  --phone-h: min(76vh, 620px);
+  /* Static composition (reduced motion / short screens): never shorter than
+     the 440px that holds all four notifications at a legible size — on a
+     very short viewport the phone simply scrolls like any tall element. */
+  --phone-h: min(max(76vh, 440px), 620px);
   --phone-w: calc(var(--phone-h) * 0.461538);
   --phone-r: calc(var(--phone-w) * 0.16);
   --phone-depth: calc(var(--phone-w) * 0.0058);
@@ -210,7 +213,7 @@
   }
 
   .how-device {
-    --phone-h: min(78svh, 540px, 156vw);
+    --phone-h: min(max(78svh, 440px), 540px, 156vw);
   }
 
   .how-steps {
@@ -301,21 +304,24 @@
   margin-inline: 0;
 }
 
+/* Hierarchy in the supporting slot: section title (h2, ~36→48px) above the
+   step titles (h3, ~28→36px) above the lead copy — differentiated by size
+   and position, never by dimming the heading. */
 .how--split .how-head__title {
   margin: 14px 0 0;
-  font-size: clamp(1.5rem, 0.95rem + 0.95vw, 2.125rem);
-  line-height: 1.16;
+  font-size: clamp(2.25rem, 1.1rem + 1.85vw, 3rem);
+  line-height: 1.1;
 }
 
 .how--split .how-steps {
-  margin-top: clamp(36px, 7.5vh, 76px);
+  margin-top: clamp(36px, 7vh, 72px);
   max-width: 32rem;
 }
 
 .how--split .how-step__title {
-  font-size: clamp(2.125rem, 1.2rem + 1.45vw, 2.75rem);
-  letter-spacing: var(--tracking-heading);
-  line-height: 1.08;
+  font-size: clamp(1.75rem, 1.05rem + 1.05vw, 2.25rem);
+  letter-spacing: var(--tracking-title);
+  line-height: 1.12;
 }
 
 .how--split .how-step__text {
@@ -338,15 +344,24 @@
   height: calc(100svh - var(--nav-h));
 }
 
+/* The static layout's 40–66px row gaps would come out of the phone's height;
+   a tighter, height-aware rhythm gives it to the device instead (the centred
+   device area still leaves air around it), so all four notifications fit at
+   a legible size. */
+.how--stacked .how-layout {
+  row-gap: clamp(18px, 3.2svh, 34px);
+}
+
 .how--stacked .how-head {
   flex: none;
   width: 100%;
 }
 
+/* Same hierarchy as desktop: h2 (~26→36px) above the step titles (~21→28px). */
 .how--stacked .how-head__title {
   margin-top: 6px;
-  font-size: clamp(1.3rem, 0.95rem + 1.6vw, 2rem);
-  line-height: 1.18;
+  font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.25rem);
+  line-height: 1.12;
 }
 
 .how--stacked .how-device-area {
@@ -366,8 +381,8 @@
 }
 
 .how--stacked .how-step__title {
-  font-size: clamp(1.5rem, 1.05rem + 1.8vw, 2.25rem);
-  letter-spacing: var(--tracking-heading);
+  font-size: clamp(1.3125rem, 0.95rem + 1.2vw, 1.75rem);
+  letter-spacing: var(--tracking-title);
 }
 
 .how--stacked .how-step__text {

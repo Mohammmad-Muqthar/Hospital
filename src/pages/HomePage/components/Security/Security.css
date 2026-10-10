@@ -4,11 +4,18 @@
  * Three layouts share one DOM:
  *  - default (no JS / reduced motion): normal section, architecture in its
  *    composed final state, all four features listed;
- *  - .is-pinned (desktop ≥1024 × ≥600, motion OK): 100vh stage pinned by
- *    ScrollTrigger, features grid-stacked in a stable reading area;
- *  - .is-scrolly (smaller / shorter screens, motion OK): no pin; the compact
- *    architecture sticks under the navbar while feature blocks scroll by.
+ *  - .is-pinned (desktop tall enough for the whole composition — see
+ *    PIN_QUERY in Security.jsx — motion OK): 100vh stage pinned by
+ *    ScrollTrigger, features grid-stacked in a stable reading area with its
+ *    own index (the quick navigation) directly underneath;
+ *  - .is-scrolly (smaller / shorter screens, motion OK): no pin; after the
+ *    intro, one scene (architecture + the active feature's caption) sticks
+ *    under the navbar while a scroll track plays the same master timeline.
+ *    Captions live in a fixed slot under the visual, so text never passes
+ *    beneath it.
  * The classes are added by gsap.matchMedia() and removed on revert.
+ * .sec-track and .sec-scene are layout-neutral (display: contents) except in
+ * the scroll-by sequence.
  */
 
 .sec {
@@ -20,7 +27,7 @@
 
 .sec-frame {
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   grid-template-areas:
     'intro stage'
     'features features';
@@ -29,26 +36,42 @@
   align-items: center;
 }
 
+.sec-track,
+.sec-scene {
+  display: contents;
+}
+
 /* ---------------------------------------------------------------- */
 /* Intro: eyebrow, heading, paragraph, checklist                      */
 /* ---------------------------------------------------------------- */
 .sec-intro {
   grid-area: intro;
   min-width: 0;
+  /* the heading's size is capped by this column's width (cqi) */
+  container-type: inline-size;
 }
 
 .sec-eyebrow {
   margin-bottom: clamp(16px, 2.2vh, 24px);
 }
 
+/*
+ * The shared .t-h2 spec (size, leading, tracking) — the same as Features,
+ * How It Works and Roles. The only extra cap is the column width, so the
+ * three designed lines fit as set: "Private by default." measures ≈ 8.66em,
+ * and 11.2cqi leaves it ≈ 3% of slack (font rendering can never tip it
+ * onto a fourth line).
+ */
 .sec-title {
-  /* capped by column width so the three designed lines never re-wrap */
-  font-size: min(var(--fs-h2), 4.3vw, 4.2rem);
-  line-height: 1.06;
-  letter-spacing: -0.035em;
+  font-size: min(var(--fs-h2), 11.2cqi);
   color: var(--color-text);
 }
 
+/*
+ * Each designed line starts on its own line, but may still wrap: with user
+ * text-spacing overrides (WCAG 1.4.12) a line can outgrow the column, and it
+ * must re-flow rather than widen the page.
+ */
 .sec-title__line {
   display: block;
 }
@@ -81,7 +104,7 @@
 }
 
 /* ---------------------------------------------------------------- */
-/* Stage: architecture + quick feature navigation                     */
+/* Stage: the architecture                                           */
 /* ---------------------------------------------------------------- */
 .sec-stage {
   grid-area: stage;
@@ -95,11 +118,6 @@
   position: relative;
   width: 100%;
   aspect-ratio: 860 / 690;
-}
-
-/* The quick navigation only exists alongside the pinned timeline. */
-.sec-nav {
-  display: none;
 }
 
 /* ---------------------------------------------------------------- */
@@ -149,6 +167,11 @@
   white-space: nowrap;
 }
 
+/* The quick navigation only exists alongside a scrubbed timeline on desktop. */
+.sec-nav {
+  display: none;
+}
+
 /* ================================================================ */
 /* Pinned desktop scene                                              */
 /* ================================================================ */
@@ -160,7 +183,7 @@
   height: 100vh;
   padding-top: var(--nav-h);
   padding-bottom: clamp(12px, 2.2vh, 32px);
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
   grid-template-areas:
     '. stage'
@@ -172,8 +195,8 @@
 }
 
 .sec.is-pinned .sec-title {
-  /* three balanced lines that fit the column and short laptop viewports */
-  font-size: min(var(--fs-h2), 4.3vw, 7.2vh, 4.2rem);
+  /* short laptop viewports: capped by height so the column fits */
+  font-size: min(var(--fs-h2), 11.2cqi, 7.2vh);
 }
 
 .sec.is-pinned .sec-lead {
@@ -186,12 +209,26 @@
   margin-top: clamp(16px, 3vh, 34px);
 }
 
+.sec.is-pinned .sec-eyebrow {
+  margin-bottom: clamp(12px, 2vh, 22px);
+}
+
+/*
+ * Reading area + its index. The index is a compact list of the four titles
+ * set beside the active feature, top-aligned with its title, so it reads as
+ * that area's table of contents. It adds no height to the text column (which
+ * is full on short laptops) and sits in the empty lower-left of the stage.
+ */
 .sec.is-pinned .sec-features {
-  margin-top: clamp(22px, 4.4vh, 52px);
+  --sec-read-w: min(27em, 100%);
+  position: relative;
+  margin-top: clamp(20px, 3.8vh, 48px);
+  font-size: var(--fs-body);
 }
 
 /* Stable reading area: all four items share one grid cell (no height jumps). */
 .sec.is-pinned .sec-features__list {
+  width: var(--sec-read-w);
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
 }
@@ -223,24 +260,30 @@
 }
 
 .sec.is-pinned .sec-nav {
+  position: absolute;
+  top: 0;
+  left: calc(var(--sec-read-w) + clamp(28px, 2.6vw, 48px));
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0 clamp(10px, 1.2vw, 24px);
-  padding-top: 4px;
-  margin-right: calc(var(--gutter) * 0.6);
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* four 25px rows = the reading area's height (title + two lines); ≥ 24px targets */
+.sec.is-pinned .sec-nav__btn {
+  min-height: 25px;
 }
 
 .sec-nav__btn {
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 4px 0 14px;
+  min-height: 36px;
+  padding: 0 2px 0 14px;
   border-radius: 8px;
   font-size: var(--fs-small);
   font-weight: var(--fw-medium);
   letter-spacing: -0.003em;
+  white-space: nowrap;
   color: var(--color-text-subtle);
   transition: color var(--dur-base) var(--ease-out);
 }
@@ -261,8 +304,12 @@
     transform var(--dur-base) var(--ease-out);
 }
 
-.sec-nav__btn:hover {
-  color: var(--color-text);
+/* Hover only where it exists: on touch a tapped item would keep the hover
+   colour after the story moves on, reading as a second current item. */
+@media (hover: hover) {
+  .sec-nav__btn:hover {
+    color: var(--color-text);
+  }
 }
 
 .sec-nav__btn[aria-current] {
@@ -274,63 +321,67 @@
   transform: scale(1);
 }
 
-@media (max-width: 1399px) {
-  /* two tidy rows rather than one orphaned title */
-  .sec.is-pinned .sec-nav {
-    display: grid;
-    grid-template-columns: repeat(2, max-content);
-    justify-content: center;
-    column-gap: 28px;
-  }
+/* ================================================================ */
+/* Scroll-by sequence (no pin): sticky scene + scroll track          */
+/* ================================================================ */
+.sec.is-scrolly {
+  /* scroll distance per timeline unit; a feature owns two units */
+  --sec-unit: 22svh;
 }
 
-/* ================================================================ */
-/* Scroll-by sequence (no pin)                                       */
-/* ================================================================ */
 .sec.is-scrolly .sec-frame {
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
-.sec.is-scrolly .sec-stage {
-  position: sticky;
-  top: var(--nav-h);
-  z-index: 2;
-  margin-top: clamp(32px, 5vh, 56px);
-  background: var(--color-background);
+.sec.is-scrolly .sec-track {
+  display: block;
+  position: relative;
+  margin-top: clamp(24px, 4svh, 48px);
 }
 
-/* soft fade so blocks slide under the stage without a hard edge */
-.sec.is-scrolly .sec-stage::after {
+/* The run: 7.5 units of scroll while the scene is stuck (branch → end). It
+   must be content (not padding) — a sticky box stays inside its containing
+   block's content box. */
+.sec.is-scrolly .sec-track::after {
   content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 28px;
-  background: linear-gradient(to bottom, var(--color-background), rgba(250, 251, 249, 0));
-  pointer-events: none;
+  display: block;
+  height: calc(var(--sec-unit) * 7.5);
+}
+
+.sec.is-scrolly .sec-scene {
+  position: sticky;
+  top: var(--nav-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(16px, 3svh, 32px);
+  height: calc(100svh - var(--nav-h));
+  min-height: 0;
+}
+
+.sec.is-scrolly .sec-stage {
+  flex: none;
 }
 
 .sec.is-scrolly .sec-visual {
   aspect-ratio: auto;
-  height: clamp(250px, 48svh, 560px);
+  height: clamp(260px, 52svh, 600px);
+}
+
+/* Caption slot: the four features stacked in one cell (stable height). */
+.sec.is-scrolly .sec-features {
+  flex: none;
 }
 
 .sec.is-scrolly .sec-features__list {
-  display: block;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 
 .sec.is-scrolly .sec-feature {
-  min-height: 56svh;
-  padding-top: 12px;
-}
-
-/* The last block ends with the section so the stage and its text leave together. */
-.sec.is-scrolly .sec-feature:last-child {
-  min-height: 0;
-  padding-bottom: clamp(24px, 6svh, 64px);
+  grid-area: 1 / 1;
 }
 
 .sec.is-scrolly .sec-feature__title {
@@ -347,10 +398,6 @@
 }
 
 @media (max-width: 1023px) {
-  .sec-title {
-    font-size: var(--fs-h2);
-  }
-
   .sec-visual {
     aspect-ratio: 1 / 0.9;
   }
@@ -383,45 +430,98 @@
     font-size: var(--fs-body-sm);
   }
 
+  /* The scene is width-bound on phones; the height is headroom for its
+     counter-scaled (legible) labels above and around it. */
   .sec.is-scrolly .sec-visual {
-    height: clamp(240px, 40svh, 360px);
-  }
-
-  .sec.is-scrolly .sec-feature {
-    min-height: 52svh;
+    height: clamp(260px, 50svh, 440px);
   }
 }
 
-/* Short desktop screens without the pinned scene: two columns, sticky visual. */
-@media (min-width: 1024px) {
-  .sec.is-scrolly .sec-frame {
-    display: grid;
-    grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
-    grid-template-areas:
-      'intro stage'
-      'features stage';
-    align-items: start;
+/*
+ * Wide-but-short screens without the pinned scene (desktop under 600px tall,
+ * phones in landscape): the sticky scene is a row — caption left, visual
+ * right — so both fit the short viewport.
+ */
+@media (min-width: 1024px), (min-width: 560px) and (max-height: 559px) {
+  .sec.is-scrolly .sec-scene {
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(24px, 4vw, 72px);
   }
 
   .sec.is-scrolly .sec-stage {
-    grid-row: 1 / span 2;
-    margin-top: 0;
-  }
-
-  .sec.is-scrolly .sec-stage::after {
-    display: none;
+    flex: 1 1 58%;
+    min-width: 0;
+    height: 100%;
   }
 
   .sec.is-scrolly .sec-visual {
-    height: calc(100vh - var(--nav-h) - 24px);
+    height: 100%;
   }
 
   .sec.is-scrolly .sec-features {
-    margin-top: 48px;
+    flex: 0 1 38%;
+    min-width: 0;
+  }
+}
+
+/* Short desktops: the reading area's index sits under the caption. */
+@media (min-width: 1024px) {
+  .sec.is-scrolly .sec-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: clamp(16px, 3vh, 28px);
+    margin-left: -14px;
   }
 
-  /* beside the stage, the last block keeps the stage stuck through the final state */
-  .sec.is-scrolly .sec-feature:last-child {
-    min-height: 80vh;
+  .sec.is-scrolly .sec-nav__btn {
+    min-height: 30px;
+  }
+}
+
+/*
+ * Touch input (iPads in landscape, touch laptops): the index rows become
+ * 44px targets, the same rule the footer follows. In the pinned scene four
+ * such rows would be far taller than the reading area they index (and run
+ * into the architecture), so there the index becomes two rows of two —
+ * 88px, still within the reading area's height, top-aligned with its title.
+ * Two columns reach further into the stage, so the stage keeps a band of
+ * that height free at its foot: the architecture is fitted and centred
+ * above it and never dips into the index, whatever the camera does. The
+ * smaller stage is fitted by its height on short screens, so a top inset
+ * keeps the raised access panel clear of the navbar there.
+ */
+@media (any-pointer: coarse) {
+  .sec.is-pinned .sec-nav__btn,
+  .sec.is-scrolly .sec-nav__btn {
+    min-height: 44px;
+  }
+
+  .sec.is-pinned .sec-nav {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    column-gap: clamp(14px, 1.4vw, 24px);
+  }
+
+  .sec.is-pinned .sec-stage {
+    padding-top: 16px;
+    padding-bottom: 88px;
+  }
+}
+
+/* Phones in landscape: a narrower caption column — keep each title on one line. */
+@media (max-width: 1023px) and (max-height: 559px) {
+  .sec.is-scrolly .sec-features {
+    flex-basis: 42%;
+  }
+
+  .sec.is-scrolly .sec-feature__title {
+    font-size: 1.375rem;
+  }
+
+  .sec.is-scrolly .sec-feature__text {
+    font-size: var(--fs-body-sm);
   }
 }

@@ -5,7 +5,8 @@ import useSiteLink from '../../hooks/useSiteLink'
  *
  * Hover: the link lifts 2px while its label rises through a clipped mask —
  * the resting label exits upward and an identical copy rises into place.
- * The copy is aria-hidden, so the accessible name stays a single label.
+ * The copy is CSS-generated content with empty alternative text, so the
+ * label appears once in the DOM and in the accessible name.
  */
 export default function NavLink({ item, active = false, linkRef }) {
   const { href, onClick } = useSiteLink(item.target)
@@ -19,11 +20,11 @@ export default function NavLink({ item, active = false, linkRef }) {
       aria-current={active ? 'true' : undefined}
       data-active={active ? '' : undefined}
     >
-      <span className="nav__link-mask">
+      {/* The rising copy is a ::after generated from data-label (with empty
+          alt text), so the label exists once in the DOM, find-in-page and
+          the accessible name. */}
+      <span className="nav__link-mask" data-label={item.label}>
         <span className="nav__link-text">{item.label}</span>
-        <span className="nav__link-text nav__link-text--rise" aria-hidden="true">
-          {item.label}
-        </span>
       </span>
     </a>
   )

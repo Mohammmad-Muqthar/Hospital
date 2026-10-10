@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { gsap, ScrollTrigger, useGSAP, MQ } from '../../../../lib/gsap'
+import { gsap, useGSAP, MQ } from '../../../../lib/gsap'
 import { scrollToTimelineLabel } from '../../../../lib/scroll'
 import { SECTION_IDS, siteConfig } from '../../../../config/site'
 import { HERO } from '../../../../data/siteContent'
@@ -10,6 +10,7 @@ import HeroHeadline from './HeroHeadline'
 import HeroDashboard from './HeroDashboard'
 import HeroStatCard from './HeroStatCard'
 import { buildHeroTimeline, CINEMA_MQ } from './heroTimeline'
+import { fitHeroCopy } from './heroCopyFit'
 import './Hero.css'
 
 const SLICE_INDEXES = [0, 1, 2, 3]
@@ -19,8 +20,9 @@ const SLICE_INDEXES = [0, 1, 2, 3]
  *
  * One pinned stage driven by one scrubbed master timeline (see heroTimeline.js):
  * full-bleed video → camera pull-back through the headline → copy + CTAs →
- * 3D dashboard rise onto the light page surface → four-slice split that flips
- * into the stat cards. With reduced motion (or very short screens) the same
+ * 3D dashboard rise onto the light page surface → the dashboard splits into
+ * four pieces (strips on desktop, quadrants for the 2×2 layouts) that turn
+ * over into the stat cards. With reduced motion (or very short screens) the same
  * markup renders as a calm static layout with no pinning.
  */
 export default function Hero({
@@ -76,16 +78,25 @@ export default function Hero({
           if (!ctx.conditions.cinematic) {
             // Reduced motion / very short screens: static layout, no pin, nothing hidden.
             playbackRef.current.covered = false
-            ScrollTrigger.create({
-              trigger: root,
-              start: 'top bottom',
-              end: 'bottom top',
-              onToggle: setInView,
-              onRefresh: setInView,
+            // Attached to an (empty) timeline so its first refresh is deferred:
+            // a bare ScrollTrigger created inside a matchMedia branch refreshes
+            // immediately and wipes GSAP's remembered scroll position, which
+            // sends the page to the top on every breakpoint change.
+            gsap.timeline({
+              scrollTrigger: {
+                trigger: root,
+                start: 'top bottom',
+                end: 'bottom top',
+                onToggle: setInView,
+                onRefresh: setInView,
+              },
             })
             return undefined
           }
 
+          // Before the timeline measures the copy: keep it inside the stage
+          // under user text settings (no-op with the designed type).
+          const releaseCopyFit = fitHeroCopy(root)
           const tl = buildHeroTimeline(root, ctx.conditions, {
             onCoveredChange: (covered) => {
               playbackRef.current.covered = covered
@@ -95,15 +106,19 @@ export default function Hero({
           timelineRef.current = tl
           // Visible from the top of the page until the released section has
           // scrolled a full viewport past the end of its pin.
-          ScrollTrigger.create({
-            start: -1,
-            end: () => tl.scrollTrigger.end + window.innerHeight,
-            refreshPriority: -1, // measured after the pinned master trigger
-            onToggle: setInView,
-            onRefresh: setInView,
+          // Timeline-attached for the same deferred-refresh reason as above.
+          gsap.timeline({
+            scrollTrigger: {
+              start: -1,
+              end: () => tl.scrollTrigger.end + window.innerHeight,
+              refreshPriority: -1, // measured after the pinned master trigger
+              onToggle: setInView,
+              onRefresh: setInView,
+            },
           })
 
           return () => {
+            releaseCopyFit()
             timelineRef.current = null
             playbackRef.current.covered = false
           }
@@ -176,7 +191,11 @@ export default function Hero({
             <HeroDashboard className="hero__dash-whole" />
             <div className="hero__slices" aria-hidden="true">
               {SLICE_INDEXES.map((i) => (
-                <div key={i} className="hero__slice" style={{ '--i': i }}>
+                <div
+                  key={i}
+                  className="hero__slice"
+                  style={{ '--i': i, '--col': i % 2, '--row': Math.floor(i / 2) }}
+                >
                   <div className="hero__slice-front">
                     <HeroDashboard className="hero__slice-dash" />
                   </div>

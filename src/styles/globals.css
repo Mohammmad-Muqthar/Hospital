@@ -18,6 +18,12 @@ html {
   /* Dark canvas: the page opens on the dark hero and ends on the dark
      footer, so overscroll bounce at either end never flashes off-white. */
   background: var(--color-dark);
+  /* Browser scroll anchoring shifts scrollY while pinned sections reflow on
+     resize; ScrollTrigger and useScrollTriggerSetup restore position instead. */
+  overflow-anchor: none;
+  /* Focus moved by Tab (forward or back) is scrolled clear of the fixed
+     navbar. lib/scroll.js uses window.scrollTo, so landings are unaffected. */
+  scroll-padding-top: calc(var(--nav-h) + 16px);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* No `scroll-behavior: smooth` here: it fights ScrollTrigger's refresh.
@@ -102,6 +108,19 @@ p {
   outline: 2px solid var(--color-primary);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* While a reload restores the reading position (see prepareScrollRestore),
+   keep the page hidden so the hero doesn't flash before the jump. */
+html.is-restoring #root {
+  visibility: hidden;
+}
+
+/* Sections receive programmatic focus after in-page navigation (so the next
+   Tab continues there); they are landmarks, not controls — no ring. */
+section[tabindex='-1']:focus,
+main[tabindex='-1']:focus {
+  outline: none;
 }
 
 /* ---------- Utilities ---------- */

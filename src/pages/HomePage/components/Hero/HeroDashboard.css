@@ -2,14 +2,20 @@
  * Hero dashboard preview (sample data). Sized entirely by its parent and
  * adapted with container queries, so the unified preview and the four slice
  * copies always lay out identically.
+ *
+ * Type floor: 11px (--fs-ui-xs) for micro labels at desktop/tablet sizes and
+ * 12px (--fs-ui) on phones, where the preview is the first product view and
+ * settles at 1:1. Greys are the system text tokens (as in the Features
+ * mock-ups), so tertiary labels stay AA (5.2:1 on white) and the three
+ * product previews read as one CRM.
  */
 .hero-dash {
   --hd-border: #e3eae6;
   --hd-line: #edf2ef;
   --hd-canvas: #f6f8f7;
   --hd-text: var(--color-text);
-  --hd-muted: #5a6b65;
-  --hd-subtle: #7f8e88;
+  --hd-muted: var(--color-text-muted);
+  --hd-subtle: var(--color-text-subtle);
   --hd-accent: var(--color-primary);
   --hd-radius: 18px;
 
@@ -85,8 +91,8 @@
 }
 
 .hero-dash__slash {
+  flex: none;
   color: #c3cfc9;
-  font-size: 14px;
 }
 
 .hero-dash__title {
@@ -160,7 +166,7 @@
   border-radius: 50%;
   background: var(--color-primary-dark);
   color: #fff;
-  font-size: 10.5px;
+  font-size: var(--fs-ui-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -266,7 +272,7 @@
   border-radius: 6px;
   background: #ebf6f0;
   color: #0b6b52;
-  font-size: 11px;
+  font-size: var(--fs-ui-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -344,7 +350,7 @@
   align-items: center;
   gap: 6px;
   color: var(--hd-subtle);
-  font-size: 11px;
+  font-size: var(--fs-ui-xs);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -389,7 +395,7 @@
   width: 32px;
   transform: translateY(-50%);
   color: var(--hd-subtle);
-  font-size: 10.5px;
+  font-size: var(--fs-ui-xs);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -420,7 +426,7 @@
   border-radius: 7px;
   background: var(--color-primary-dark);
   color: #fff;
-  font-size: 11px;
+  font-size: var(--fs-ui-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -434,7 +440,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--hd-subtle);
-  font-size: 10.5px;
+  font-size: var(--fs-ui-xs);
 }
 
 /* Pipeline */
@@ -557,7 +563,7 @@
   border-radius: 50%;
   background: #e6f3ed;
   color: #0a5e4c;
-  font-size: 10px;
+  font-size: var(--fs-ui-xs);
   font-weight: 600;
 }
 
@@ -601,11 +607,12 @@
 }
 
 .hero-dash__status {
-  padding: 3px 7px;
+  padding: 2px 7px;
   border-radius: 6px;
   background: #ebf6f0;
   color: #0b6b52;
-  font-size: 10.5px;
+  font-size: var(--fs-ui-xs);
+  line-height: 15px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -620,7 +627,24 @@
   flex: 1;
 }
 
+/*
+ * The list shows as many COMPLETE rows as the panel holds, at every preview
+ * size, with no breakpoints: rows that don't fit wrap into a second column
+ * that sits beyond the panel's right edge and is clipped. No row is ever
+ * cut and at most one row's height is left empty at the bottom.
+ */
+.hero-dash__tasks {
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  min-height: 0;
+  column-gap: 40px;
+  overflow: hidden;
+}
+
 .hero-dash__task {
+  flex: none;
+  width: 100%;
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) 24px;
   align-items: center;
@@ -655,26 +679,12 @@
 
 .hero-dash__task-type {
   color: var(--hd-subtle);
-  font-size: 11px;
+  font-size: var(--fs-ui-xs);
 }
 
 .hero-dash__task-owner {
   width: 24px;
   height: 24px;
-  font-size: 9.5px;
-}
-
-/* Shorter previews show fewer follow-ups instead of clipping one. */
-@container hero-dash (max-height: 640px) {
-  .hero-dash__task:nth-child(n + 4) {
-    display: none;
-  }
-}
-
-@container hero-dash (max-height: 500px) {
-  .hero-dash__task:nth-child(n + 3) {
-    display: none;
-  }
 }
 
 /* Short previews (short laptop screens): tighten instead of overflowing. */
@@ -703,13 +713,8 @@
   }
 
   .hero-dash__panel-sub,
-  .hero-dash__pipe-foot,
-  .hero-dash__follow {
+  .hero-dash__pipe-foot {
     display: none;
-  }
-
-  .hero-dash__team {
-    flex: 1;
   }
 
   .hero-dash__stages {
@@ -721,9 +726,14 @@
     gap: 3px;
   }
 
-  .hero-dash__reps {
-    gap: 8px;
+  .hero-dash__reps,
+  .hero-dash__tasks {
+    row-gap: 8px;
     margin-top: 9px;
+  }
+
+  .hero-dash__task {
+    padding-top: 8px;
   }
 
   .hero-dash__chart {
@@ -757,14 +767,6 @@
     padding: 14px 16px 16px;
   }
 
-  .hero-dash__follow {
-    display: none;
-  }
-
-  .hero-dash__team {
-    flex: 1;
-  }
-
   .hero-dash__charts {
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   }
@@ -788,7 +790,9 @@
   }
 }
 
-/* ---------- Phones ---------- */
+/* ---------- Phones ----------
+ * The phone preview settles at 1:1 and is a visitor's first product view,
+ * so every label is at least --fs-ui (12px) here. */
 @container hero-dash (max-width: 520px) {
   .hero-dash__ui {
     grid-template-rows: 48px minmax(0, 1fr);
@@ -823,12 +827,13 @@
   .hero-dash__chip {
     height: 26px;
     padding: 0 8px;
-    font-size: 11px;
+    font-size: var(--fs-ui);
   }
 
   .hero-dash__avatar {
     width: 26px;
     height: 26px;
+    font-size: var(--fs-ui);
   }
 
   .hero-dash__main {
@@ -858,14 +863,14 @@
     gap: 2px;
   }
 
-  .hero-dash__label {
-    font-size: 11px;
+  .hero-dash__label,
+  .hero-dash__delta {
+    font-size: var(--fs-ui);
   }
 
   .hero-dash__delta {
     padding: 0;
     background: none;
-    font-size: 10.5px;
   }
 
   .hero-dash__delta svg,
@@ -884,6 +889,14 @@
 
   .hero-dash__legend {
     display: none;
+  }
+
+  .hero-dash__panel-sub,
+  .hero-dash__panel-meta,
+  .hero-dash__marker-tip,
+  .hero-dash__months,
+  .hero-dash__gridline span {
+    font-size: var(--fs-ui);
   }
 
   .hero-dash__chart {
@@ -907,7 +920,7 @@
 
   .hero-dash__stage-name,
   .hero-dash__stage-count {
-    font-size: 11px;
+    font-size: var(--fs-ui);
   }
 
   .hero-dash__track {

@@ -139,7 +139,11 @@
 }
 
 .btn:focus-visible {
-  outline: none;
+  /* Transparent outline: invisible normally (the ring is the box-shadow),
+     painted in the system colour in forced-colours / High Contrast mode,
+     where box-shadows are removed. */
+  outline: 2px solid transparent;
+  outline-offset: 3px;
   box-shadow:
     0 0 0 2px var(--color-background),
     0 0 0 4px var(--color-primary);

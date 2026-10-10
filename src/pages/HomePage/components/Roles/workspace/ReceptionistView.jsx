@@ -4,7 +4,7 @@ import { Card, Tag } from './parts'
 
 const SOURCE_TONE = { 'Walk-in': 'mint', Call: 'neutral', Campaign: 'amber' }
 
-function CaptureForm({ compact }) {
+function CaptureForm() {
   const { tabs, fields, saveLabel } = RECEPTIONIST_VIEW
   return (
     <Card depth={1} area="form" className="rw-form">
@@ -31,7 +31,10 @@ function CaptureForm({ compact }) {
           <span className="rw-input rw-num">{fields.phone.value}</span>
         </div>
         <div className="rw-field">
-          <span className="rw-field__label">{compact ? fields.department.shortLabel : fields.department.label}</span>
+          <span className="rw-field__label">
+            <span className="rw-x-full">{fields.department.label}</span>
+            <span className="rw-x-compact">{fields.department.shortLabel}</span>
+          </span>
           <span className="rw-input rw-select">
             {fields.department.value}
             <ChevronDown size={13} strokeWidth={1.9} />
@@ -51,12 +54,10 @@ function CaptureForm({ compact }) {
         </span>
       </div>
 
-      {!compact && (
-        <div className="rw-field">
-          <span className="rw-field__label">{fields.notes.label}</span>
-          <span className="rw-input rw-textarea">{fields.notes.value}</span>
-        </div>
-      )}
+      <div className="rw-field rw-x-full">
+        <span className="rw-field__label">{fields.notes.label}</span>
+        <span className="rw-input rw-textarea">{fields.notes.value}</span>
+      </div>
 
       <div className="rw-form__actions">
         <span className="rw-btn">{saveLabel}</span>
@@ -65,21 +66,17 @@ function CaptureForm({ compact }) {
   )
 }
 
-export default function ReceptionistView({ variant }) {
+/**
+ * Receptionist lead capture. The phone window (CSS hides .rw-x-full) keeps
+ * the capture form only, without the notes field.
+ */
+export default function ReceptionistView() {
   const { recent, today } = RECEPTIONIST_VIEW
-
-  if (variant === 'compact') {
-    return (
-      <div className="rw-grid rw-grid--recep-c">
-        <CaptureForm compact />
-      </div>
-    )
-  }
 
   return (
     <div className="rw-grid rw-grid--recep">
       <CaptureForm />
-      <Card title={recent.title} meta={recent.meta} depth={2} area="recent" className="rw-recent">
+      <Card title={recent.title} meta={recent.meta} depth={2} area="recent" className="rw-recent rw-x-full">
         <div className="rw-recent__list">
           {recent.items.map((c) => (
             <div className="rw-recent__item" key={c.id}>
@@ -95,7 +92,7 @@ export default function ReceptionistView({ variant }) {
           ))}
         </div>
       </Card>
-      <Card title={today.title} depth={3} area="today" className="rw-today">
+      <Card title={today.title} depth={3} area="today" className="rw-today rw-x-full">
         <div className="rw-today__grid">
           {today.items.map((t) => (
             <span className="rw-today__cell" key={t.label}>

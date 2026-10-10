@@ -89,14 +89,14 @@ export function PartnersArt() {
           <>
             <Avatar initials={p.initials} tone={i === 0 ? 'ink' : 'soft'} square />
             <span className="feat-ui-stack feat-ui-partner__text">
-              <strong className="feat-ui-strong feat-ui-ellipsis">{p.name}</strong>
-              <span className="feat-ui-muted feat-ui-ellipsis">{p.deal}</span>
+              <strong className="feat-ui-strong feat-ui-partner__name">{p.name}</strong>
+              <span className="feat-ui-muted feat-ui-partner__deal">{p.deal}</span>
             </span>
             <span className="feat-ui-partner__end">
               <Chip>{p.type}</Chip>
               <span className={`feat-ui-partner__status${signed ? ' is-signed' : ''}`}>
                 {signed ? <CircleCheck size={12} strokeWidth={2.2} /> : <Clock size={12} strokeWidth={2.2} />}
-                {p.agreement}
+                <span className="feat-ui-partner__agreement">{p.agreement}</span>
               </span>
             </span>
           </>
@@ -130,7 +130,7 @@ export function ActivitiesArt() {
             </span>
             <span className="feat-ui-stack feat-ui-activity__text">
               <span className="feat-ui-label">{item.label}</span>
-              <strong className="feat-ui-strong feat-ui-ellipsis">{item.title}</strong>
+              <strong className="feat-ui-strong">{item.title}</strong>
             </span>
             <span className="feat-ui-muted t-tabular feat-ui-activity__meta">{item.meta}</span>
           </>
@@ -195,7 +195,7 @@ export function SupportArt() {
                   <ChannelIcon size={13} strokeWidth={2} />
                 </span>
                 <span className="feat-ui-stack feat-ui-ticket__text">
-                  <strong className="feat-ui-strong feat-ui-ellipsis">{t.subject}</strong>
+                  <strong className="feat-ui-strong">{t.subject}</strong>
                   <span className="feat-ui-muted t-tabular">{t.ref}</span>
                 </span>
                 <span className={`feat-ui-chip${t.region === activeRegion ? ' feat-ui-chip--emerald' : ''}`}>

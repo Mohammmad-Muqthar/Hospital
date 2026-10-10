@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { NAV_ACTIONS, NAV_ITEMS } from '../../data/siteContent'
 import { SECTION_IDS } from '../../config/site'
 import { MQ } from '../../lib/gsap'
+import { focusSection } from '../../lib/scroll'
 import BrandLogo from '../ui/BrandLogo'
 import useMediaQuery from '../../hooks/useMediaQuery'
 import useSiteLink from '../../hooks/useSiteLink'
@@ -70,16 +71,28 @@ export default function Navbar() {
   const releaseScrollLock = useBodyScrollLock(menuOpen)
 
   const openMenu = useCallback(() => setMenuOpen(true), [])
-  const closeMenu = useCallback(() => setMenuOpen(false), [])
+  // When the menu closes because an in-page link was chosen, remember the
+  // target so keyboard focus can continue there instead of the hamburger.
+  const navTargetRef = useRef(null)
+  const closeMenu = useCallback((event) => {
+    const href = event?.currentTarget?.getAttribute?.('href')
+    navTargetRef.current = typeof href === 'string' && href.length > 1 && href.startsWith('#') ? href.slice(1) : null
+    setMenuOpen(false)
+  }, [])
 
-  // Return focus to the hamburger after closing — only if focus was inside
-  // the menu (or lost), never stealing it from somewhere the user moved it.
+  // After closing: move focus to the chosen section (like a native anchor
+  // jump), otherwise back to the hamburger — but only if focus was inside the
+  // menu (or lost), never stealing it from somewhere the user moved it.
+  // The menu's focus trap is already released here (its effect runs first).
   const wasOpenRef = useRef(false)
   useEffect(() => {
     if (wasOpenRef.current && !menuOpen) {
+      const target = navTargetRef.current && document.getElementById(navTargetRef.current)
+      navTargetRef.current = null
       const current = document.activeElement
       const focusWasInMenu = !current || current === document.body || current.closest?.(`#${MENU_ID}`)
-      if (focusWasInMenu) toggleRef.current?.focus({ preventScroll: true })
+      if (target) focusSection(target)
+      else if (focusWasInMenu) toggleRef.current?.focus({ preventScroll: true })
     }
     wasOpenRef.current = menuOpen
   }, [menuOpen])

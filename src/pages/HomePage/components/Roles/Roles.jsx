@@ -2,25 +2,24 @@ import { useCallback, useId, useRef, useState } from 'react'
 import { MotionConfig } from 'motion/react'
 import { SECTION_IDS } from '../../../../config/site'
 import { ROLES, ROLES_INTRO } from '../../../../data/siteContent'
-import { MQ } from '../../../../lib/gsap'
-import { scrollToTimelineLabel } from '../../../../lib/scroll'
+import { scrollToTimelineLabel, scrollToY } from '../../../../lib/scroll'
 import useMediaQuery from '../../../../hooks/useMediaQuery'
 import usePrefersReducedMotion from '../../../../hooks/usePrefersReducedMotion'
 import RoleSelector from './RoleSelector'
 import RoleDescription from './RoleDescription'
 import CRMWorkspace from './CRMWorkspace'
-import useRolesScene, { PINNED_QUERY } from './useRolesScene'
+import useRolesScene, { COLUMNS_QUERY, PINNED_QUERY } from './useRolesScene'
 import { ROLE_LABELS } from './rolesScene'
 import './Roles.css'
 
 /**
  * Phase 5 — Roles: one CRM workspace, four perspectives.
  *
- * Desktop (PINNED_QUERY: ≥1280 × ≥600 or ≥1024 × ≥700, motion OK): the
- * section pins and one scrubbed master timeline walks Admin → Sales Manager →
- * Sales Executive → Receptionist; the tablist mirrors the timeline and
- * clicking a role scrolls to its timeline label. Everywhere else (tablet,
- * mobile, short laptops, reduced motion): no pin, the tablist sets state and
+ * Desktop (PINNED_QUERY: ≥1200 × ≥600, motion OK): the section pins and one
+ * scrubbed master timeline walks Admin → Sales Manager → Sales Executive →
+ * Receptionist; the tablist mirrors the timeline and clicking a role scrolls
+ * to its timeline label. Everywhere else (tablets incl. landscape, mobile,
+ * very short screens, reduced motion): no pin, the tablist sets state and
  * Motion animates the swap.
  */
 export default function Roles() {
@@ -29,8 +28,9 @@ export default function Roles() {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const pinned = useMediaQuery(PINNED_QUERY)
-  const isMobile = useMediaQuery(MQ.mobile)
-  const isDesktop = useMediaQuery(MQ.desktop)
+  // The selector is a vertical list wherever the stage has side columns
+  // (≥ 1200, Roles.css); a row above the workspace below that.
+  const vertical = useMediaQuery(COLUMNS_QUERY)
   const reduce = usePrefersReducedMotion()
 
   const { timelineRef, activeRef } = useRolesScene(rootRef, ROLES, setActiveIndex)
@@ -43,6 +43,30 @@ export default function Roles() {
       setActiveIndex(index)
     },
     [timelineRef, activeRef],
+  )
+
+  // Keyboard focus arriving in the selector or description while the scene
+  // is still revealing (the copy is in the Tab order from the start, but may
+  // be faded — before the pin, or during the docked heading hand-over):
+  // bring the reader to a settled, fully visible state.
+  const handleStageFocus = useCallback(
+    (event) => {
+      if (reduce || !event.target.matches?.(':focus-visible')) return
+      const tl = timelineRef.current
+      const st = tl?.scrollTrigger
+      if (st) {
+        const settled = tl.labels[ROLE_LABELS[0]] / tl.duration()
+        if (window.scrollY < st.start - 1 || st.progress < settled - 0.002) {
+          scrollToTimelineLabel(tl, ROLE_LABELS[activeRef.current])
+        }
+        return
+      }
+      const rect = event.target.getBoundingClientRect()
+      if (rect.bottom > window.innerHeight * 0.8) {
+        scrollToY(window.scrollY + rect.top - window.innerHeight * 0.45)
+      }
+    },
+    [reduce, timelineRef, activeRef],
   )
 
   const tabs = !pinned
@@ -73,12 +97,12 @@ export default function Roles() {
           <p className="t-lead roles__lead">{ROLES_INTRO.paragraph}</p>
         </header>
 
-        <div className="roles__stage">
+        <div className="roles__stage" onFocus={handleStageFocus}>
           <div className="roles__sel-col">
             <RoleSelector
               roles={ROLES}
               activeIndex={activeIndex}
-              orientation={isDesktop ? 'vertical' : 'horizontal'}
+              orientation={vertical ? 'vertical' : 'horizontal'}
               onSelect={handleSelect}
               idPrefix={idPrefix}
               reduce={reduce}
@@ -86,13 +110,7 @@ export default function Roles() {
           </div>
 
           <div className="roles__ws-col">
-            <CRMWorkspace
-              roles={ROLES}
-              activeIndex={activeIndex}
-              tabs={tabs}
-              reduce={reduce}
-              variant={isMobile ? 'compact' : 'full'}
-            />
+            <CRMWorkspace roles={ROLES} activeIndex={activeIndex} tabs={tabs} reduce={reduce} />
           </div>
 
           <div className="roles__desc-col">

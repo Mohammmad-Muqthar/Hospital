@@ -6,20 +6,21 @@
  *   copy       paragraph + CTAs reveal
  *   hold       readable composition (CTA hold)
  *   dashboard  copy recedes, dashboard rises in 3D, stage turns off-white
- *   split      dashboard → 4 slices → crop → flip → stat cards
+ *   split      dashboard → 4 pieces → each turns over into a stat card
  *   end        cards settled, short hold, pin releases into Features
  *
  * Everything size-dependent is function-based and the ScrollTrigger uses
  * invalidateOnRefresh, so resizes re-measure the DOM (offset-based, so the
  * values are never polluted by the transforms being animated).
  */
-import { gsap, SCRUB } from '../../../../lib/gsap'
+import { gsap, SCRUB, ANTICIPATE_PIN } from '../../../../lib/gsap'
 
 /** Layout + motion run only here; otherwise the static stacked layout is shown. */
 export const CINEMA_MQ = '(prefers-reduced-motion: no-preference) and (min-height: 520px)'
 
 const DESKTOP = {
-  pin: 3.4,
+  /** Pin distance per timeline second, in viewport heights (sets the scroll pace). */
+  vhPerSecond: 0.338,
   perspective: 1000,
   startScale: [6.4, 6.9, 7.4],
   lineDur: 2.4,
@@ -33,31 +34,36 @@ const DESKTOP = {
   dashFrom: { y: 0.78, rotationX: 22, rotationY: -8, scale: 0.86, z: -120 },
   dashDur: 2,
   dashHold: 0.5,
+  // split: pieces part with a fine gap and a little depth (over `partDur`),
+  // then each turns over (staggered) while its crop condenses to the card's
+  // shape. The first turn starts exactly as the parting ends (no overlap on
+  // the same properties, velocity-matched eases, no dead hold).
   sepGap: 22,
-  sepZ: -70,
+  sepZ: -30,
+  partDur: 0.55,
+  turnDur: 1,
+  turnStagger: 0.12,
   slicePerspective: 1400,
-  flipStagger: 0.14,
-  moveStagger: 0.1,
-  endHold: 0.6,
+  endHold: 0.45,
 }
 
 const TABLET = {
   ...DESKTOP,
-  pin: 3,
+  vhPerSecond: 0.312,
   perspective: 900,
   startScale: [5.2, 5.6, 6],
   lineDur: 2.2,
   lineStagger: 0.2,
   dashFrom: { y: 0.72, rotationX: 16, rotationY: -5, scale: 0.88, z: -80 },
   dashDur: 1.8,
-  sepGap: 14,
-  sepZ: -50,
+  sepGap: 16,
+  sepZ: -24,
   slicePerspective: 1200,
 }
 
 const MOBILE = {
   ...DESKTOP,
-  pin: 2.4,
+  vhPerSecond: 0.266,
   perspective: 700,
   startScale: [3.8, 4.1, 4.4, 4.7, 5],
   lineDur: 1.9,
@@ -70,12 +76,13 @@ const MOBILE = {
   dashFrom: { y: 0.7, rotationX: 12, rotationY: -3, scale: 0.9, z: -40 },
   dashDur: 1.6,
   dashHold: 0.4,
-  sepGap: 8,
-  sepZ: -30,
+  sepGap: 12,
+  sepZ: -18,
+  partDur: 0.5,
+  turnDur: 0.95,
+  turnStagger: 0.1,
   slicePerspective: 900,
-  flipStagger: 0.12,
-  moveStagger: 0.08,
-  endHold: 0.5,
+  endHold: 0.4,
 }
 
 /**
@@ -104,6 +111,16 @@ function offsetWithin(el, ancestor) {
   return { x, y }
 }
 
+/** Group the headline's words into the lines of the active layout. */
+function headlineLines(words, key) {
+  const lines = []
+  words.forEach((word) => {
+    const n = Number(word.dataset[key]) || 0
+    ;(lines[n] ||= []).push(word)
+  })
+  return lines.filter(Boolean)
+}
+
 export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   const S = conditions.mobile ? MOBILE : conditions.tablet ? TABLET : DESKTOP
   const q = gsap.utils.selector(root)
@@ -113,8 +130,8 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   const scrim = one('.hero-bg__scrim')
   const light = one('.hero__light')
   const copy = one('.hero__copy')
-  const linesWrap = one(conditions.mobile ? '.hero__lines--narrow' : '.hero__lines--wide')
-  const lines = q(conditions.mobile ? '.hero__lines--narrow .hero__line' : '.hero__lines--wide .hero__line')
+  const linesWrap = one('.hero__lines')
+  const lines = headlineLines(q('.hero__word'), conditions.mobile ? 'lineNarrow' : 'lineWide')
   const lead = one('.hero__lead')
   const ctaGroup = one('.hero__ctas')
   const ctas = q('.hero__cta')
@@ -130,20 +147,56 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   const cards = q('.hero__cards > li')
 
   const vh = () => window.innerHeight
-  const last = slices.length - 1
 
-  /* ---------- Geometry (re-read on every refresh) ---------- */
-  const geometry = () => {
-    const W = frame.offsetWidth
-    const H = frame.offsetHeight
-    const sw = slices[0].offsetWidth
-    const cw = cards[0].offsetWidth
-    const ch = cards[0].offsetHeight
-    const radius = parseFloat(getComputedStyle(cards[0]).borderTopLeftRadius) || 16
-    const k = Math.min(1, (sw - 8) / cw, (H * 0.9) / ch)
-    return { W, H, sw, cw, ch, k, radius, insetX: (sw - cw * k) / 2, insetY: (H - ch * k) / 2 }
+  /* ---------- Split geometry (re-read on every refresh) ----------
+   * Desktop cuts the dashboard into four vertical strips (cards in a row);
+   * the 2×2 layouts cut it into quadrants, so every piece is already larger
+   * than its card and nothing is ever scaled up (no blurred fragments). */
+  const piece = (i) => {
+    const s = slices[i]
+    const cols = Math.max(1, Math.round(frame.offsetWidth / s.offsetWidth))
+    const rows = Math.max(1, Math.round(frame.offsetHeight / s.offsetHeight))
+    const col = Math.round(s.offsetLeft / s.offsetWidth)
+    const row = Math.round(s.offsetTop / s.offsetHeight)
+    return { col, row, cols, rows, w: s.offsetWidth, h: s.offsetHeight }
   }
-  const sliceTarget = (i) => {
+  // The tile each piece condenses to: the card's size, centred in the piece.
+  const tile = (i) => {
+    const p = piece(i)
+    const card = cards[i]
+    const radius = parseFloat(getComputedStyle(card).borderTopLeftRadius) || 16
+    return {
+      x: Math.max(0, (p.w - card.offsetWidth) / 2),
+      y: Math.max(0, (p.h - card.offsetHeight) / 2),
+      radius,
+    }
+  }
+  const outerRadius = () => parseFloat(getComputedStyle(whole).borderTopLeftRadius) || 18
+  // Only the dashboard's outer corners are rounded while the pieces are whole.
+  const cornerRadii = (i) => {
+    const { col, row, cols, rows } = piece(i)
+    const r = outerRadius()
+    const left = col === 0
+    const top = row === 0
+    const right = col === cols - 1
+    const bottom = row === rows - 1
+    // [top-left, top-right, bottom-right, bottom-left]
+    return [left && top ? r : 0, right && top ? r : 0, right && bottom ? r : 0, left && bottom ? r : 0]
+  }
+  const clipFrom = (i) => {
+    const [a, b, c, d] = cornerRadii(i)
+    return `inset(0px 0px 0px 0px round ${a}px ${b}px ${c}px ${d}px)`
+  }
+  const clipTo = (i) => {
+    const t = tile(i)
+    return `inset(${t.y}px ${t.x}px ${t.y}px ${t.x}px round ${t.radius}px)`
+  }
+  const sepOffset = (i) => {
+    const { col, row, cols, rows } = piece(i)
+    return { x: (col - (cols - 1) / 2) * S.sepGap, y: (row - (rows - 1) / 2) * S.sepGap }
+  }
+  // Travel from the piece's centre to its card's centre (layout positions).
+  const cardTarget = (i) => {
     const s = offsetWithin(slices[i], layer)
     const c = offsetWithin(cards[i], layer)
     return {
@@ -151,31 +204,28 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
       y: c.y + cards[i].offsetHeight / 2 - (s.y + slices[i].offsetHeight / 2),
     }
   }
-  const outerRadius = () => parseFloat(getComputedStyle(whole).borderTopLeftRadius) || 18
-  // Initial per-corner radii: only the outer slices carry the dashboard's rounded corners.
-  const cornerRadii = (i) => {
-    const r = outerRadius()
-    return [i === 0 ? r : 0, i === last ? r : 0, i === last ? r : 0, i === 0 ? r : 0]
-  }
-  const clipFrom = (i) => {
-    const [tl, tr, br, bl] = cornerRadii(i)
-    return `inset(0px 0px 0px 0px round ${tl}px ${tr}px ${br}px ${bl}px)`
-  }
-  const clipTo = () => {
-    const g = geometry()
-    const r = g.radius * g.k
-    return `inset(${g.insetY}px ${g.insetX}px ${g.insetY}px ${g.insetX}px round ${r}px ${r}px ${r}px ${r}px)`
-  }
 
   /* ---------- Initial, non-timeline state ---------- */
-  // Perspective must sit on the lines' direct parent (perspective only reaches children).
+  // Perspective must sit on the words' direct parent (perspective only reaches children).
   gsap.set(linesWrap, { perspective: S.perspective })
   gsap.set(ctaGroup, { pointerEvents: 'none' })
   gsap.set(slicesWrap, { autoAlpha: 0 })
-  gsap.set(cardsList, { autoAlpha: 0 })
+  // The real stat cards stay in the accessibility tree the whole time (plain
+  // opacity, not visibility): screen readers get the four facts from the top
+  // of the page while the decorative, aria-hidden pieces do the visual turn.
+  gsap.set(cardsList, { opacity: 0 })
   // The dashboard waits fully transparent (still in the accessibility tree)
   // until its rise begins, so no corner can peek in during the CTA hold.
   gsap.set(frame, { opacity: 0 })
+  // The pull-back scales the backdrop and deepens the scrim on every frame.
+  // Their own compositor layers keep both changes off the paint path:
+  // without them each frame re-rasterised the full-viewport gradient
+  // backdrop (~85% of the 'type' phase raster work at 1920×1080). Decorative,
+  // text-free layers, so a fixed raster scale costs no sharpness. Released
+  // once they settle (see 'type'); set here, inside the matchMedia context,
+  // so leaving the cinematic layout restores the original inline styles.
+  gsap.set(bg, { willChange: 'transform' })
+  gsap.set(scrim, { willChange: 'opacity' })
 
   let covered = false
   let coveredAt = 1
@@ -185,9 +235,10 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
       trigger: root,
       pin: true,
       start: 'top top',
-      end: () => `+=${Math.round(vh() * S.pin)}`,
+      // Constant scroll pace: the pin is as long as the choreography needs.
+      end: () => `+=${Math.round(vh() * S.vhPerSecond * tl.duration())}`,
       scrub: SCRUB,
-      anticipatePin: 1,
+      anticipatePin: ANTICIPATE_PIN,
       invalidateOnRefresh: true,
       onUpdate(self) {
         const isCovered = self.progress >= coveredAt
@@ -205,13 +256,15 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   // so it resolves first and every later line (closer to the camera at any
   // instant) projects further *below* it — the lines layer in depth but can
   // never overlap. The wrapper shift keeps the giant first line centred in the
-  // viewport while it is close, then eases it up into its slot.
+  // viewport while it is close, then eases it up into its slot. All words of
+  // a line share one tween, so they project exactly like a single element.
   gsap.set(linesWrap, { perspectiveOrigin: `50% ${50 / lines.length}%` })
   const firstLineShift = () => {
     const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 0
     const target = nav + (window.innerHeight - nav) / 2
-    const pos = offsetWithin(lines[0], root)
-    return target - (pos.y + lines[0].offsetHeight / 2)
+    const word = lines[0][0]
+    const pos = offsetWithin(word, root)
+    return target - (pos.y + word.offsetHeight / 2)
   }
   tl.fromTo(linesWrap, { y: firstLineShift }, { y: 0, duration: S.lineDur, ease: 'power2.out' }, 0)
   lines.forEach((line, i) => {
@@ -228,6 +281,11 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   const typeEnd = (lines.length - 1) * S.lineStagger + S.lineDur
   tl.fromTo(bg, { scale: S.bgFrom }, { scale: 1, duration: typeEnd, ease: 'power2.out' }, 0)
   tl.fromTo(scrim, { opacity: 0 }, { opacity: S.scrim, duration: typeEnd - 0.5, ease: 'power1.inOut' }, 0.15)
+  // The backdrop and scrim are their own compositor layers only while they
+  // move; once settled they flatten back into the stage so later phases don't
+  // composite two idle full-viewport layers. Scrubbed, so scrolling back
+  // restores the layers before they move again.
+  tl.set([bg, scrim], { willChange: 'auto' }, typeEnd)
 
   /* ---------- copy: paragraph, then the CTA pair ---------- */
   const copyAt = typeEnd - 0.55
@@ -274,47 +332,68 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
   tl.fromTo(light, { yPercent: 50 }, { yPercent: -30, duration: lightDur, ease: 'power1.inOut' }, lightAt)
   const coveredTime = lightAt + lightDur
 
-  /* ---------- split: slices > tiles > arrange > flip > cards ----------
-   * 1. swap the unified dashboard for four pixel-identical slice copies
-   * 2. slices separate with growing gaps and a little depth
-   * 3. each strip is cropped to a tile with the card's proportions
-   * 4. tiles travel to their card slot (and, where the card is wider than a
-   *    strip, as in the 2x2 layouts, the fragment zooms up to card size)
-   * 5. staggered rotateY flip reveals the stat card on the back face, which
-   *    is laid out at its final size, so it always settles at scale 1
-   * 6. swap to the flat, accessible card grid (identical geometry)
+  /* ---------- split: pieces part, then each turns over into its card ----------
+   * 1. swap the unified dashboard for four pixel-identical piece copies
+   * 2. the pieces part with a fine gap and a little depth
+   * 3. each piece turns over (staggered) while it travels to its card slot;
+   *    in the first half of the turn its crop condenses from the piece to
+   *    the card's shape, so the cropped fragment is only ever seen in motion
+   *    and foreshortened, and the change completes by the edge-on moment
+   * 4. the back face is the stat card laid out at its final size, so it
+   *    settles at identity (crisp), then swaps to the flat accessible grid
    */
   const splitAt = riseAt + S.dashDur + S.dashHold
-  const cropAt = splitAt + 0.2
-  const arrangeAt = splitAt + 0.85
-  const flipAt = splitAt + 1.35
   tl.addLabel('split', splitAt)
   tl.set(whole, { autoAlpha: 0 }, splitAt)
   tl.set(slicesWrap, { autoAlpha: 1 }, splitAt)
   tl.to(shadow, { opacity: 0, duration: 0.45, ease: 'power1.out' }, splitAt)
   tl.fromTo(edges, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power1.out' }, splitAt + 0.05)
 
-  const tileRadius = () => geometry().radius * geometry().k
-  const cardInsetX = () => (geometry().sw - geometry().cw) / 2
-  const cardInsetY = () => (geometry().H - geometry().ch) / 2
-
+  const cropDelay = S.turnDur * 0.06
+  const cropDur = S.turnDur * 0.42
   slices.forEach((slice, i) => {
-    const offset = i - last / 2
-    const moveAt = arrangeAt + i * S.moveStagger
-
+    // part
     tl.fromTo(
       slice,
       { x: 0, y: 0, z: 0, rotationY: 0, transformPerspective: S.slicePerspective },
-      { x: offset * S.sepGap, z: S.sepZ, duration: 0.9, ease: 'power2.out' },
+      {
+        x: () => sepOffset(i).x,
+        y: () => sepOffset(i).y,
+        z: S.sepZ,
+        duration: S.partDur,
+        ease: 'power2.out',
+      },
       splitAt,
     )
 
-    // crop: strip to tile
+    // turn over + travel to the card slot (explicit start values: these
+    // continue exactly where the parting ended, whatever the scroll path)
+    const turnAt = splitAt + S.partDur + i * S.turnStagger
+    tl.fromTo(
+      slice,
+      { rotationY: 0, z: S.sepZ },
+      { rotationY: 180, z: 0, duration: S.turnDur, ease: 'power2.inOut', immediateRender: false },
+      turnAt,
+    )
+    tl.fromTo(
+      slice,
+      { x: () => sepOffset(i).x, y: () => sepOffset(i).y },
+      {
+        x: () => cardTarget(i).x,
+        y: () => cardTarget(i).y,
+        duration: S.turnDur,
+        ease: 'power3.inOut',
+        immediateRender: false,
+      },
+      turnAt,
+    )
+
+    // condense: piece → card-shaped tile, finished by the edge-on moment
     tl.fromTo(
       fronts[i],
-      { clipPath: () => clipFrom(i), scale: 1 },
-      { clipPath: clipTo, duration: 0.85, ease: 'power2.inOut' },
-      cropAt,
+      { clipPath: () => clipFrom(i) },
+      { clipPath: () => clipTo(i), duration: cropDur, ease: 'power1.inOut' },
+      turnAt + cropDelay,
     )
     tl.fromTo(
       edges[i],
@@ -329,53 +408,26 @@ export function buildHeroTimeline(root, conditions, { onCoveredChange } = {}) {
         borderBottomLeftRadius: () => cornerRadii(i)[3],
       },
       {
-        top: () => geometry().insetY,
-        bottom: () => geometry().insetY,
-        left: () => geometry().insetX,
-        right: () => geometry().insetX,
-        borderTopLeftRadius: tileRadius,
-        borderTopRightRadius: tileRadius,
-        borderBottomRightRadius: tileRadius,
-        borderBottomLeftRadius: tileRadius,
-        duration: 0.85,
-        ease: 'power2.inOut',
+        top: () => tile(i).y,
+        bottom: () => tile(i).y,
+        left: () => tile(i).x,
+        right: () => tile(i).x,
+        borderTopLeftRadius: () => tile(i).radius,
+        borderTopRightRadius: () => tile(i).radius,
+        borderBottomRightRadius: () => tile(i).radius,
+        borderBottomLeftRadius: () => tile(i).radius,
+        duration: cropDur,
+        ease: 'power1.inOut',
       },
-      cropAt,
+      turnAt + cropDelay,
     )
-
-    // arrange: tile to its card slot (+ zoom to card size where needed)
-    tl.to(
-      slice,
-      { x: () => sliceTarget(i).x, y: () => sliceTarget(i).y, duration: 1, ease: 'power3.inOut' },
-      moveAt,
-    )
-    tl.to(fronts[i], { scale: () => 1 / geometry().k, duration: 1, ease: 'power3.inOut' }, moveAt)
-    tl.to(
-      edges[i],
-      {
-        top: cardInsetY,
-        bottom: cardInsetY,
-        left: cardInsetX,
-        right: cardInsetX,
-        borderTopLeftRadius: () => geometry().radius,
-        borderTopRightRadius: () => geometry().radius,
-        borderBottomRightRadius: () => geometry().radius,
-        borderBottomLeftRadius: () => geometry().radius,
-        duration: 1,
-        ease: 'power3.inOut',
-      },
-      moveAt,
-    )
-
-    // flip
-    tl.to(slice, { rotationY: 180, z: 0, duration: 0.95, ease: 'power2.inOut' }, flipAt + i * S.flipStagger)
   })
 
   /* ---------- end: swap to the flat accessible cards, hold ---------- */
-  const endAt = Math.max(flipAt + last * S.flipStagger + 0.95, arrangeAt + last * S.moveStagger + 1) + 0.05
+  const endAt = splitAt + S.partDur + (slices.length - 1) * S.turnStagger + S.turnDur + 0.05
   tl.addLabel('end', endAt)
   tl.set(slicesWrap, { autoAlpha: 0 }, endAt)
-  tl.set(cardsList, { autoAlpha: 1 }, endAt)
+  tl.set(cardsList, { opacity: 1 }, endAt)
   tl.to({}, { duration: S.endHold }, endAt)
 
   coveredAt = coveredTime / tl.duration()

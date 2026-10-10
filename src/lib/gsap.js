@@ -5,6 +5,8 @@
  * directly) so plugins are registered exactly once and every section shares
  * the same ScrollTrigger configuration.
  */
+// Must run before gsap.matchMedia() is first used (see the file for why).
+import './sharedMediaQueries'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
@@ -43,6 +45,14 @@ export const EASE = {
 
 /** Default scrub smoothing (seconds of catch-up) for pinned scenes. */
 export const SCRUB = 1
+
+/**
+ * anticipatePin for every pinned scene. A little look-ahead avoids a
+ * one-frame jolt when a fast scroll enters a pin; the GSAP default advice of
+ * 1 pinned sections ~100-300px too early on PageDown / Space / scrollbar
+ * drags. 0.3 keeps about a frame of lead without visible early pins.
+ */
+export const ANTICIPATE_PIN = 0.3
 
 export { gsap, ScrollTrigger, useGSAP }
 

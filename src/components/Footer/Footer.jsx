@@ -3,7 +3,7 @@ import { FOOTER } from '../../data/siteContent'
 import BrandLogo from '../ui/BrandLogo'
 import Icon from '../ui/Icon'
 import useSiteLink from '../../hooks/useSiteLink'
-import { gsap, ScrollTrigger, useGSAP, MQ, EASE } from '../../lib/gsap'
+import { gsap, useGSAP, MQ, EASE } from '../../lib/gsap'
 import './Footer.css'
 
 /** Logo height in px — sized for the official artwork (≈ 2.05 : 1). */
@@ -100,13 +100,18 @@ function useFooterEntrance(rootRef) {
 
         // One-shot play. `once` never reverses or replays; clamp() keeps the
         // start reachable, and a trigger already passed on load fires at once.
-        ScrollTrigger.create({
-          trigger: root,
-          start: mobile ? 'clamp(top 92%)' : 'clamp(top 85%)',
-          once: true,
-          onEnter: () => {
-            revealedRef.current = true
-            tl.play()
+        // Attached to an empty timeline (not bare) so creating it inside a
+        // matchMedia branch defers its first refresh and cannot wipe GSAP's
+        // remembered scroll position on a breakpoint change.
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: root,
+            start: mobile ? 'clamp(top 92%)' : 'clamp(top 85%)',
+            once: true,
+            onEnter: () => {
+              revealedRef.current = true
+              tl.play()
+            },
           },
         })
 

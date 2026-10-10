@@ -8,6 +8,12 @@
  * pixel-crisp — at every size.
  */
 .how-phone {
+  /* Legibility floor for the screen's small text, in RENDERED px: mock-UI
+     micro labels stay >= 11px with headroom (so a de-emphasised card at
+     scale .98 is still >= 11px). The pinned timeline rests the phone at a
+     scale below 1 (`--how-rest`, set by the choreography hook; 1 in the
+     static layouts), so the layout size is divided by it. */
+  --how-text-min: calc(11.5px / var(--how-rest, 1));
   position: relative;
   width: var(--phone-w);
   height: var(--phone-h);
@@ -196,7 +202,7 @@
 }
 
 .how-phone__date {
-  font-size: 4.7cqw;
+  font-size: max(var(--how-text-min), 4.7cqw);
   font-weight: var(--fw-semibold);
   line-height: 1.2;
   letter-spacing: 0.005em;
@@ -340,7 +346,7 @@
   display: flex;
   justify-content: space-between;
   gap: 2cqw;
-  font-size: max(11px, 3.7cqw);
+  font-size: max(var(--how-text-min), 3.7cqw);
   font-weight: var(--fw-medium);
   line-height: 1.25;
   color: rgba(255, 255, 255, 0.52);
@@ -348,7 +354,7 @@
 
 .how-notif__title {
   margin-top: 0.6cqw;
-  font-size: max(11px, 4.75cqw);
+  font-size: max(calc(var(--how-text-min) * 1.04), 4.75cqw);
   font-weight: var(--fw-semibold);
   line-height: 1.25;
   letter-spacing: -0.006em;
@@ -357,36 +363,48 @@
 
 .how-notif__body {
   margin-top: 0.3cqw;
-  font-size: max(11px, 4.4cqw);
+  font-size: max(var(--how-text-min), 4.4cqw);
   line-height: 1.32;
   color: rgba(255, 255, 255, 0.72);
+  /* No one-word last lines ("team.") when a body needs a third line. */
+  text-wrap: pretty;
 }
 
-/* Compact devices: keep every notification legible (>= 11px) and make the
-   lock screen give the four-item stack the room it needs. */
+/* Compact devices: the text sits on its legibility floor here, so the
+   screen trades a little chrome (insets, icon tile, clock, line spacing)
+   for text width and height — short bodies keep to two lines and the
+   four-item stack keeps clear of the home indicator. */
 @container how-screen (max-width: 250px) {
+  .how-phone__ui {
+    padding-inline: 2.8cqw;
+  }
+
   .how-notif {
-    gap: 3.2cqw;
-    padding: 3cqw 3.2cqw 3.2cqw 3cqw;
+    gap: 2.8cqw;
+    padding: 2.7cqw 3cqw 2.9cqw 2.7cqw;
   }
 
   .how-notif__media {
-    width: 10cqw;
-    height: 10cqw;
+    width: 9.6cqw;
+    height: 9.6cqw;
   }
 
-  .how-notif__title,
+  .how-notif__meta,
+  .how-notif__title {
+    line-height: 1.2;
+  }
+
   .how-notif__body {
-    line-height: 1.24;
+    line-height: 1.22;
   }
 
   .how-phone__stack {
-    gap: 2.2cqw;
-    margin-top: 5cqw;
+    gap: 2cqw;
+    margin-top: 4.5cqw;
   }
 
   .how-phone__clock {
-    font-size: 20cqw;
+    font-size: 19cqw;
   }
 }
 
@@ -396,7 +414,7 @@
   }
 
   .how-phone__date {
-    font-size: max(10px, 4.4cqw);
+    font-size: max(var(--how-text-min), 4.4cqw);
   }
 
   .how-phone__clock {

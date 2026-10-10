@@ -11,18 +11,41 @@ import PricingPlan from './PricingPlan'
 import './Pricing.css'
 
 /**
- * Builds a play-once scroll entrance. `from` tweens render their start
- * state immediately (inside the motion branch only — CSS never hides
- * content), and clear their transforms on completion so text settles on
- * an identity transform and stays crisp.
+ * Builds one play-once scroll entrance from `steps` — `[targets, fromVars,
+ * position]` — and returns `{ tl, targets, finish }`, or null when there is
+ * nothing left to reveal.
+ *
+ * `seen` holds every element whose entrance has already started. Those are
+ * left out, so a gsap.matchMedia() re-run (a resize across the desktop
+ * breakpoint rebuilds this section's entrances) never snaps content the
+ * visitor has already seen back to invisible, and never replays it.
+ *
+ * `from` tweens render their start state immediately (inside the motion
+ * branch only — CSS never hides content), and clear their transforms on
+ * completion so text settles on an identity transform and stays crisp.
+ * The trigger is attached to the timeline (never bare), as the shared
+ * scroll anchor requires inside matchMedia.
  */
-function reveal(trigger, start, build) {
+function reveal({ seen, trigger, start, steps }) {
+  const pending = steps
+    .map(([targets, vars, position]) => [targets.filter((el) => !seen.has(el)), vars, position])
+    .filter(([targets]) => targets.length > 0)
+  if (!pending.length) return null
+
+  const targets = pending.flatMap(([els]) => els)
+  const markSeen = () => targets.forEach((el) => seen.add(el))
   const tl = gsap.timeline({
     defaults: { ease: EASE.out, clearProps: 'transform,opacity' },
-    scrollTrigger: { trigger, start, once: true },
+    scrollTrigger: { trigger, start, once: true, onEnter: markSeen },
   })
-  build(tl)
-  return tl
+  pending.forEach(([els, vars, position]) => tl.from(els, vars, position))
+
+  // Jump straight to the settled state (keyboard focus arriving early).
+  const finish = () => {
+    markSeen()
+    tl.progress(1)
+  }
+  return { tl, targets, finish }
 }
 
 /**
@@ -32,6 +55,8 @@ function reveal(trigger, start, build) {
  */
 export default function Pricing() {
   const rootRef = useRef(null)
+  // Elements whose entrance has started; survives matchMedia re-runs.
+  const seenRef = useRef(null)
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [announcement, setAnnouncement] = useState('')
   const reduced = usePrefersReducedMotion()
@@ -49,62 +74,73 @@ export default function Pricing() {
 
   useGSAP(
     () => {
-      const q = gsap.utils.selector(rootRef)
+      const root = rootRef.current
+      const q = gsap.utils.selector(root)
+      const seen = (seenRef.current ??= new WeakSet())
       const mm = gsap.matchMedia()
 
       // Plans sit in one row from the desktop breakpoint; below it they stack.
       mm.add({ motionOK: MQ.motionOK, row: MQ.desktop }, ({ conditions }) => {
-        if (!conditions.motionOK) return
+        if (!conditions.motionOK) return undefined
 
         const { row } = conditions
+        const reveals = []
+        const add = (config) => {
+          const entrance = reveal({ seen, ...config })
+          if (entrance) reveals.push(entrance)
+        }
 
         // Thresholds sit near the viewport bottom so nothing that is in view
         // (e.g. after an anchor jump) waits long for its entrance.
-        reveal(q('.price-head')[0], 'top 92%', (tl) => {
-          tl.from(q('.price-eyebrow'), { opacity: 0, y: 14, duration: 0.8 }, 0)
-            .from(q('.price-title__line'), { yPercent: 108, duration: 1.15, ease: EASE.expo, stagger: 0.1 }, 0.06)
-            .from(q('.price-lead'), { opacity: 0, y: 18, duration: 0.95 }, 0.32)
-            .from(q('.price-currency'), { opacity: 0, y: 14, duration: 0.85 }, 0.44)
+        add({
+          trigger: q('.price-head')[0],
+          start: 'top 92%',
+          steps: [
+            [q('.price-eyebrow'), { opacity: 0, y: 14, duration: 0.8 }, 0],
+            [q('.price-title__line'), { yPercent: 108, duration: 1.15, ease: EASE.expo, stagger: 0.1 }, 0.06],
+            [q('.price-lead'), { opacity: 0, y: 18, duration: 0.95 }, 0.32],
+            [q('.price-currency'), { opacity: 0, y: 14, duration: 0.85 }, 0.44],
+          ],
         })
 
         if (row) {
           // One table timeline, driven by the band: band settles with a
           // slight perspective, then the three panels in a restrained,
           // coordinated stagger (never left hidden while the band shows).
-          reveal(q('.price-insight')[0], 'top 94%', (tl) => {
-            tl.from(q('.price-insight'), {
-              opacity: 0,
-              y: 34,
-              rotationX: 7,
-              transformPerspective: 1400,
-              transformOrigin: '50% 100%',
-              duration: 1.15,
-            }).from(
-              q('.price-plan-wrap'),
-              {
-                opacity: 0,
-                y: 44,
-                rotationX: 8,
-                transformPerspective: 1400,
-                transformOrigin: '50% 100%',
-                duration: 1.2,
-                stagger: 0.11,
-              },
-              0.16,
-            )
+          const depth = { transformPerspective: 1400, transformOrigin: '50% 100%' }
+          add({
+            trigger: q('.price-insight')[0],
+            start: 'top 94%',
+            steps: [
+              [q('.price-insight'), { opacity: 0, y: 34, rotationX: 7, ...depth, duration: 1.15 }, 0],
+              [q('.price-plan-wrap'), { opacity: 0, y: 44, rotationX: 8, ...depth, duration: 1.2, stagger: 0.11 }, 0.16],
+            ],
           })
         } else {
           // Stacked: each block settles as it arrives; flatter, no rotation.
           q('.price-insight, .price-plan-wrap').forEach((block) => {
-            reveal(block, 'top 96%', (tl) => {
-              tl.from(block, { opacity: 0, y: 28, duration: 0.95 })
-            })
+            add({ trigger: block, start: 'top 96%', steps: [[[block], { opacity: 0, y: 28, duration: 0.95 }, 0]] })
           })
         }
 
-        reveal(q('.price-foot')[0], 'top 97%', (tl) => {
-          tl.from(q('.price-foot > *'), { opacity: 0, y: 16, duration: 0.85, stagger: 0.08 })
+        // The CTA is animated through its wrapper: GSAP never touches the
+        // shared .btn, whose CSS transform transition would fight the tween.
+        add({
+          trigger: q('.price-foot')[0],
+          start: 'top 97%',
+          steps: [[q('.price-footnote, .price-foot__cta'), { opacity: 0, y: 16, duration: 0.85, stagger: 0.08 }, 0]],
         })
+
+        // Keyboard focus can arrive before (or while) a group rises — e.g.
+        // tabbing from Security straight onto the currency switch. Never
+        // leave a focused control invisible: settle its group at once.
+        const onFocusIn = ({ target }) => {
+          reveals.forEach((entrance) => {
+            if (entrance.tl.progress() < 1 && entrance.targets.some((el) => el.contains(target))) entrance.finish()
+          })
+        }
+        root.addEventListener('focusin', onFocusIn)
+        return () => root.removeEventListener('focusin', onFocusIn)
       })
     },
     { scope: rootRef },
@@ -115,7 +151,7 @@ export default function Pricing() {
       <div className="container price-inner">
         <header className="price-head">
           <p className="t-eyebrow price-eyebrow">{PRICING.eyebrow}</p>
-          <h2 id="price-title" className="price-title">
+          <h2 id="price-title" className="t-h2 price-title">
             {PRICING.titleLines.map((line, index) => (
               <span key={line} className="price-title__mask">
                 {index > 0 && ' '}
@@ -151,9 +187,11 @@ export default function Pricing() {
 
         <div className="price-foot">
           <p className="price-footnote">{PRICING.footnote}</p>
-          <Button to="fullPricing" variant="secondary">
-            {PRICING.fullPricingCta}
-          </Button>
+          <div className="price-foot__cta">
+            <Button to="fullPricing" variant="secondary">
+              {PRICING.fullPricingCta}
+            </Button>
+          </div>
         </div>
       </div>
     </section>

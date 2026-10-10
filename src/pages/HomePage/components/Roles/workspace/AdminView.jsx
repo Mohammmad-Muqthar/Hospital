@@ -9,17 +9,15 @@ const ROLE_TONE = {
   Receptionist: 'amber',
 }
 
-function UsersTable({ compact }) {
+function UsersTable() {
   const { users } = ADMIN_VIEW
   return (
     <Card title={users.title} meta={users.meta} depth={2} area="users" className="rw-users">
-      {!compact && (
-        <div className="rw-table__row rw-table__row--head">
-          {users.columns.map((c) => (
-            <span key={c}>{c}</span>
-          ))}
-        </div>
-      )}
+      <div className="rw-table__row rw-table__row--head rw-x-full">
+        {users.columns.map((c) => (
+          <span key={c}>{c}</span>
+        ))}
+      </div>
       {users.rows.map((u) => (
         <div className="rw-table__row" key={u.name}>
           <span className="rw-person">
@@ -29,22 +27,23 @@ function UsersTable({ compact }) {
           <span>
             <Tag tone={ROLE_TONE[u.role]}>{u.role}</Tag>
           </span>
-          {!compact && (
-            <span className={`rw-status${u.status === 'Invited' ? ' is-pending' : ''}`}>{u.status}</span>
-          )}
+          <span className={`rw-status rw-x-full${u.status === 'Invited' ? ' is-pending' : ''}`}>{u.status}</span>
         </div>
       ))}
     </Card>
   )
 }
 
-function Permissions({ rows }) {
+/** The phone window shows the first two permissions only. */
+const COMPACT_PERMISSIONS = 2
+
+function Permissions() {
   const { permissions } = ADMIN_VIEW
   return (
     <Card title={permissions.title} meta={permissions.meta} depth={3} area="perms">
       <div className="rw-perms">
-        {(rows ?? permissions.rows).map((p) => (
-          <div className="rw-perms__row" key={p.label}>
+        {permissions.rows.map((p, i) => (
+          <div className={`rw-perms__row${i >= COMPACT_PERMISSIONS ? ' rw-x-full' : ''}`} key={p.label}>
             <span>{p.label}</span>
             <Toggle on={p.on} />
           </div>
@@ -54,21 +53,16 @@ function Permissions({ rows }) {
   )
 }
 
-export default function AdminView({ variant }) {
+/**
+ * Admin settings workspace. The phone window (CSS hides .rw-x-full) keeps the
+ * user table and the first permissions only, users first.
+ */
+export default function AdminView() {
   const { general, branding, terms, config } = ADMIN_VIEW
-
-  if (variant === 'compact') {
-    return (
-      <div className="rw-grid rw-grid--admin-c">
-        <UsersTable compact />
-        <Permissions rows={ADMIN_VIEW.permissions.rows.slice(0, 2)} />
-      </div>
-    )
-  }
 
   return (
     <div className="rw-grid rw-grid--admin">
-      <Card title={general.title} depth={1} area="general">
+      <Card title={general.title} depth={1} area="general" className="rw-x-full">
         <div className="rw-fields">
           {general.fields.map((f) => (
             <div className="rw-field" key={f.label}>
@@ -79,7 +73,7 @@ export default function AdminView({ variant }) {
         </div>
       </Card>
 
-      <Card title={branding.title} depth={2} area="brand">
+      <Card title={branding.title} depth={2} area="brand" className="rw-x-full">
         <div className="rw-brand">
           <div className="rw-drop">
             <ImagePlus size={16} strokeWidth={1.75} />
@@ -99,7 +93,7 @@ export default function AdminView({ variant }) {
       <Permissions />
       <UsersTable />
 
-      <div className="rw-mod rw-col" data-depth="3" style={{ '--a': 'side' }}>
+      <div className="rw-mod rw-col rw-x-full" data-depth="3" style={{ '--a': 'side' }}>
         <div className="rw-card rw-terms">
           <div className="rw-card__head">
             <span className="rw-card__title">{terms.title}</span>

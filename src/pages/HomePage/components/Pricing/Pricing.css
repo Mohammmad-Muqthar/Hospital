@@ -17,6 +17,8 @@
   --price-stack: 560px;
   --price-fig: clamp(3rem, 4.2vw, 4rem);
   --price-surface-tint: #eef5f1;
+  /* Currency option height: 40px for a mouse, 44px for fingers (below). */
+  --price-switch-h: 40px;
 
   position: relative;
   /* Off-white, settling into a barely deeper tone behind the plans so the
@@ -36,13 +38,13 @@
   text-align: center;
 }
 
+/* Size, leading and tracking come from the shared .t-h2 (same as every
+   section h2); only the spacing and the emerald second line are local.
+   Grid, so the masks' negative margins below never collapse into each
+   other: the line pitch stays exactly the shared heading leading. */
 .price-title {
+  display: grid;
   margin-top: clamp(16px, 1.6vw, 22px);
-  font-family: var(--font-display);
-  font-size: var(--fs-h2);
-  font-weight: var(--fw-semibold);
-  line-height: 1.04;
-  letter-spacing: -0.042em;
   color: var(--color-text);
 }
 
@@ -96,7 +98,7 @@
   align-items: center;
   justify-content: center;
   min-width: 76px;
-  min-height: 40px;
+  min-height: var(--price-switch-h);
   padding: 0 18px;
   border-radius: 10px;
   font-family: var(--font-body);
@@ -136,6 +138,16 @@
 @media (hover: hover) and (pointer: fine) {
   .price-switch__option[aria-checked='false']:hover {
     color: var(--color-text);
+  }
+}
+
+/* 44px touch targets. Size follows the input, not the viewport: iPads in
+   landscape, large touch tablets and touch laptops get the desktop grid
+   but are tapped with a finger. The stacked layout (phones, tablet
+   portrait) keeps its 44px whatever the pointer reports. */
+@media (any-pointer: coarse), (max-width: 1023px) {
+  .price {
+    --price-switch-h: 44px;
   }
 }
 
@@ -375,6 +387,9 @@
 
 .price-amount {
   display: flex;
+  /* The figure never breaks, but the "/month" suffix may drop to its own
+     line if the row would overflow (e.g. WCAG text-spacing overrides). */
+  flex-wrap: wrap;
   align-items: baseline;
   white-space: nowrap;
   font-family: var(--font-display);
@@ -515,16 +530,18 @@ ul.price-plan__specs {
   color: var(--color-text-muted);
 }
 
+/* GSAP entrance target for the CTA (the shared .btn keeps its own CSS
+   hover transition). Flex, so the inline-flex button adds no line gap. */
+.price-foot__cta {
+  display: flex;
+}
+
 /* ---------------------------------------------------------------- */
 /* Stacked: tablet portrait and mobile                                */
 /* ---------------------------------------------------------------- */
 @media (max-width: 1023px) {
   .price {
     --price-fig: 3.5rem;
-  }
-
-  .price-switch__option {
-    min-height: 44px;
   }
 
   .price-insight,

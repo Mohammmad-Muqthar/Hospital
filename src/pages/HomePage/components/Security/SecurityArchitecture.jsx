@@ -10,7 +10,7 @@ import {
   ROUTED_REGION_INDEX,
   SUPPORT_TOKEN,
 } from '../../../../data/mock/mockSecurity'
-import { SCENE, chamberRest, regionRest } from './securityGeometry'
+import { SCENE, chamberRest, fitScene, regionRest } from './securityGeometry'
 import './SecurityArchitecture.css'
 
 /**
@@ -35,13 +35,16 @@ function Box({ className = '', w, d, h, x = 0, y = 0, z = 0, children, top = nul
 
 /**
  * Billboard: an anchor point in the scene whose content is counter-rotated
- * against the camera (reads the --cam-rx / --cam-rz custom properties), so
- * mock labels always face the viewer and stay readable.
+ * against the camera, so mock labels always face the viewer and stay
+ * readable. The CSS rest state counter-rotates against the composed final
+ * camera; while the camera moves, the master timeline tweens each anchor's
+ * own rotation in step with it (data-bz holds the anchor's lift), so no
+ * inherited custom property is animated across the 3D tree.
  */
 function Billboard({ className = '', x, y, z, center = false, children }) {
   return (
-    <div className={`sx-bb ${className}`} style={{ left: x, top: y, '--bz': `${z}px` }}>
-      {center ? <div className="sx-bb__center">{children}</div> : children}
+    <div className={`sx-bb ${className}`} style={{ left: x, top: y, '--bz': `${z}px` }} data-bz={z}>
+      <div className="sx-bb__face">{center ? <div className="sx-bb__center">{children}</div> : children}</div>
     </div>
   )
 }
@@ -199,6 +202,9 @@ function Region({ label, index }) {
   )
 }
 
+/** Tray rects are deck-relative; the plate starts `inset` above the deck. */
+const onPlate = (rect) => ({ ...rect, top: rect.top + PLATFORM.plate.inset })
+
 /**
  * Decorative 3D architecture for the Security section: one hospital-group
  * platform, four isolated clinic chambers, a consent-gated access request
@@ -217,11 +223,12 @@ function SecurityArchitecture({ regions }) {
     const apply = () => {
       const { width, height } = root.getBoundingClientRect()
       if (!width || !height) return
-      const fit = Math.min(width / SCENE.frame.w, height / SCENE.frame.h, SCENE.maxFit)
+      // Mock labels are counter-scaled when the scene shrinks so they stay
+      // legible; on dense (phone) stages fewer of them show at once (CSS).
+      const { fit, labelScale, dense } = fitScene(width, height)
       viewport.style.setProperty('--fit', fit.toFixed(4))
-      // Mock labels are counter-scaled when the scene shrinks so they stay legible.
-      const labelScale = Math.min(Math.max(SCENE.labelFit / fit, 1), SCENE.maxLabelScale)
       viewport.style.setProperty('--label-scale', labelScale.toFixed(4))
+      root.toggleAttribute('data-dense', dense)
     }
     apply()
     const ro = new ResizeObserver(apply)
@@ -247,67 +254,74 @@ function SecurityArchitecture({ regions }) {
       >
         <div className="sx-emerge">
           <div className="sx-rig">
-            <div className="sx-scene" style={{ width: base.w, height: base.d }}>
-              <div className="sx-ground" />
-              <Box className="sx-plinth" w={base.w} d={base.d} h={base.h} />
-              <Box
-                className="sx-plate"
-                w={base.w - plate.inset * 2}
-                d={base.d - plate.inset * 2}
-                h={plate.h}
-                x={plate.inset}
-                y={plate.inset}
-                z={base.h}
-                top={
-                  <>
-                    <span className="sx-tray" style={SCENE.trays.grid} />
-                    <span className="sx-tray sx-tray--desk" style={SCENE.trays.desks} />
-                  </>
-                }
-              />
-              <div
-                className="sx-deck"
-                style={{
-                  left: plate.inset,
-                  top: plate.inset,
-                  width: base.w - plate.inset * 2,
-                  height: base.d - plate.inset * 2,
-                  '--deck-z': `${base.h + plate.h}px`,
-                }}
-              >
-                {CHAMBERS.map((chamber) => (
-                  <Chamber key={chamber.id} chamber={chamber} />
-                ))}
-                {regions.map((label, index) => (
-                  <Region key={label} label={label} index={index} />
-                ))}
+            {/* Camera: tilt (rotateX) on the scene, turn (rotateZ) on the plane. */}
+            <div className="sx-scene" style={{ '--scene-w': `${base.w}px`, '--scene-d': `${base.d}px` }}>
+              <div className="sx-plane">
+                <div className="sx-ground" />
+                <Box className="sx-plinth" w={base.w} d={base.d} h={base.h} />
+                {/* The plate is inset from the plinth only on the two edges the
+                    camera sees (left, front). On the back edges it is flush, so
+                    the raised plate never leaves a sliver of the dark plinth top
+                    showing behind it as a hairline. */}
+                <Box
+                  className="sx-plate"
+                  w={base.w - plate.inset}
+                  d={base.d - plate.inset}
+                  h={plate.h}
+                  x={plate.inset}
+                  y={0}
+                  z={base.h}
+                  top={
+                    <>
+                      <span className="sx-tray" style={onPlate(SCENE.trays.grid)} />
+                      <span className="sx-tray sx-tray--desk" style={onPlate(SCENE.trays.desks)} />
+                    </>
+                  }
+                />
                 <div
-                  className="sx-token"
+                  className="sx-deck"
                   style={{
-                    left: regionRest(ROUTED_REGION_INDEX).x + (SCENE.region.w - SCENE.token.w) / 2,
-                    top: regionRest(ROUTED_REGION_INDEX).y + (SCENE.region.d - SCENE.token.d) / 2,
-                    width: SCENE.token.w,
-                    height: SCENE.token.d,
+                    left: plate.inset,
+                    top: plate.inset,
+                    width: base.w - plate.inset * 2,
+                    height: base.d - plate.inset * 2,
+                    '--deck-z': `${base.h + plate.h}px`,
                   }}
                 >
-                  <div className="sx-token__ao" />
-                  <div className="sx-token__body">
-                    <Box className="sx-puck" w={SCENE.token.w} d={SCENE.token.d} h={SCENE.token.h} />
-                    <Billboard
-                      className="sx-chip-bb"
-                      x={SCENE.token.w / 2}
-                      y={SCENE.token.d / 2}
-                      z={SCENE.token.h + 20}
-                      center
-                    >
-                      <span className="sx-chip">
-                        <span className="sx-chip__dot" />
-                        <span className="sx-chip__text">
-                          <span className="sx-chip__title">{SUPPORT_TOKEN.label}</span>
-                          <span className="sx-chip__sub">{routed}</span>
+                  {CHAMBERS.map((chamber) => (
+                    <Chamber key={chamber.id} chamber={chamber} />
+                  ))}
+                  {regions.map((label, index) => (
+                    <Region key={label} label={label} index={index} />
+                  ))}
+                  <div
+                    className="sx-token"
+                    style={{
+                      left: regionRest(ROUTED_REGION_INDEX).x + (SCENE.region.w - SCENE.token.w) / 2,
+                      top: regionRest(ROUTED_REGION_INDEX).y + (SCENE.region.d - SCENE.token.d) / 2,
+                      width: SCENE.token.w,
+                      height: SCENE.token.d,
+                    }}
+                  >
+                    <div className="sx-token__ao" />
+                    <div className="sx-token__body">
+                      <Box className="sx-puck" w={SCENE.token.w} d={SCENE.token.d} h={SCENE.token.h} />
+                      <Billboard
+                        className="sx-chip-bb"
+                        x={SCENE.token.w / 2}
+                        y={SCENE.token.d / 2}
+                        z={SCENE.token.h + 20}
+                        center
+                      >
+                        <span className="sx-chip">
+                          <span className="sx-chip__dot" />
+                          <span className="sx-chip__text">
+                            <span className="sx-chip__title">{SUPPORT_TOKEN.label}</span>
+                            <span className="sx-chip__sub">{routed}</span>
+                          </span>
                         </span>
-                      </span>
-                    </Billboard>
+                      </Billboard>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -41,6 +41,6 @@ export const mockNotifications = [
 export const mockPhoneScreen = {
   appName: 'Trionix CRM',
   timestamp: 'now',
-  date: 'Tuesday, 14 May',
+  date: 'Tuesday, 13 Oct', // same sample 'today' as the Features and Roles mock-ups
   time: '9:41',
 }

@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Search,
   Settings,
+  Slash,
   TrendingUp,
   Users,
 } from 'lucide-react'
@@ -72,7 +73,7 @@ function HeroDashboard({ className = '' }) {
               {mockDashboard.workspace}
               <ChevronDown size={13} strokeWidth={2} />
             </span>
-            <span className="hero-dash__slash">/</span>
+            <Slash className="hero-dash__slash" size={14} strokeWidth={1.5} />
             <span className="hero-dash__title">{mockDashboard.title}</span>
           </div>
           <div className="hero-dash__tools">

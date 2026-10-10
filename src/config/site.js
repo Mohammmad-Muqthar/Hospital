@@ -5,7 +5,7 @@
  * Vite env file (.env.local), e.g.:
  *   VITE_TRIAL_URL=https://app.trionixhospital.com/signup
  *   VITE_SIGNIN_URL=https://app.trionixhospital.com/login
- *   VITE_HERO_VIDEO_SRC=/videos/hero.mp4
+ *   VITE_HERO_VIDEO_SRC=/videos/hero1.mp4
  */
 const env = import.meta.env
 
@@ -34,9 +34,10 @@ export const siteConfig = {
   },
 
   /**
-   * Hero background video. Replace public/videos/hero.mp4 (and optionally
-   * hero.webm / a poster image). If the file is missing the hero falls back
-   * to a still cinematic background automatically.
+   * Hero background video (public/videos/hero1.mp4). Replace the file or
+   * point VITE_HERO_VIDEO_SRC elsewhere; optionally add a .webm and a poster
+   * image. If the file is missing the hero falls back to a still cinematic
+   * background automatically.
    */
   hero: {
     videoSrc: env.VITE_HERO_VIDEO_SRC || '/videos/hero1.mp4',

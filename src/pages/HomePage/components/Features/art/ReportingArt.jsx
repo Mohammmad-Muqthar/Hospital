@@ -138,11 +138,11 @@ export function ReportsArt() {
             <span className="feat-ui-columns__track">
               {i === 0 ? (
                 <Accent className="feat-ui-columns__bar feat-ui-columns__bar--lead">
-                  <span style={{ height: `${(s.value / max) * 100}%` }} />
+                  <span style={{ '--v': s.value / max }} />
                 </Accent>
               ) : (
                 <span className="feat-ui-columns__bar">
-                  <span style={{ height: `${(s.value / max) * 100}%` }} />
+                  <span style={{ '--v': s.value / max }} />
                 </span>
               )}
             </span>
@@ -186,7 +186,8 @@ export function WeeklyArt() {
         <span />
         {days.map((d) => (
           <span key={d} className="feat-ui-week__day">
-            {d}
+            <span className="feat-ui-week__long">{d}</span>
+            <span className="feat-ui-week__short">{d[0]}</span>
           </span>
         ))}
         {rows.map((row, r) => (
@@ -233,7 +234,7 @@ export function DailyArt() {
         <Accent className="feat-ui-daily__check">
           <CircleCheck size={14} strokeWidth={2} />
         </Accent>
-        <span className="feat-ui-ellipsis">{outcome}</span>
+        <span className="feat-ui-daily__text">{outcome}</span>
         <Chip tone="emerald">{status}</Chip>
       </div>
     </div>
